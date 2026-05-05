@@ -1,4 +1,5 @@
 package src;
+import src.modele.Partie;
 import src.vue.VueJeu;
 import javax.swing.SwingUtilities;
 
@@ -8,7 +9,8 @@ import javax.swing.SwingUtilities;
 public class MrJackPocket {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            VueJeu vue = new VueJeu();
+            Partie partie = new Partie();
+            VueJeu vue = new VueJeu(partie);
             vue.setVisible(true);
         });
     }

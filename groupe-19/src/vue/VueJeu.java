@@ -1,6 +1,7 @@
 package src.vue;
 
 import src.modele.District;
+import src.modele.Partie;
 import src.modele.Personnage;
 import src.modele.Quartier;
 
@@ -35,7 +36,6 @@ import java.util.Map;
  *   - Bande latérale   : x ∈ [0, 100] — rendue avec un Composant2D de fond
  */
 public class VueJeu extends JFrame {
-
     // =========================================================================
     // Constantes monde
     // =========================================================================
@@ -192,13 +192,13 @@ public class VueJeu extends JFrame {
     // Constructeur
     // =========================================================================
 
-    public VueJeu() {
+    public VueJeu(Partie partie) {
         super("Mr. Jack Pocket");
         initFrame();
         initCamera();
         initComponents();
         initUIOverlay();
-        this.gameplay = new Gameplay(this);
+        this.gameplay = new Gameplay(this, partie);
     }
 
     // =========================================================================

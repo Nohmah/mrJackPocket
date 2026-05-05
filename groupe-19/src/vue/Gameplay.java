@@ -38,9 +38,9 @@ public class Gameplay {
     // Constructeur
     // -------------------------------------------------------------------------
 
-    public  Gameplay(VueJeu vue) {
-        this.vue       = vue;
-        this.partie = new Partie();
+    public  Gameplay(VueJeu vue, Partie partie) {
+        this.vue = vue;
+        this.partie = partie;
         this.controler = new IHMControler(this);
 
         // Branche le contrôleur sur la Vue (écouteurs souris + clavier)
