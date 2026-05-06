@@ -97,8 +97,7 @@ public class Gameplay {
 
         controler.setActivePlayerType(playerType);
         vue.updateTurnIndicator(turn);
-        List<JetonAction> jetons = partie.getJetonsActions();
-        vue.updateJetons(jetons); // On met à jour la vue des jetons (apres un lancer ou un retourner)
+        vue.updateJetons(partie.actions.getJetonsActions()); // On met à jour la vue des jetons (apres un lancer ou un retourner)
 
         if ("AI".equals(playerType)) {
             // Lance l'action IA de façon asynchrone pour ne pas bloquer Swing
@@ -130,7 +129,7 @@ public class Gameplay {
 
         partie.appelATemoin();
         vue.updateDistrictView(partie.district);
-        vue.updateJetons(partie.getJetonsActions());
+        vue.updateJetons(partie.actions.getJetonsActions());
         // ENVOI : Transmet la liste des actions du tour à GameEngine pour qu'il
         // les valide officiellement et mette à jour FinalGameState.
         // List<IHMControler.ClickIntent> actions = IntermediaryGameState.getPendingActions();

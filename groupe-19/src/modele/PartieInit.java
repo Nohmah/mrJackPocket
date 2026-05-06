@@ -5,6 +5,11 @@ import java.util.Collections;
 
 public class PartieInit {
 
+    public static void initialiserIdentiteJack(Partie partie){
+        partie.identiteJack = partie.actions.piocherCarteAlibi().getPersonnage();
+        System.out.println("Mr Jack est "+ partie.identiteJack.nom);
+    }
+
     public static void initialiserJetons(Partie partie) {
         partie.jetonsAction.add(JetonAction.creerJeton(Action.ALIBI, Action.HOLMES));
         partie.jetonsAction.add(JetonAction.creerJeton(Action.TOBY, Action.WATSON));

@@ -48,7 +48,7 @@ public class Ia {
     }
 
     public Action choisirActionRandom(Partie partie, boolean estJack){
-        List<Action> actionsPossibles = partie.getActionsPossibles();
+        List<Action> actionsPossibles = partie.actions.getActionsPossibles();
         return actionsPossibles.get(r.nextInt(actionsPossibles.size()));
     }
 
@@ -56,7 +56,7 @@ public class Ia {
         // à définir
         //return choisirActionRandom(partie, estJack);
 
-        List<Action> actionsPossibles = partie.getActionsPossibles();
+        List<Action> actionsPossibles = partie.actions.getActionsPossibles();
         Action actionChoisie = null;
         int maxGagant = -8000;
         for(Action action : actionsPossibles){

@@ -57,6 +57,14 @@ public class District {
         }
     }
 
+    public void reinitialiserFlagsRotation() {
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                grille[i][j].setADejaPivoteTour(false);
+            }
+        }
+    }
+
     public List<Personnage> personnagesVisiblesParDetective(Detective detective){
         List<Personnage> personnagesVisibles = new ArrayList<>();
         Quartier premierQuartier = get(detective.getQx(), detective.getQy());

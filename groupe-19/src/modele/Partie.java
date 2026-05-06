@@ -19,12 +19,13 @@ public class Partie {
     }
 
     public District district;
+    public final PartieActions actions;
     public List<JetonAction> jetonsAction;
     public List<CarteAlibi> cartesAlibiPioche;
     public List<Detective> detectives;
     public List<Personnage> suspects;
-    private Joueur joueurCourant;
-    private Personnage identiteJack;
+    public Joueur joueurCourant;
+    public Personnage identiteJack;
     public int sabliersDeJack;
     private final int MAX_SABLIER = 6;
     private Joueur gagnant = null;
@@ -39,7 +40,7 @@ public class Partie {
 
     public Partie(){
         district = new District();
-
+        actions = new PartieActions(this);
         // Création des listes
         jetonsAction = new ArrayList<>();
         cartesAlibiPioche = new ArrayList<>();
@@ -51,81 +52,9 @@ public class Partie {
         PartieInit.initialiserCartes(this);
         PartieInit.initialiserDetectives(this);
         PartieInit.initialiserSuspects(this);
+        PartieInit.initialiserIdentiteJack(this);
 
-        initialiserIdentiteJack();
         tourSuivant();
-    }
-
-    public void initialiserIdentiteJack(){
-        identiteJack = piocherCarteAlibi().getPersonnage();
-        System.out.println("Mr Jack est "+ identiteJack.nom);
-    }
-
-    // -------------------------------------------------------------------------
-    // Méthodes pour réaliser les actions au niveau du modèle
-    // -------------------------------------------------------------------------
-    public void jouerActionDeplacerDetective(Detective detective, int pas) {
-        detective.deplacer(pas);
-        System.out.println(detective.getType() + "avance de" + pas);
-        apresAction();
-    }
-
-    public void jouerActionJoker(Detective detective) {
-        if (joueurCourant == Joueur.ENQUETEUR) {
-            jouerActionDeplacerDetective(detective, 1);
-        }
-        else {
-            if (detective == null) {
-                System.out.println("Mr. Jack choisit de ne déplacer aucun détective.");
-            } else {
-                jouerActionDeplacerDetective(detective, 1);
-            }
-        }
-        verifFinDePartie();
-        if(isPartieTerminee()) return;
-        apresAction();
-    }
-
-    public void jouerActionRotationQuartier(int x, int y, int quarts) {
-        Quartier q = district.get(x, y);
-        if (q.getADejaPivoteTour()) {
-            System.out.println("INTERDIT");
-            return;
-        }
-        q.pivoter(quarts);
-        q.setADejaPivoteTour(true);
-        System.out.println("Quartier pivoté");
-        apresAction();
-    }
-
-    public void jouerActionEchange(int x1, int y1, int x2, int y2) {
-        district.echanger(x1, y1, x2, y2);
-        System.out.println("Échange");
-        apresAction();
-    }
-
-    public void jouerActionAlibi(){
-        CarteAlibi cartePiochee = piocherCarteAlibi();
-        if (cartePiochee == null) return;
-        System.out.println("Carte alibi piochée:" + cartePiochee.getPersonnage());
-        if (joueurCourant==Joueur.JACK){
-            sabliersDeJack += cartePiochee.getSabliers();
-        } else {
-            suspects.remove(cartePiochee.getPersonnage());
-            district.innocenter(cartePiochee.getPersonnage());
-        }
-        apresAction();
-    }
-    // -------------------------------------------------------------------------
-    // Fin des méthodes pour réaliser les actions au niveau du modèle
-    // -------------------------------------------------------------------------
-
-    private void reinitialiserFlagsRotation() {
-        for (int x = 0; x < 3; x++) {
-            for (int y = 0; y < 3; y++) {
-                district.get(x, y).setADejaPivoteTour(false);
-            }
-        }
     }
 
     public void appelATemoin(){
@@ -154,11 +83,6 @@ public class Partie {
         if(!isPartieTerminee()) tourSuivant();
     }
 
-    public CarteAlibi piocherCarteAlibi(){
-        if (cartesAlibiPioche.isEmpty()) return null;
-        return cartesAlibiPioche.remove(0);
-    }
-
     public void changerJoueur() {
         joueurCourant = (joueurCourant == Joueur.JACK) ? Joueur.ENQUETEUR : Joueur.JACK;
     }
@@ -182,7 +106,7 @@ public class Partie {
     public void tourSuivant(){
         if(isPartieTerminee()) return;
         numeroTour++;
-        reinitialiserFlagsRotation();
+        district.reinitialiserFlagsRotation();
         totalActionsJouees = 0;
         if(numeroTour % 2 != 0){
             for(JetonAction j : jetonsAction){
@@ -197,20 +121,6 @@ public class Partie {
             }
             joueurCourant = Joueur.JACK;
         }
-    }
-
-    public List<JetonAction> getJetonsActions(){;
-        return jetonsAction;
-    }
-
-    public List<Action> getActionsPossibles(){
-        List<Action> actionsPossibles = new ArrayList<>();
-        for(JetonAction j : jetonsAction){
-            if(!j.isJouee()){
-                actionsPossibles.add(j.getActionVisible());
-            }
-        }
-        return actionsPossibles;
     }
 
     /**
