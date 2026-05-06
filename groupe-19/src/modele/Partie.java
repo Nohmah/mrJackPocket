@@ -55,22 +55,69 @@ public class Partie {
         System.out.println("Mr Jack est "+ identiteJack.nom);
     }
 
-    /**Méthode pour réaliser les actions au niveau du modele*/
-    public void jouerAction(Action action){
-        if (action==Action.ALIBI){
-            CarteAlibi cartePiochee = piocherCarteAlibi();
-            if (cartePiochee == null) return;
-            if (joueurCourant==Joueur.JACK){
-                sabliersDeJack += cartePiochee.getSabliers();
+    // -------------------------------------------------------------------------
+    // Méthodes pour réaliser les actions au niveau du modèle
+    // -------------------------------------------------------------------------
+    public void jouerActionDeplacerDetective(Detective detective, int pas) {
+        detective.deplacer(pas);
+        System.out.println(detective.getType() + "avance de" + pas);
+        apresAction();
+    }
+
+    public void jouerActionJoker(Detective detective) {
+        if (joueurCourant == Joueur.ENQUETEUR) {
+            jouerActionDeplacerDetective(detective, 1);
+        }
+        else {
+            if (detective == null) {
+                System.out.println("Mr. Jack choisit de ne déplacer aucun détective.");
             } else {
-                suspects.remove(cartePiochee.getPersonnage());
-                district.innocenter(cartePiochee.getPersonnage());
-                //Trouver le quartier qui a ce personnage et si ça n'est pas déjà fait, le retourner
-                // (à l'aide d'une nouvelle méthode de District)
-                //Il faut repaint
+                jouerActionDeplacerDetective(detective, 1);
             }
         }
         apresAction();
+    }
+
+    public void jouerActionRotationQuartier(int x, int y, int quarts) {
+        Quartier q = district.get(x, y);
+        if (q.getADejaPivoteTour()) {
+            System.out.println("INTERDIT");
+            return;
+        }
+        q.pivoter(quarts);
+        q.setADejaPivoteTour(true);
+        System.out.println("Quartier pivoté");
+        apresAction();
+    }
+
+    public void jouerActionEchange(int x1, int y1, int x2, int y2) {
+        district.echanger(x1, y1, x2, y2);
+        System.out.println("Échange");
+        apresAction();
+    }
+
+    public void jouerActionAlibi(){
+        CarteAlibi cartePiochee = piocherCarteAlibi();
+        if (cartePiochee == null) return;
+        System.out.println("Carte alibi piochée:" + cartePiochee.getPersonnage());
+        if (joueurCourant==Joueur.JACK){
+            sabliersDeJack += cartePiochee.getSabliers();
+        } else {
+            suspects.remove(cartePiochee.getPersonnage());
+            district.innocenter(cartePiochee.getPersonnage());
+        }
+        apresAction();
+    }
+    // -------------------------------------------------------------------------
+    // Fin des méthodes pour réaliser les actions au niveau du modèle
+    // -------------------------------------------------------------------------
+
+    private void reinitialiserFlagsRotation() {
+        for (int x = 0; x < 3; x++) {
+            for (int y = 0; y < 3; y++) {
+                district.get(x, y).setADejaPivoteTour(false);
+            }
+        }
     }
 
     public void appelATemoin(){
@@ -153,6 +200,7 @@ public class Partie {
 
     public void tourSuivant(){
         numeroTour++;
+        reinitialiserFlagsRotation();
         totalActionsJouees = 0;
         if(numeroTour % 2 != 0){
             for(JetonAction j : jetonsAction){

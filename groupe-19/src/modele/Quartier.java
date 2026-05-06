@@ -15,14 +15,20 @@ public class Quartier {
     private final Personnage personnage;
     private Orientation orientationMur;
     private Face face;
+    private boolean aDejaPivoteTour;
 
     public Quartier(Personnage perso, Orientation mur){
         personnage = perso;
         orientationMur = mur;
         face = Face.SUSPECT;
+        aDejaPivoteTour = false;
     }
 
     // ---- Set/Get ----
+    public boolean getADejaPivoteTour(){
+        return aDejaPivoteTour;
+    }
+
     public Personnage getPersonnage(){
         return this.personnage;
     }
@@ -43,5 +49,9 @@ public class Quartier {
 
     public void innocenter(){
         face = Face.VIDE;
+    }
+
+    public void setADejaPivoteTour(boolean value) {
+        aDejaPivoteTour = value;
     }
 }
