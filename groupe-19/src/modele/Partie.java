@@ -19,10 +19,10 @@ public class Partie {
     }
 
     public District district;
-    private List<JetonAction> jetonsAction;
-    private List<CarteAlibi> cartesAlibiPioche;
-    private List<Detective> detectives;
-    private List<Personnage> suspects;
+    public List<JetonAction> jetonsAction;
+    public List<CarteAlibi> cartesAlibiPioche;
+    public List<Detective> detectives;
+    public List<Personnage> suspects;
     private Joueur joueurCourant;
     private Personnage identiteJack;
     public int sabliersDeJack;
@@ -47,10 +47,10 @@ public class Partie {
         suspects = new ArrayList<>();
 
         // Création et ajout dans les listes des objets
-        initialiserJetons();
-        initialiserCartes();
-        initialiserDetectives();
-        initialiserSuspects();
+        PartieInit.initialiserJetons(this);
+        PartieInit.initialiserCartes(this);
+        PartieInit.initialiserDetectives(this);
+        PartieInit.initialiserSuspects(this);
 
         initialiserIdentiteJack();
         tourSuivant();
@@ -154,36 +154,6 @@ public class Partie {
         if(!isPartieTerminee()) tourSuivant();
     }
 
-    public void initialiserJetons() {
-        jetonsAction.add(JetonAction.creerJeton(Action.ALIBI, Action.HOLMES));
-        jetonsAction.add(JetonAction.creerJeton(Action.TOBY, Action.WATSON));
-        jetonsAction.add(JetonAction.creerJeton(Action.ROTATION, Action.ECHANGE));
-        jetonsAction.add(JetonAction.creerJeton(Action.ROTATION, Action.JOKER));
-    }
-
-    public void initialiserCartes(){
-        cartesAlibiPioche.add(CarteAlibi.creerCarteAlibi(Personnage.NORA_NOIRE, 2));
-        cartesAlibiPioche.add(CarteAlibi.creerCarteAlibi(Personnage.SGT_GOODLEY, 0));
-        cartesAlibiPioche.add(CarteAlibi.creerCarteAlibi(Personnage.JEREMY_BERT, 1));
-        cartesAlibiPioche.add(CarteAlibi.creerCarteAlibi(Personnage.WILLIAM_GULL, 1));
-        cartesAlibiPioche.add(CarteAlibi.creerCarteAlibi(Personnage.MISS_STEALTHY, 1));
-        cartesAlibiPioche.add(CarteAlibi.creerCarteAlibi(Personnage.JOHN_SMITH, 1));
-        cartesAlibiPioche.add(CarteAlibi.creerCarteAlibi(Personnage.INSPECTEUR_LESTRADE, 0));
-        cartesAlibiPioche.add(CarteAlibi.creerCarteAlibi(Personnage.JOHN_PIZER, 1));
-        cartesAlibiPioche.add(CarteAlibi.creerCarteAlibi(Personnage.JOSEPH_LANE, 1));
-        Collections.shuffle(cartesAlibiPioche);
-    }
-
-    public void initialiserDetectives(){
-        detectives.add(Detective.creerDetective(Detective.Type.HOLMES, 11));
-        detectives.add(Detective.creerDetective(Detective.Type.WATSON, 3));
-        detectives.add(Detective.creerDetective(Detective.Type.TOBY, 7));
-    }
-
-    public void initialiserSuspects(){
-        suspects.addAll(Arrays.asList(Personnage.values()));
-    }
-
     public CarteAlibi piocherCarteAlibi(){
         if (cartesAlibiPioche.isEmpty()) return null;
         return cartesAlibiPioche.remove(0);
@@ -256,22 +226,17 @@ public class Partie {
             verifFinCoursePoursuite();
         } else {
             //Si les deux camps atteignent leur but en même temps, on
-            if((suspects.size() == 1 && suspects.contains(identiteJack))
-                    && sabliersDeJack >= MAX_SABLIER){
+            if((suspects.size() == 1) && sabliersDeJack >= MAX_SABLIER){
                 coursePoursuiteActive = true;
-                System.out.println("Début de course poursuite");
-                return;
+                System.out.println("Début de course poursuite !!!");
             }else if(suspects.size() == 1){
                 gagnant = Joueur.ENQUETEUR;
                 System.out.println("----- Victoire des Détectives ! -----");
-                return;
             }else if(sabliersDeJack >= MAX_SABLIER){
                 gagnant = Joueur.JACK;
                 System.out.println("----- Victoire de Jack ! -----");
-                return;
             }
         }
-        return;
     }
 
     public void verifFinCoursePoursuite(){
@@ -283,7 +248,6 @@ public class Partie {
         if(numeroTour >= MAX_TOUR){
                 gagnant = Joueur.JACK;
                 System.out.println("Jack à pris la fuite.\n ----- Victoire de Jack -----\n");
-                return;
         }
     }
 
