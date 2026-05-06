@@ -26,10 +26,16 @@ public class Partie {
     private Joueur joueurCourant;
     private Personnage identiteJack;
     public int sabliersDeJack;
-    public int numeroTour = 0;
+    private final int MAX_SABLIER = 6;
+    private Joueur gagnant = null;
+    private boolean coursePoursuiteActive = false;
 
     //Suivi de tour
+    private final int MAX_TOUR = 8;
+    public int numeroTour = 0;
     private int totalActionsJouees;
+    private boolean jackVisibleCeTour;
+
 
     public Partie(){
         district = new District();
@@ -75,6 +81,8 @@ public class Partie {
                 jouerActionDeplacerDetective(detective, 1);
             }
         }
+        verifFinDePartie();
+        if(isPartieTerminee()) return;
         apresAction();
     }
 
@@ -130,8 +138,10 @@ public class Partie {
 
         if(personnagesVisibles.contains(identiteJack)){
             suspects.retainAll(personnagesVisibles);
+            jackVisibleCeTour = true;
             // L'enquêteur prive Jack du sablier du tour
         } else {
+            jackVisibleCeTour = false;
             sabliersDeJack ++; // Jack gagne le sablier du tour
             suspects.removeAll(personnagesVisibles);
         }
@@ -140,7 +150,8 @@ public class Partie {
         for(Personnage p : avantAppel){
             district.innocenter(p);
         }
-        tourSuivant();
+        verifFinDePartie();
+        if(!isPartieTerminee()) tourSuivant();
     }
 
     public void initialiserJetons() {
@@ -199,6 +210,7 @@ public class Partie {
     }
 
     public void tourSuivant(){
+        if(isPartieTerminee()) return;
         numeroTour++;
         reinitialiserFlagsRotation();
         totalActionsJouees = 0;
@@ -230,4 +242,57 @@ public class Partie {
         }
         return actionsPossibles;
     }
+
+    /**
+     *
+     * Logique de fin de partie.*
+     *
+     */
+
+    public void verifFinDePartie(){
+        if(gagnant != null) return;
+        //En cas de fin de course poursuite, on vérifie si Jack a été trouvé ou non.
+        if(coursePoursuiteActive){
+            verifFinCoursePoursuite();
+        } else {
+            //Si les deux camps atteignent leur but en même temps, on
+            if((suspects.size() == 1 && suspects.contains(identiteJack))
+                    && sabliersDeJack >= MAX_SABLIER){
+                coursePoursuiteActive = true;
+                System.out.println("Début de course poursuite");
+                return;
+            }else if(suspects.size() == 1){
+                gagnant = Joueur.ENQUETEUR;
+                System.out.println("----- Victoire des Détectives ! -----");
+                return;
+            }else if(sabliersDeJack >= MAX_SABLIER){
+                gagnant = Joueur.JACK;
+                System.out.println("----- Victoire de Jack ! -----");
+                return;
+            }
+        }
+        return;
+    }
+
+    public void verifFinCoursePoursuite(){
+        if(jackVisibleCeTour){
+            gagnant = Joueur.ENQUETEUR;
+            System.out.println("Jack à été trouvé.\n ----- Victoire des Détectives -----\n");
+            return;
+        }
+        if(numeroTour >= MAX_TOUR){
+                gagnant = Joueur.JACK;
+                System.out.println("Jack à pris la fuite.\n ----- Victoire de Jack -----\n");
+                return;
+        }
+    }
+
+    public boolean isPartieTerminee(){
+        return gagnant != null;
+    }
+
+    public Joueur getGagnant(){
+        return gagnant;
+    }
+
 }
