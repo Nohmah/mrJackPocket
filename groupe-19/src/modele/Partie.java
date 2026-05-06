@@ -166,4 +166,16 @@ public class Partie {
             joueurCourant = Joueur.JACK;
         }
     }
+
+    public List<Action> getActionsPossibles(){
+        List<Action> actionsPossibles = new ArrayList<>();
+        for(JetonAction j : jetonsAction){
+            if(!j.isJouee()){
+                actionsPossibles.add(j.getActionVisible());
+            }
+        }
+        return actionsPossibles;
+    }
+
+    
 }
