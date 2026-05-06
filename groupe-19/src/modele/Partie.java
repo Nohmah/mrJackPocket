@@ -28,6 +28,9 @@ public class Partie {
     public int sabliersDeJack;
     public int numeroTour;
 
+    //Suivi de tour
+    private int totalActionsJouees;
+
     public Partie(){
         district = new District();
 
@@ -68,14 +71,29 @@ public class Partie {
                 //Il faut repaint
             }
         }
+        apresAction();
     }
 
-    public boolean appelATemoin(){
-        List<Personnage> personnagesVisibles = new ArrayList<>();
-        for (int i=0; i<3; i++){
-            personnagesVisibles.addAll(district.personnagesVisiblesParDetective(detectives.get(i)));
+    public void appelATemoin(){
+        HashSet<Personnage> personnagesVisibles = new HashSet<>();
+        personnagesVisibles.addAll(district.personnagesVisiblesParDetective(detectives.get(0)));
+        personnagesVisibles.addAll(district.personnagesVisiblesParDetective(detectives.get(1)));
+        personnagesVisibles.addAll(district.personnagesVisiblesParDetective(detectives.get(2)));
+
+        List<Personnage> avantAppel = new ArrayList<>(suspects);
+
+        if(personnagesVisibles.contains(identiteJack)){
+            suspects.retainAll(personnagesVisibles);
+        } else {
+            sabliersDeJack ++;
+            suspects.removeAll(personnagesVisibles);
         }
-        return personnagesVisibles.contains(identiteJack);
+        //Apres réduction des suspects, on innocente les supprimés.
+        avantAppel.removeAll(suspects);
+        for(Personnage p : avantAppel){
+            district.innocenter(p);
+        }
+        tourSuivant();
     }
 
     public void initialiserJetons() {
@@ -115,5 +133,37 @@ public class Partie {
 
     public void changerJoueur() {
         joueurCourant = (joueurCourant == Joueur.JACK) ? Joueur.ENQUETEUR : Joueur.JACK;
+    }
+
+    public void apresAction(){
+        totalActionsJouees++;
+
+        switch(totalActionsJouees){
+            case 1, 3:
+                changerJoueur();
+                break;
+            case 4:
+                //appelATemoin();
+                break;
+            default:
+                break;
+
+        }
+    }
+
+    public void tourSuivant(){
+        numeroTour++;
+        totalActionsJouees = 0;
+        if(numeroTour % 2 != 0){
+            for(JetonAction j : jetonsAction){
+                j.lancer();
+            }
+            joueurCourant = Joueur.ENQUETEUR;
+        } else {
+            for(JetonAction j : jetonsAction){
+                j.retourner();
+            }
+            joueurCourant = Joueur.JACK;
+        }
     }
 }

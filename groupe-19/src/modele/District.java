@@ -50,9 +50,8 @@ public class District {
     public void innocenter(Personnage personnage){
         for (int i=0; i<3; i++){
             for (int j=0; j<3; j++){
-                Quartier q = grille[i][j];
-                if (q.getPersonnage()==personnage){
-                    q.innocenter();
+                if (grille[i][j].getPersonnage() == personnage){
+                    grille[i][j].innocenter();
                 }
             }
         }
