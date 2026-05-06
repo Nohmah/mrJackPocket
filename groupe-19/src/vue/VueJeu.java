@@ -1,9 +1,7 @@
 package src.vue;
 
-import src.modele.District;
-import src.modele.Partie;
-import src.modele.Personnage;
-import src.modele.Quartier;
+import src.modele.*;
+import src.modele.Action;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -14,6 +12,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -59,9 +58,9 @@ public class VueJeu extends JFrame {
     // =========================================================================
 
     /** Face Pile des boules A-D. */
-    private static final String[] BALL_FACE_PILE = { "BallAP", "BallBP", "BallCP", "BallDP" };
+    private static final String[] BALL_FACE_PILE = { "action_alibi", "action_toby", "action_rotation", "action_rotation" };
     /** Face Face des boules A-D. */
-    private static final String[] BALL_FACE_FACE = { "BallAF", "BallBF", "BallCF", "BallDF" };
+    private static final String[] BALL_FACE_FACE = { "action_holmes", "action_watson", "action_echange", "action_joker" };
 
     // =========================================================================
     // Noms de fichiers pour les faces des tours (indicateurs de tour)
@@ -564,6 +563,24 @@ public class VueJeu extends JFrame {
                     BALL_FACE_PILE[i]
             );
         }
+    }
+
+    /**Pour afficher les jetons qui ont étés lancés/retournés*/
+    public void updateJetons(List<JetonAction> jetons) {
+        for (int i = 0; i < 4 && i < actionBalls.length; i++) {
+            Action a = jetons.get(i).getActionVisible();
+            String spriteName = switch (a) {
+                case HOLMES    -> "action_holmes";
+                case WATSON    -> "action_watson";
+                case TOBY      -> "action_toby";
+                case JOKER     -> "action_joker";
+                case ROTATION  -> "action_rotation";
+                case ECHANGE   -> "action_echange";
+                case ALIBI     -> "action_alibi";
+            };
+            actionBalls[i].spriteId = Camera.AddSprite(spriteName);
+        }
+        Camera.Repaint();
     }
 
     private void initTurnIndicators() {

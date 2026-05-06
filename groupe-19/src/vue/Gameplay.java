@@ -1,7 +1,10 @@
 package src.vue;
 
 import src.modele.District;
+import src.modele.JetonAction;
 import src.modele.Partie;
+
+import java.util.List;
 
 /**
  * Gameplay — Pont logique (Mediator).
@@ -94,6 +97,8 @@ public class Gameplay {
 
         controler.setActivePlayerType(playerType);
         vue.updateTurnIndicator(turn);
+        List<JetonAction> jetons = partie.getJetonsActions();
+        vue.updateJetons(jetons); // On met à jour la vue des jetons (apres un lancer ou un retourner)
 
         if ("AI".equals(playerType)) {
             // Lance l'action IA de façon asynchrone pour ne pas bloquer Swing
@@ -123,6 +128,9 @@ public class Gameplay {
     private void endTurn() {
         System.out.println("Gameplay — fin du tour " + currentTurn + " : validation en cours");
 
+        partie.appelATemoin();
+        vue.updateDistrictView(partie.district);
+        vue.updateJetons(partie.getJetonsActions());
         // ENVOI : Transmet la liste des actions du tour à GameEngine pour qu'il
         // les valide officiellement et mette à jour FinalGameState.
         // List<IHMControler.ClickIntent> actions = IntermediaryGameState.getPendingActions();

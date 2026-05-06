@@ -144,7 +144,7 @@ public class Camera extends JComponent {
         boolean horsX = (pos.x + tail.x < 0) || (pos.x > Camera.taille.x);
         boolean horsY = (pos.y + tail.y < 0) || (pos.y > Camera.taille.y);
         boolean visible = !horsX && !horsY;
-        System.out.println("In camera : " + visible);
+        //System.out.println("In camera : " + visible);
         return visible;
     }
     // T

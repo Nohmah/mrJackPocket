@@ -26,7 +26,7 @@ public class Partie {
     private Joueur joueurCourant;
     private Personnage identiteJack;
     public int sabliersDeJack;
-    public int numeroTour;
+    public int numeroTour = 0;
 
     //Suivi de tour
     private int totalActionsJouees;
@@ -46,14 +46,13 @@ public class Partie {
         initialiserDetectives();
         initialiserSuspects();
 
-        //La suite est à revoir...
         initialiserIdentiteJack();
-        numeroTour = 1;
-        joueurCourant = Joueur.ENQUETEUR;
+        tourSuivant();
     }
 
     public void initialiserIdentiteJack(){
         identiteJack = piocherCarteAlibi().getPersonnage();
+        System.out.println("Mr Jack est "+ identiteJack.nom);
     }
 
     /**Méthode pour réaliser les actions au niveau du modele*/
@@ -84,12 +83,13 @@ public class Partie {
 
         if(personnagesVisibles.contains(identiteJack)){
             suspects.retainAll(personnagesVisibles);
+            // L'enquêteur prive Jack du sablier du tour
         } else {
-            sabliersDeJack ++;
+            sabliersDeJack ++; // Jack gagne le sablier du tour
             suspects.removeAll(personnagesVisibles);
         }
-        //Apres réduction des suspects, on innocente les supprimés.
-        avantAppel.removeAll(suspects);
+        //Apres réduction de suspects, on innocente les suspects supprimés.
+        avantAppel.removeAll(suspects); // Obtention des gens plus suspects
         for(Personnage p : avantAppel){
             district.innocenter(p);
         }
@@ -157,13 +157,19 @@ public class Partie {
         if(numeroTour % 2 != 0){
             for(JetonAction j : jetonsAction){
                 j.lancer();
+                System.out.println("Jeton lancé sur : " + j.getActionVisible());
             }
             joueurCourant = Joueur.ENQUETEUR;
         } else {
             for(JetonAction j : jetonsAction){
                 j.retourner();
+                System.out.println("Jeton retourné sur : " + j.getActionVisible());
             }
             joueurCourant = Joueur.JACK;
         }
+    }
+
+    public List<JetonAction> getJetonsActions(){;
+        return jetonsAction;
     }
 }
