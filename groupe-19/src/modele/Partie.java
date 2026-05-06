@@ -172,4 +172,14 @@ public class Partie {
     public List<JetonAction> getJetonsActions(){;
         return jetonsAction;
     }
+
+    public List<Action> getActionsPossibles(){
+        List<Action> actionsPossibles = new ArrayList<>();
+        for(JetonAction j : jetonsAction){
+            if(!j.isJouee()){
+                actionsPossibles.add(j.getActionVisible());
+            }
+        }
+        return actionsPossibles;
+    }
 }
