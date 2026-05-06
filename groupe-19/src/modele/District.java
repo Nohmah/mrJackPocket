@@ -4,10 +4,10 @@ import java.util.*;
 /**
  * Le District est la grille 3x3 de Quartiers.
  *
- * Coordonées (convention colonne-ligne) :
- *   (0,0) haut-gauche ... (2,0) haut-droite
- *   (0,1) milieu-gauche ... (2,1) milieu-droite
- *   (0,2) bas-gauche ... (2,2) bas-droite
+ * Coordonées (convention ligne-colonne) :
+ *   (0,0) haut-gauche ... (0,2) haut-droite
+ *   (1,0) milieu-gauche ... (1,2) milieu-droite
+ *   (2,0) bas-gauche ... (2,2) bas-droite
  *
  *   Chaque quartier est placé aléatoirement avec une orientation aléatoire.
  *
@@ -26,8 +26,8 @@ public class District {
         Random rng = new Random();
 
         int index = 0;
-        for(int y = 0; y < 3; y++){
-            for(int x = 0; x < 3; x++){
+        for(int x = 0; x < 3; x++){
+            for(int y = 0; y < 3; y++){
                 Orientation orMur = Orientation.CARDINAUX[rng.nextInt(4)];
                 grille[x][y] = new Quartier(personnages.get(index++), orMur);
                 //Pour vérifier si le modele correspond à la vue future
@@ -81,20 +81,20 @@ public class District {
                 int x2 = 0;
                 int y2 = switch (detective.getOrientation()) {
                     case NORD -> {
-                        x2 = x1;
-                        yield y1 + 1;
-                    }
-                    case EST -> {
                         x2 = x1 - 1;
                         yield y1;
                     }
-                    case SUD -> {
+                    case EST -> {
                         x2 = x1;
-                        yield y1 - 1;
+                        yield y1 + 1;
                     }
-                    case OUEST -> {
+                    case SUD -> {
                         x2 = x1 + 1;
                         yield y1;
+                    }
+                    case OUEST -> {
+                        x2 = x1;
+                        yield y1 - 1;
                     }
                     default -> 0;
                 }; //(trop fort IntelliJ)

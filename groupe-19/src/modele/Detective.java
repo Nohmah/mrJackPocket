@@ -7,9 +7,9 @@ package src.modele;
  *
  *              [0]   [1]   [2]
  *
- *      [11]   (0,0) (1,0) (2,0)   [3]
- *      [10]   (0,1) (1,1) (2,1)   [4]
- *       [9]   (0,2) (1,2) (2,2)   [5]
+ *      [11]   (0,0) (0,1) (0,2)   [3]
+ *      [10]   (1,0) (1,1) (1,2)   [4]
+ *       [9]   (2,0) (2,1) (2,2)   [5]
  *
  *              [8]   [7]   [6]
  *
@@ -39,19 +39,19 @@ public class Detective {
      */
     public static final int[][] CIRCUIT = {
             /* 0 */ {0, 0, 0}, // face au quartier 0,0 depuis le NORD.
-            /* 1 */ {1, 0, 0}, // face au quartier 1,0 depuis le NORD.
-            /* 2 */ {2, 0, 0}, // face au quartier 2,0 depuis le NORD.
+            /* 1 */ {0, 1, 0}, // face au quartier 0,1 depuis le NORD.
+            /* 2 */ {0, 2, 0}, // face au quartier 0,2 depuis le NORD.
 
-            /* 3 */ {2, 0, 1}, // face au quartier 2,0 depuis l'EST.
-            /* 4 */ {2, 1, 1}, // face au quartier 2,1 depuis l'EST.
+            /* 3 */ {0, 2, 1}, // face au quartier 0,2 depuis l'EST.
+            /* 4 */ {1, 2, 1}, // face au quartier 1,2 depuis l'EST.
             /* 5 */ {2, 2, 1}, // face au quartier 2,2 depuis l'EST.
 
             /* 6 */ {2, 2, 2}, // face au quartier 2,2 depuis le SUD.
-            /* 7 */ {1, 2, 2}, // face au quartier 1,2 depuis le SUD.
-            /* 8 */ {0, 2, 2}, // face au quartier 0,2 depuis le SUD.
+            /* 7 */ {2, 1, 2}, // face au quartier 2,1 depuis le SUD.
+            /* 8 */ {2, 0, 2}, // face au quartier 2,0 depuis le SUD.
 
-            /* 9 */ {0, 2, 3}, // face au quartier 0,2 depuis le OUEST.
-            /*10 */ {0, 1, 3}, // face au quartier 0,1 depuis le OUEST.
+            /* 9 */ {2, 0, 3}, // face au quartier 2,0 depuis le OUEST.
+            /*10 */ {1, 0, 3}, // face au quartier 1,0 depuis le OUEST.
             /*11 */ {0, 0, 3}, // face au quartier 0,0 depuis le OUEST.
     };
 
@@ -80,18 +80,18 @@ public class Detective {
     public void deplacer(int pas){
         position = (position + pas) % NB_POSITIONS;
     }
-    /** Renvoi la coordonées x du quartier observé par le détective */
+    /** Renvoi la ligne du quartier observé par le détective */
     public int getQx(){
         return CIRCUIT[position][0];
     }
 
-    /** Renvoi la coordonnées y du quartier observé par le détective */
+    /** Renvoi la colonne du quartier observé par le détective */
     public int getQy(){
         return CIRCUIT[position][1];
     }
 
     /** Renvoi l'orientation où se trouve le détective */
     public Orientation getOrientation(){
-        return Orientation.values()[CIRCUIT[position][2]];
+        return Orientation.CARDINAUX[CIRCUIT[position][2]];
     }
 }

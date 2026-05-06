@@ -461,7 +461,7 @@ public class VueJeu extends JFrame {
     public void updateDistrictView(District district) {
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                Quartier q = district.get(j, i);
+                Quartier q = district.get(i, j);
                 if (q.estSuspect()) {
                     String spriteName = q.getPersonnage().nom.replace(" ", "");
                     tileComponents[i][j].spriteId = Camera.AddSprite(spriteName);
