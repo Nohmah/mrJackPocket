@@ -81,20 +81,20 @@ public class District {
                 int x2 = 0;
                 int y2 = switch (detective.getOrientation()) {
                     case NORD -> {
-                        x2 = x1 - 1;
+                        x2 = x1 + 1;
                         yield y1;
                     }
                     case EST -> {
                         x2 = x1;
-                        yield y1 + 1;
+                        yield y1 - 1;
                     }
                     case SUD -> {
-                        x2 = x1 + 1;
+                        x2 = x1 - 1;
                         yield y1;
                     }
                     case OUEST -> {
                         x2 = x1;
-                        yield y1 - 1;
+                        yield y1 + 1;
                     }
                     default -> 0;
                 }; //(trop fort IntelliJ)
@@ -110,20 +110,20 @@ public class District {
                         int x3 = 0;
                         int y3 = switch (detective.getOrientation()) {
                             case NORD -> {
-                                x3 = x2;
-                                yield y2 + 1;
-                            }
-                            case EST -> {
-                                x3 = x2 - 1;
+                                x3 = x2 + 1;
                                 yield y2;
                             }
-                            case SUD -> {
+                            case EST -> {
                                 x3 = x2;
                                 yield y2 - 1;
                             }
-                            case OUEST -> {
-                                x3 = x2 + 1;
+                            case SUD -> {
+                                x3 = x2 - 1;
                                 yield y2;
+                            }
+                            case OUEST -> {
+                                x3 = x2;
+                                yield y2 + 1;
                             }
                             default -> 0;
                         };
@@ -136,6 +136,7 @@ public class District {
                 }
             }
         }
+        System.out.println(detective.getType() + " voit : " + personnagesVisibles);
         return personnagesVisibles;
     }
 }
