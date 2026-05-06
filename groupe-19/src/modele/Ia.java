@@ -11,6 +11,15 @@ public class Ia {
         difficulte = 0;
     }
 
+    public Ia(int difficulte){
+        r = new Random();
+        this.difficulte = difficulte;
+    }
+
+    public void setDifficulte(int difficulte){
+        this.difficulte = difficulte;
+    }
+
     public Action choisirAction(Partie partie, boolean estJack){
         switch (difficulte){
             case 0:
@@ -49,7 +58,7 @@ public class Ia {
 
         List<Action> actionsPossibles = partie.getActionsPossibles();
         Action actionChoisie = null;
-        int maxGagant = Integer.MIN_VALUE;
+        int maxGagant = -8000;
         for(Action action : actionsPossibles){
             if(estJack){
                 if(GagnantJack(partie) > maxGagant){
