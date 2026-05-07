@@ -73,9 +73,9 @@ public class PartieActions {
         partie.apresAction();
     }
 
-    public void rotationQuartier(int x, int y, int quarts) {
-        JetonAction jeton = getSiJetonDisponible(Action.ROTATION);
-        if (jeton==null){
+    public void rotationQuartier(int JetonIndex, int x, int y, int quarts) {
+        JetonAction jeton = partie.jetonsAction.get(JetonIndex);
+        if (jeton.isJouee()){
             return;
         }
         Quartier q = partie.district.get(x, y);

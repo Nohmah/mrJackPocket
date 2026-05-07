@@ -180,7 +180,10 @@ public class IHMControler implements MouseListener, KeyListener {
         int row = (int) ((worldPos.y - BOARD_WORLD_ORIGIN.y) / TILE_WORLD_SIZE);
 
         // Ignore les clics hors du plateau 3x3
-        if (col < 0 || col > 2 || row < 0 || row > 2) return;
+        if (col < 0 || col > 2 || row < 0 || row > 2){
+            gameplay.clicHorsDistrict();
+            return;
+        }
 
         boolean isRight = (e.getButton() == MouseEvent.BUTTON3);
         pendingIntent = new ClickIntent(row, col, worldPos, isRight);

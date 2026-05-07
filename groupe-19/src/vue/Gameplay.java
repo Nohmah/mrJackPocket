@@ -36,7 +36,10 @@ public class Gameplay {
 
     private boolean waitingForEchange = false;
     private int line = -1, column = -1;
-
+    private boolean rotationMode = false;
+    private int rotationRow = -1, rotationCol = -1;
+    private int rotationsAccumulees = 0;
+    private int rotationJetonIndex;
     // -------------------------------------------------------------------------
     // Constructeur
     // -------------------------------------------------------------------------
@@ -191,6 +194,32 @@ public class Gameplay {
         System.out.println("Action échange de tuiles : cliquez sur la première tuile");
     }
 
+    /**Pour faire des rotations d'une tuile*/
+    public void startRotationMode(int jetonIndex) {
+        rotationMode = true;
+        rotationJetonIndex = jetonIndex;
+        System.out.println("Mode rotation, cliquez sur une tuile pour la faire pivoter autant de fois que vous voulez. Tout clic hors de la tuile sort du mode rotation.");
+    }
+
+    public void exitRotationMode() {
+        // Appliquer la rotation au modèle
+        System.out.println("quarts:" + rotationsAccumulees);
+        System.out.println("position modifié dans le modele: (" + rotationRow + rotationCol + ")" );
+        partie.actions.rotationQuartier(rotationJetonIndex, rotationRow, rotationCol, rotationsAccumulees);
+        rotationMode = false;
+        rotationRow = -1;
+        rotationCol = -1;
+        rotationsAccumulees = 0;
+        // Pour vérifier si la tuile tourné au niveau de la vue correspond à ce qui vient de se passer au niveau du modèle,
+        // on peut simplement appeler updateDistrictView ici !!
+        vue.updateDistrictView(partie.district);
+        System.out.println("Mode rotation terminé.");
+    }
+
+    public void clicHorsDistrict() {
+        if (rotationMode) exitRotationMode();
+    }
+
     /**
      * Gère la fin de partie.
      */
@@ -277,6 +306,24 @@ public class Gameplay {
                 waitingForEchange = false;
                 //On update la vue pour refléter le changement
                 vue.updateDistrictView(partie.district);
+            }
+        } else if (rotationMode) {
+            // Premier clic ?
+            if (rotationRow == -1) {
+                rotationsAccumulees++;
+                rotationRow = row;
+                rotationCol = col;
+                vue.rotateTile(row, col, 90);
+                System.out.println("Tuile sélectionnée pour rotation visuelle");
+            }
+            // Clic sur la même tuile ?
+            else if (row == rotationRow && col == rotationCol) {
+                rotationsAccumulees = (rotationsAccumulees + 1) % 4;
+                vue.rotateTile(row, col, 90);
+                System.out.println("Rotation visuelle");
+            }
+            else {
+                exitRotationMode();
             }
         }
     }

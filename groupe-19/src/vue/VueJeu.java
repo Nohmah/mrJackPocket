@@ -989,6 +989,7 @@ public class VueJeu extends JFrame {
                     case "action_joker":
                         break;
                     case "action_rotation":
+                        gameplay.startRotationMode(i);
                         break;
                     case "action_echange":
                         gameplay.startEchange();

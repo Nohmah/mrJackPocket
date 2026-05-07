@@ -223,7 +223,9 @@ public class Partie {
                 // Logique pour l'action JOKER
                 break;
             case ROTATION:
-                actions.rotationQuartier(coupIa.para1 / 3, coupIa.para1 % 3, coupIa.para2);
+                //rotationQuartier prend un int maintenant, qui indique quel jeton rotation a été choisi (car il peut y
+                // avoir 2 jetons face rotation en même temps au cours d'un tour. (Bone chance)
+                //actions.rotationQuartier(coupIa.para1 / 3, coupIa.para1 % 3, coupIa.para2);
                 // Logique pour l'action ROTATION
                 break;
             case ECHANGE:
