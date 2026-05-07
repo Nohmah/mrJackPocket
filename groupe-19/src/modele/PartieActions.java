@@ -76,11 +76,12 @@ public class PartieActions {
     public void rotationQuartier(int JetonIndex, int x, int y, int quarts) {
         JetonAction jeton = partie.jetonsAction.get(JetonIndex);
         if (jeton.isJouee()){
+            System.out.println("JETON ACTION DEJA JOUE");
             return;
         }
         Quartier q = partie.district.get(x, y);
         if (q.getADejaPivoteTour()) {
-            System.out.println("INTERDIT");
+            System.out.println("Il est interdit de pivoter un quartier déjà pivoté dans le même tour de jeu");
             return;
         }
         q.pivoter(quarts);

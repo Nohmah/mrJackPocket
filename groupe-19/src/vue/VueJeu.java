@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.swing.JOptionPane;
 
 /**
  * VueJeu — Fenêtre principale du jeu (1200×800).
@@ -214,9 +215,9 @@ public class VueJeu extends JFrame {
         initComponents();
         initUIOverlay();
         this.gameplay = new Gameplay(this, partie);
-        replaceOuterBall(8, 1);
-        replaceOuterBall(12, 2);
-        replaceOuterBall(4, 3);
+        replaceOuterBall(12, 1);
+        replaceOuterBall(4, 2);
+        replaceOuterBall(8, 3);
     }
 
 
@@ -979,14 +980,77 @@ public class VueJeu extends JFrame {
                 // Utilise l'état interne synchronisé plutôt que les tableaux statiques
                 String nomAction = actionBallCurrentSprite[i];
                 System.out.println("J'ai cliqué sur " + nomAction);
+                String input;
+                int pas;
                 switch (nomAction) {
                     case "action_holmes":
+                        input = JOptionPane.showInputDialog(this, "Déplacer Holmes de combien de pas ? (1 ou 2)");
+                        pas = Integer.parseInt(input);
+                        if (pas != 1 && pas != 2) pas = 1;
+                        // Récupérer le détective Holmes (premier de la liste)
+                        Detective holmes = gameplay.partie.detectives.get(0);
+                        gameplay.partie.actions.deplacerDetective(holmes, pas);
+                        updateDetectivesView();
                         break;
                     case "action_watson":
+                        input = JOptionPane.showInputDialog(this, "Déplacer Watson de combien de pas ? (1 ou 2)");
+                        pas = Integer.parseInt(input);
+                        if (pas != 1 && pas != 2) pas = 1;
+                        Detective watson = gameplay.partie.detectives.get(1);
+                        gameplay.partie.actions.deplacerDetective(watson, pas);
+                        updateDetectivesView();
                         break;
                     case "action_toby":
+                        input = JOptionPane.showInputDialog(this, "Déplacer le chien tout mignon Toby de combien de pas ? (1 ou 2)");
+                        pas = Integer.parseInt(input);
+                        if (pas != 1 && pas != 2) pas = 1;
+                        Detective toby = gameplay.partie.detectives.get(2);
+                        gameplay.partie.actions.deplacerDetective(toby, pas);
+                        updateDetectivesView();
                         break;
                     case "action_joker":
+                        Partie.Joueur joueur = gameplay.partie.joueurCourant;
+                        if (joueur == Partie.Joueur.ENQUETEUR) {
+                            String[] options = {"Holmes", "Watson", "Toby"};
+                            int choix = JOptionPane.showOptionDialog(this,
+                                    "Quel détective voulez-vous déplacer d’un pas ?",
+                                    "Action Joker",
+                                    JOptionPane.DEFAULT_OPTION,
+                                    JOptionPane.QUESTION_MESSAGE,
+                                    null,
+                                    options,
+                                    options[0]);
+                            if (choix < 0) break;
+                            Detective detective = switch (choix) {
+                                case 0 -> gameplay.partie.detectives.get(0);
+                                case 1 -> gameplay.partie.detectives.get(1);
+                                case 2 -> gameplay.partie.detectives.get(2);
+                                default -> null;
+                            };
+                            if (detective != null) {
+                                gameplay.partie.actions.joker(detective);
+                                updateDetectivesView();
+                            }
+                        } else { // Mr. Jack
+                            String[] options = {"Holmes", "Watson", "Toby", "Ne rien déplacer"};
+                            int choix = JOptionPane.showOptionDialog(this,
+                                    "Choisissez une action (déplacer un détective d'un pas ou rien)",
+                                    "Action Joker - Mr. Jack",
+                                    JOptionPane.DEFAULT_OPTION,
+                                    JOptionPane.QUESTION_MESSAGE,
+                                    null,
+                                    options,
+                                    options[0]);
+                            if (choix < 0) break;
+                            Detective detective = switch (choix) {
+                                case 0 -> gameplay.partie.detectives.get(0);
+                                case 1 -> gameplay.partie.detectives.get(1);
+                                case 2 -> gameplay.partie.detectives.get(2);
+                                default -> null;
+                            };
+                            gameplay.partie.actions.joker(detective);
+                            updateDetectivesView();
+                        }
                         break;
                     case "action_rotation":
                         gameplay.startRotationMode(i);
@@ -1016,6 +1080,22 @@ public class VueJeu extends JFrame {
                     : new Vector2(1.0, 1.0);
         }
         Camera.Repaint();
+    }
+
+    /**
+     * Met à jour l'affichage des 3 détectives à partir des positions du modèle.
+     */
+    public void updateDetectivesView() {
+        List<Detective> detectives = gameplay.partie.detectives;
+        for (Detective d : detectives) {
+            int position = d.getPosition() + 1;
+            int nom = switch (d.getType()) {
+                case HOLMES -> 1;
+                case WATSON -> 2;
+                case TOBY  -> 3;
+            };
+            replaceOuterBall(position, nom);
+        }
     }
 
     /**

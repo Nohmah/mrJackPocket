@@ -61,6 +61,7 @@ public class Gameplay {
         gameOver = false;
         vue.updateDistrictView(partie.district);
         vue.updateJetons(partie.actions.getJetonsActions());
+        vue.updateDetectivesView();
         vue.updateTurnIndicator(currentTurn);
         vue.updateBackgroundForTurn(currentTurn);
         // Réactiver le bouton "Terminer tour"

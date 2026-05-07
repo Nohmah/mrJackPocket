@@ -149,7 +149,7 @@ public class Partie {
                 //lanceIa();
                 break;
             case 4:
-                appelATemoin();
+                //appelATemoin(); Ne pas faire, en tout cas pour l'instant, car ça court circuite la vue et plus rien ne va...
                 //lanceIa();
                 break;
             default:
@@ -223,8 +223,8 @@ public class Partie {
                 // Logique pour l'action JOKER
                 break;
             case ROTATION:
-                //rotationQuartier prend un int maintenant, qui indique quel jeton rotation a été choisi (car il peut y
-                // avoir 2 jetons face rotation en même temps au cours d'un tour. (Bone chance)
+                //rotationQuartier prend un int maintenant, qui indiquer l'index du jeton action rotation qui a été choisi
+                // (car il peut y avoir 2 jetons face rotation en même temps au cours d'un tour). (Bone chance)
                 //actions.rotationQuartier(coupIa.para1 / 3, coupIa.para1 % 3, coupIa.para2);
                 // Logique pour l'action ROTATION
                 break;
