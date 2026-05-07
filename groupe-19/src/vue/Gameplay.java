@@ -25,7 +25,7 @@ public class Gameplay {
 
     private final VueJeu vue;
     private final IHMControler controler;
-    private Partie partie;
+    public Partie partie;
     /**
      * Numéro du tour courant (1-indexé).
      * La partie comporte typiquement 8 tours (un par boule de tour).
@@ -106,6 +106,7 @@ public class Gameplay {
         // vue.buildBoardComponents(initialGrid);
         District district = partie.district;  // accède au district
         vue.updateDistrictView(district);
+        startTurn(currentTurn);
     }
 
     /**
@@ -115,7 +116,7 @@ public class Gameplay {
      * @param turn Numéro du tour (1-8).
      */
     private void startTurn(int turn) {
-        System.out.println("Gameplay — début du tour " + turn);
+        System.out.println("Gameplay ----------------- début du tour " + turn);
 
         // RÉCEPTION : Demande à IntermediaryGameState quel est le joueur actif
         // pour ce tour et son type (HUMAN / AI).
@@ -155,7 +156,7 @@ public class Gameplay {
     private void endTurn() {
         System.out.println("Gameplay — fin du tour " + currentTurn + " : validation en cours");
         if (currentTurn >= 1 && currentTurn <= 8) vue.switchTurnFace(currentTurn - 1);
-        //partie.appelATemoin();
+        partie.appelATemoin();
         vue.updateDistrictView(partie.district);
         vue.updateJetons(partie.actions.getJetonsActions());
         // ENVOI : Transmet la liste des actions du tour à GameEngine pour qu'il

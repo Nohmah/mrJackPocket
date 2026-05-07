@@ -885,11 +885,11 @@ public class VueJeu extends JFrame {
     System.out.println("VueJeu — Affichage des règles");}
 
     private void onRetourPressed() {
-        switchBallFace(0);
-        switchBallFace(1);
-        switchBallFace(2);
-        switchBallFace(3);
-        swapTiles(new Vector2(0,0),new Vector2(1,0));
+        //switchBallFace(0);
+        //switchBallFace(1);
+        //switchBallFace(2);
+        //switchBallFace(3);
+        //swapTiles(new Vector2(0,0),new Vector2(1,0));
         System.out.println("VueJeu — Retour (non implémenté)");
         // À connecter à une éventuelle navigation entre écrans
     }
@@ -979,6 +979,28 @@ public class VueJeu extends JFrame {
                 // Utilise l'état interne synchronisé plutôt que les tableaux statiques
                 String nomAction = actionBallCurrentSprite[i];
                 System.out.println("J'ai cliqué sur " + nomAction);
+                switch (nomAction) {
+                    case "action_holmes":
+                        break;
+                    case "action_watson":
+                        break;
+                    case "action_toby":
+                        break;
+                    case "action_joker":
+                        break;
+                    case "action_rotation":
+                        break;
+                    case "action_echange":
+                        break;
+                    case "action_alibi":
+                        gameplay.partie.actions.alibi();
+                        updateDistrictView(gameplay.partie.district);
+                        //Ici on pourrait faire quelque chose pour griser le jeton qui a été utilisé
+                        break;
+                    default:
+                        System.out.println("Action inconnue: " + nomAction);
+                        break;
+                }
                 return; // Un seul hit par clic
             }
         }

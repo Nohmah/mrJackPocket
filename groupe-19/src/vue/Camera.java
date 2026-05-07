@@ -92,7 +92,7 @@ public class Camera extends JComponent {
     @Override
     public void paintComponent(Graphics g)
     {
-        System.out.println("Entree dans paintComponent : " + testCounter++);
+        //System.out.println("Entree dans paintComponent : " + testCounter++);
 
         Graphics2D drawable = (Graphics2D) g;
         int width  = getSize().width;
