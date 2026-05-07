@@ -536,9 +536,29 @@ public class VueJeu extends JFrame {
                         baseName = "TileDefault";
                     }
                 }
-                tileBaseNames[i][j] = baseName;
-                tileRotations[i][j] = 0;
-                tileComponents[i][j].spriteId = Camera.AddSprite(baseName);
+                // Si le nom de base change (nouveau personnage), on met à jour le sprite
+                if (!baseName.equals(tileBaseNames[i][j])) {
+                    tileBaseNames[i][j] = baseName;
+                    tileRotations[i][j] = 0;
+                    tileComponents[i][j].spriteId = Camera.AddSprite(baseName);
+                }
+
+                int angle = switch (q.getOrientationMur()) {
+                    case SUD   -> 0;
+                    case EST   -> -90;
+                    case NORD  -> 180;
+                    case OUEST -> 90;
+                    default    -> 0;
+                };
+
+                // Calcul du delta (rotation supplémentaire à appliquer)
+                int angleActuel = tileRotations[i][j];
+                int delta = (angle - angleActuel) % 360;
+                if (delta < 0) delta += 360;
+
+                if (delta != 0) {
+                    rotateTile(i, j, delta);
+                }
             }
         }
         Camera.Repaint();
