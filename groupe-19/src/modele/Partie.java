@@ -65,6 +65,32 @@ public class Partie {
 
         tourSuivant();
     }
+    /**Réinitialise la partie.*/
+    public void reset() {
+        // Réinitialiser les variables
+        gagnant = null;
+        coursePoursuiteActive = false;
+        numeroTour = 0;
+        totalActionsJouees = 0;
+        jackVisibleCeTour = false;
+        sabliersDeJack = 0;
+
+        district = new District();
+
+        // Vider et recréer les listes
+        jetonsAction.clear();
+        cartesAlibiPioche.clear();
+        detectives.clear();
+        suspects.clear();
+
+        // Réinitialisation des listes (comme dans le constructeur)
+        PartieInit.initialiserJetons(this);
+        PartieInit.initialiserCartes(this);
+        PartieInit.initialiserDetectives(this);
+        PartieInit.initialiserSuspects(this);
+        PartieInit.initialiserIdentiteJack(this);
+        tourSuivant();
+    }
 
     public void appelATemoin(){
         HashSet<Personnage> personnagesVisibles = new HashSet<>();

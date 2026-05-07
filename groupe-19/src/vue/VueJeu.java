@@ -856,10 +856,23 @@ public class VueJeu extends JFrame {
     }
 
     private void onNewGamePressed() {
-        rotateTile(0, 0, 90);
         System.out.println("VueJeu — Nouvelle partie");
         // Recrée la partie via Gameplay si nécessaire
-        // gameplay.resetGame();
+        gameplay.resetGame();
+    }
+
+    public void enableValidateButton(boolean enabled) {
+        validateButton.setEnabled(enabled);
+    }
+
+    public void hideGameOverScreen() {
+        for (Component comp : uiOverlay.getComponents()) {
+            if (comp instanceof JLabel && "FIN DE PARTIE".equals(((JLabel) comp).getText())) {
+                uiOverlay.remove(comp);
+                break;
+            }
+        }
+        uiOverlay.repaint();
     }
 
     private void onIAPressed() {

@@ -52,6 +52,20 @@ public class Gameplay {
         initGame();
     }
 
+    public void resetGame() {
+        partie.reset();
+        currentTurn = 1;
+        gameOver = false;
+        vue.updateDistrictView(partie.district);
+        vue.updateJetons(partie.actions.getJetonsActions());
+        vue.updateTurnIndicator(currentTurn);
+        vue.updateBackgroundForTurn(currentTurn);
+        // Réactiver le bouton "Terminer tour"
+        vue.enableValidateButton(true);
+        // Enlever l'écran de fin de partie
+        vue.hideGameOverScreen();
+    }
+
     // -------------------------------------------------------------------------
     // Accesseur (utilisé par VueJeu pour brancher les listeners)
     // -------------------------------------------------------------------------
