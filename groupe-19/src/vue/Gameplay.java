@@ -1,10 +1,7 @@
 package src.vue;
 
 import src.modele.District;
-import src.modele.JetonAction;
 import src.modele.Partie;
-
-import java.util.List;
 
 /**
  * Gameplay — Pont logique (Mediator).
@@ -36,6 +33,9 @@ public class Gameplay {
      * Indique si la partie est terminée.
      */
     private boolean gameOver = false;
+
+    private boolean waitingForEchange = false;
+    private int line = -1, column = -1;
 
     // -------------------------------------------------------------------------
     // Constructeur
@@ -157,7 +157,7 @@ public class Gameplay {
         System.out.println("Gameplay — fin du tour " + currentTurn + " : validation en cours");
         if (currentTurn >= 1 && currentTurn <= 8) vue.switchTurnFace(currentTurn - 1);
         partie.appelATemoin();
-        vue.updateDistrictView(partie.district);
+        //vue.updateDistrictView(partie.district); Normalement, apres chaque action qui peut modifier la vue on aura fait updateDistrictView
         vue.updateJetons(partie.actions.getJetonsActions());
         // ENVOI : Transmet la liste des actions du tour à GameEngine pour qu'il
         // les valide officiellement et mette à jour FinalGameState.
@@ -182,6 +182,13 @@ public class Gameplay {
         } else {
             startTurn(currentTurn);
         }
+    }
+
+    /**Pour echanger 2 tuiles*/
+    public void startEchange() {
+        waitingForEchange = true;
+        line = column = -1;
+        System.out.println("Action échange de tuiles : cliquez sur la première tuile");
     }
 
     /**
@@ -259,5 +266,18 @@ public class Gameplay {
         // (row, col) est un coup légal, afin d'adapter le curseur ou la couleur.
         // boolean legal = IntermediaryGameState.isMoveLegal(row, col);
         // vue.setCellHighlight(row, col, legal);
+        if (waitingForEchange) {
+            if (line == -1) {
+                line = row;
+                column = col;
+                System.out.println("Première tuile sélectionnée : (" + line + " " + column + ")");
+            } else if (line!=row || column!=col){
+                System.out.println("Deuxième tuile sélectionnée : (" + row + " " + col + ")");
+                partie.actions.echange(line, column, row, col);
+                waitingForEchange = false;
+                //On update la vue pour refléter le changement
+                vue.updateDistrictView(partie.district);
+            }
+        }
     }
 }
