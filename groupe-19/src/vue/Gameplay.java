@@ -127,7 +127,7 @@ public class Gameplay {
     private void endTurn() {
         System.out.println("Gameplay — fin du tour " + currentTurn + " : validation en cours");
 
-        partie.appelATemoin();
+        //partie.appelATemoin();
         vue.updateDistrictView(partie.district);
         vue.updateJetons(partie.actions.getJetonsActions());
         // ENVOI : Transmet la liste des actions du tour à GameEngine pour qu'il

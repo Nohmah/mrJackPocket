@@ -95,7 +95,7 @@ public class Partie {
                 changerJoueur();
                 break;
             case 4:
-                //appelATemoin();
+                appelATemoin();
                 break;
             default:
                 break;
