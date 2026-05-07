@@ -161,7 +161,7 @@ public class Gameplay {
         System.out.println("Gameplay — fin du tour " + currentTurn + " : validation en cours");
         if (currentTurn >= 1 && currentTurn <= 8) vue.switchTurnFace(currentTurn - 1);
         partie.appelATemoin();
-        //vue.updateDistrictView(partie.district); Normalement, apres chaque action qui peut modifier la vue on aura fait updateDistrictView
+        vue.updateDistrictView(partie.district); //Non il ne faut pas l'enlever non il ne faut pas l'enlever non il ne faut pas l'enlever
         vue.updateJetons(partie.actions.getJetonsActions());
         // ENVOI : Transmet la liste des actions du tour à GameEngine pour qu'il
         // les valide officiellement et mette à jour FinalGameState.
