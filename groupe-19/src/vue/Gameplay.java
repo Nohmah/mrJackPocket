@@ -88,6 +88,7 @@ public class Gameplay {
      * @param turn Numéro du tour (1-8).
      */
     private void startTurn(int turn) {
+        if (turn != 0) { vue.switchTurnFace(turn - 1); }
         System.out.println("Gameplay — début du tour " + turn);
 
         // RÉCEPTION : Demande à IntermediaryGameState quel est le joueur actif
@@ -97,6 +98,7 @@ public class Gameplay {
 
         controler.setActivePlayerType(playerType);
         vue.updateTurnIndicator(turn);
+        vue.updateBackgroundForTurn(turn); // Pair → rouge, Impair → bleu
         vue.updateJetons(partie.actions.getJetonsActions()); // On met à jour la vue des jetons (apres un lancer ou un retourner)
 
         if ("AI".equals(playerType)) {
@@ -186,7 +188,6 @@ public class Gameplay {
         // IntermediaryGameState.applyProvisionalAction(intent);
 
         // Rafraîchit la Vue pour refléter l'état provisoire
-        vue.refreshBoardHighlight(intent.cellRow(), intent.cellCol());
         Camera.RecalculateZoom(); // Force un repaint via RecalculateZoom (proxy de Repaint)
     }
 
@@ -202,7 +203,6 @@ public class Gameplay {
         // ENVOI : Demande à IntermediaryGameState d'annuler l'action provisoire.
         // IntermediaryGameState.rollbackAction(intent);
 
-        vue.clearBoardHighlight(intent.cellRow(), intent.cellCol());
         Camera.RecalculateZoom();
     }
 
@@ -218,7 +218,6 @@ public class Gameplay {
         // ENVOI : Demande à IntermediaryGameState de ré-appliquer l'action.
         // IntermediaryGameState.reapplyAction(intent);
 
-        vue.refreshBoardHighlight(intent.cellRow(), intent.cellCol());
         Camera.RecalculateZoom();
     }
 

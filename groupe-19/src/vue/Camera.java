@@ -239,6 +239,56 @@ public class Camera extends JComponent {
         Camera.composants.add(comp);
     }
 
+    /**
+     * Retourne l'index d'un sprite déjà chargé, ou -1 s'il n'existe pas.
+     * Utilisé par VueJeu pour vérifier si un sprite tourné est déjà en cache.
+     */
+    public static int GetSpriteId(String name)
+    {
+        return Camera.spriteNames.indexOf(name);
+    }
+
+    /**
+     * Retourne l'Image associée à un sprite déjà chargé, ou null s'il est absent.
+     * Utilisé par VueJeu pour récupérer l'image originale avant rotation.
+     */
+    public static java.awt.image.BufferedImage GetSpriteImage(String name)
+    {
+        int index = Camera.spriteNames.indexOf(name);
+        if (index < 0) return null;
+        Image img = Camera.sprites.get(index);
+        if (img instanceof java.awt.image.BufferedImage) {
+            return (java.awt.image.BufferedImage) img;
+        }
+        // Convertit en BufferedImage si nécessaire
+        java.awt.image.BufferedImage bimg = new java.awt.image.BufferedImage(
+            img.getWidth(null), img.getHeight(null), java.awt.image.BufferedImage.TYPE_INT_ARGB);
+        java.awt.Graphics2D g2 = bimg.createGraphics();
+        g2.drawImage(img, 0, 0, null);
+        g2.dispose();
+        return bimg;
+    }
+
+    /**
+     * Variante d'AddSprite qui accepte directement une BufferedImage déjà construite.
+     * Utilisée pour enregistrer les sprites tournés générés par VueJeu.
+     *
+     * @param name  Clé unique du sprite (ex: "NoraNoire_90").
+     * @param image Image déjà construite à stocker.
+     * @return      Index du sprite dans la liste (nouveau ou existant).
+     */
+    public static int AddSprite(String name, java.awt.image.BufferedImage image)
+    {
+        int index = Camera.spriteNames.indexOf(name);
+        if (index > -1) return index;
+
+        Camera.sprites.add(image);
+        Camera.spriteNames.add(name);
+        index = Camera.nbreSprites;
+        Camera.nbreSprites++;
+        return index;
+    }
+
     public static int AddSprite(String name)
     {
         int index = Camera.spriteNames.indexOf(name);

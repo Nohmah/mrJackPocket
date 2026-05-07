@@ -172,6 +172,19 @@ public class VueJeu extends JFrame {
     /** Grille 3×3 des composants de tuiles. */
     private final Composant2D[][] tileComponents = new Composant2D[3][3];
 
+    /** Angle de rotation courant (0 / 90 / 180 / 270) pour chaque tuile. */
+    private final int[][] tileRotations = new int[3][3];
+
+    /**
+     * Nom de base du sprite de chaque tuile (sans suffixe d'angle).
+     * Correspond au nom du fichier image, ex: "NoraNoire", "JohnSmith".
+     * Initialisé dans updateDistrictView et mis à jour par swapTiles.
+     */
+    private final String[][] tileBaseNames = new String[3][3];
+
+    /** Composant du fond plein-écran (modifié par setBackgroundColor). */
+    private Composant2D backgroundComponent;
+
     /** Boules d'action A-D (4 boules, côté gauche). */
     private final Composant2D[] actionBalls = new Composant2D[4];
 
@@ -198,36 +211,11 @@ public class VueJeu extends JFrame {
         initComponents();
         initUIOverlay();
         this.gameplay = new Gameplay(this, partie);
+        replaceOuterBall(8, 1);
+        replaceOuterBall(12, 2);
+        replaceOuterBall(4, 3);
     }
 
-    // =========================================================================
-    // 1. Chargement d'images flexible
-    // =========================================================================
-
-    /**
-     * Cherche une image dans res/Images/ en testant successivement .png puis .jpg.
-     * Retourne null si aucune variante n'est trouvée.
-     *
-     * @param name Nom sans extension (ex: "BallAP").
-     * @return Image chargée, ou null.
-     */
-    public static BufferedImage findImage(String name) { //MARCHE PAS
-        String[] extensions = { ".png", ".jpg" };
-        for (String ext : extensions) {
-            String path = "res/Images/" + name + ext;
-            try (InputStream in = new FileInputStream(path)) {
-                BufferedImage img = ImageIO.read(in);
-                if (img != null) {
-                    System.out.println("findImage — chargé : " + path);
-                    return img;
-                }
-            } catch (IOException ignored) {
-                // Extension non trouvée, on essaie la suivante
-            }
-        }
-        System.err.println("findImage — introuvable : " + name + " (.png / .jpg)");
-        return null;
-    }
 
     /**
      * Fait pivoter une BufferedImage d'un angle donné (en radians) autour de
@@ -265,6 +253,7 @@ public class VueJeu extends JFrame {
 
         return rotated;
     }
+
 
     // =========================================================================
     // 2. Gestion des faces (Balles & Tours)
@@ -444,14 +433,89 @@ public class VueJeu extends JFrame {
 
         if (row1 == row2 && col1 == col2) return; // Rien à faire
 
-        // On échange uniquement les spriteId (les Composant2D restent en place,
-        // c'est leur image qui change — c'est la sémantique voulue dans Camera).
+        // Échange des spriteId
         int tmpSprite = tileComponents[row1][col1].spriteId;
         tileComponents[row1][col1].spriteId = tileComponents[row2][col2].spriteId;
         tileComponents[row2][col2].spriteId = tmpSprite;
 
+        // Échange des noms de base
+        String tmpBase = tileBaseNames[row1][col1];
+        tileBaseNames[row1][col1] = tileBaseNames[row2][col2];
+        tileBaseNames[row2][col2] = tmpBase;
+
+        // Échange des angles de rotation
+        int tmpRot = tileRotations[row1][col1];
+        tileRotations[row1][col1] = tileRotations[row2][col2];
+        tileRotations[row2][col2] = tmpRot;
+
         Camera.RecalculateZoom(); // Force le repaint via RecalculateZoom (proxy de Repaint)
         System.out.println("swapTiles (" + row1 + "," + col1 + ") ↔ (" + row2 + "," + col2 + ")");
+    }
+
+    /**
+     * Fait pivoter la tuile en position (row, col) d'un angle supplémentaire.
+     *
+     * <p>L'angle courant est incrémenté de {@code angleToAdd} puis réduit modulo 360.
+     * Seuls les multiples de 90 sont significatifs (0, 90, 180, 270).
+     *
+     * <p>Le sprite tourné est nommé {@code "<baseName>_<angle>"} (ex: {@code "NoraNoire_90"}).
+     * S'il n'existe pas encore dans la Camera, l'image originale est récupérée,
+     * pivotée avec {@link #rotateImage}, puis enregistrée.
+     *
+     * @param row        Ligne de la grille (0-2).
+     * @param col        Colonne de la grille (0-2).
+     * @param angleToAdd Angle à ajouter en degrés (typiquement 90, 180 ou 270).
+     */
+    public void rotateTile(int row, int col, int angleToAdd) {
+        if (row < 0 || row > 2 || col < 0 || col > 2) {
+            System.err.println("rotateTile — coordonnées hors-plateau : (" + row + "," + col + ")");
+            return;
+        }
+
+        // 1. Mise à jour de l'angle (modulo 360, toujours positif)
+        int newAngle = ((tileRotations[row][col] + angleToAdd) % 360 + 360) % 360;
+        tileRotations[row][col] = newAngle;
+
+        String baseName = tileBaseNames[row][col];
+
+        // 2. Pour l'angle 0 on réutilise directement le sprite de base
+        if (newAngle == 0) {
+            tileComponents[row][col].spriteId = Camera.AddSprite(baseName);
+            Camera.RecalculateZoom();
+            System.out.println("rotateTile (" + row + "," + col + ") → 0° (sprite de base)");
+            return;
+        }
+
+        // 3. Nom unique du sprite tourné
+        String newName = baseName + "_" + newAngle;
+
+        // 4. Vérification du cache
+        int spriteId = Camera.GetSpriteId(newName);
+        if (spriteId == -1) {
+            // 4a. Récupère l'image originale (sprite de base, jamais tourné)
+            java.awt.image.BufferedImage original = Camera.GetSpriteImage(baseName);
+            if (original == null) {
+                // Image de base absente : on tente de la charger d'abord
+                Camera.AddSprite(baseName);
+                original = Camera.GetSpriteImage(baseName);
+            }
+            if (original == null) {
+                System.err.println("rotateTile — impossible de charger l'image de base : " + baseName);
+                return;
+            }
+
+            // 4b. Rotation de l'image
+            java.awt.image.BufferedImage rotated = rotateImage(original, Math.toRadians(newAngle));
+
+            // 4c. Enregistrement dans la Camera
+            spriteId = Camera.AddSprite(newName, rotated);
+        }
+
+        // 5. Application du nouveau sprite au composant
+        tileComponents[row][col].spriteId = spriteId;
+
+        Camera.RecalculateZoom();
+        System.out.println("rotateTile (" + row + "," + col + ") → " + newAngle + "° [sprite: " + newName + "]");
     }
 
     // =========================================================================
@@ -462,16 +526,19 @@ public class VueJeu extends JFrame {
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
                 Quartier q = district.get(i, j);
+                String baseName;
                 if (q.estSuspect()) {
-                    String spriteName = q.getPersonnage().nom.replace(" ", "");
-                    tileComponents[i][j].spriteId = Camera.AddSprite(spriteName);
+                    baseName = q.getPersonnage().nom.replace(" ", "");
                 } else {
                     if (q.getPersonnage() == Personnage.JOSEPH_LANE) {
-                        tileComponents[i][j].spriteId = Camera.AddSprite("JosephLane-verso");
+                        baseName = "JosephLane-verso";
                     } else {
-                        tileComponents[i][j].spriteId = Camera.AddSprite("TileDefault");
+                        baseName = "TileDefault";
                     }
                 }
+                tileBaseNames[i][j] = baseName;
+                tileRotations[i][j] = 0;
+                tileComponents[i][j].spriteId = Camera.AddSprite(baseName);
             }
         }
         Camera.Repaint();
@@ -515,7 +582,7 @@ public class VueJeu extends JFrame {
      * Background plein-écran (rendu par Camera comme tout autre composant).
      */
     private void initBackgroundComponent() {
-        new Composant2D(
+        backgroundComponent = new Composant2D(
                 new Vector2(WINDOW_W / 2.0, WINDOW_H / 2.0),
                 new Vector2(WINDOW_W, WINDOW_H),
                 "Background"
@@ -758,11 +825,18 @@ public class VueJeu extends JFrame {
     // =========================================================================
 
     private void onRetourPressed() {
+        switchBallFace(0);
+        switchBallFace(1);
+        switchBallFace(2);
+        switchBallFace(3);
+        switchTurnFace(0);
+        swapTiles(new Vector2(0,0),new Vector2(1,0));
         System.out.println("VueJeu — Retour (non implémenté)");
         // À connecter à une éventuelle navigation entre écrans
     }
 
     private void onNewGamePressed() {
+        rotateTile(0, 0, 90);
         System.out.println("VueJeu — Nouvelle partie");
         // Recrée la partie via Gameplay si nécessaire
         // gameplay.resetGame();
@@ -800,16 +874,49 @@ public class VueJeu extends JFrame {
         Camera.Repaint();
     }
 
-    public void refreshBoardHighlight(int row, int col) {
-        if (tileComponents[row][col] == null) return;
-        tileComponents[row][col].spriteId = Camera.AddSprite("TileHighlight");
+    /**
+     * Noms de fichiers image disponibles pour le fond d'écran.
+     * Chaque constante correspond à un fichier {@code res/Images/<nom>.png}.
+     */
+    public static final String BG_WHITE  = "BackgroundWhite";
+    public static final String BG_PURPLE = "BackgroundPurple";
+    public static final String BG_RED    = "BackgroundRed";
+    public static final String BG_BLUE   = "BackgroundBlue";
+
+    /**
+     * Change le sprite du fond plein-écran.
+     *
+     * @param colorName Nom du fichier sans extension (utiliser les constantes
+     *                  {@link #BG_WHITE}, {@link #BG_PURPLE}, {@link #BG_RED},
+     *                  {@link #BG_BLUE}).
+     */
+    public void setBackgroundColor(String colorName) {
+        if (backgroundComponent == null) return;
+        int id = Camera.AddSprite(colorName);
+        if (id < 0) {
+            System.err.println("setBackgroundColor — sprite introuvable : " + colorName);
+            return;
+        }
+        backgroundComponent.spriteId = id;
         Camera.Repaint();
+        System.out.println("setBackgroundColor → " + colorName);
     }
 
-    public void clearBoardHighlight(int row, int col) {
-        if (tileComponents[row][col] == null) return;
-        tileComponents[row][col].spriteId = Camera.AddSprite("TileDefault");
-        Camera.Repaint();
+    /**
+     * Adapte la couleur du fond au numéro de tour au début de celui-ci :
+     * <ul>
+     *   <li>Tour <b>pair</b>  (2, 4, 6, 8) → {@link #BG_RED}</li>
+     *   <li>Tour <b>impair</b> (1, 3, 5, 7) → {@link #BG_BLUE}</li>
+     * </ul>
+     *
+     * @param turn Numéro du tour courant (1-8).
+     */
+    public void updateBackgroundForTurn(int turn) {
+        if (turn +1 % 2 == 0) {
+            setBackgroundColor(BG_RED);
+        } else {
+            setBackgroundColor(BG_BLUE);
+        }
     }
 
     public void refreshBoardComponents() {
@@ -820,7 +927,7 @@ public class VueJeu extends JFrame {
         validateButton.setEnabled(false);
         JLabel gameOverLabel = new JLabel("FIN DE PARTIE", SwingConstants.CENTER);
         gameOverLabel.setFont(new Font("SansSerif", Font.BOLD, 48));
-        gameOverLabel.setForeground(Color.YELLOW);
+        gameOverLabel.setForeground(Color.RED);
         gameOverLabel.setBounds(300, 350, 600, 100);
         uiOverlay.add(gameOverLabel);
         uiOverlay.revalidate();
