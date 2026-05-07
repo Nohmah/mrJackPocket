@@ -1,7 +1,5 @@
 package src.vue;
 
-import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -11,6 +9,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import javax.imageio.ImageIO;
+import javax.swing.*;
 
 // Cette classe est statique, attention
 public class Camera extends JComponent {
@@ -22,10 +22,17 @@ public class Camera extends JComponent {
     public static Vector2 zoom;       // Facteur de zoom (1,1 = normal)
     public static Vector2 tailleRel;  // Portion du monde visible (taille / zoom)
 
-    public static List<Composant2D> composants;
+    public static List<List<Composant2D>> composants;
     public static List<String> spriteNames;
     public static List<Image> sprites;
     public static int nbreSprites;
+
+    //Pour les calculs de temps entre chaque redessinement, utilisés dans paintComponent
+    //Cela servira à avoir des animations consistantes
+    //Imprécisions car on calcule à la miliseconde, mais ça devrait le faire ?
+    static long debut;
+    static long fin;
+    public static double delta;
 
     public int testCounter;
 
@@ -92,36 +99,48 @@ public class Camera extends JComponent {
         int height = getSize().height;
         drawable.clearRect(0, 0, width, height);
 
+        Camera.fin = System.currentTimeMillis();
+        Camera.delta = Math.abs((Camera.fin - Camera.debut) / 1e9);
+
         // CORRECTION : Utiliser composants.size() au lieu de nbreSprites
         // car nbreSprites compte le nombre d'images différentes chargées,
         // alors que composants.size() compte le nombre d'objets à dessiner.
-        for (int i = 0; i < composants.size(); i++)
+        for (int l = 0; l < composants.size(); l++)
         {
-            Composant2D comp = composants.get(i);
-            
-            // Vérification supplémentaire : s'assurer que le spriteId est valide
-            if (comp.spriteId < 0 || comp.spriteId >= sprites.size()) {
-                System.err.println("Sprite invalide pour composant : " + comp.spriteId);
-                continue; // Ignorer ce composant
-            }
-
-            // Coin haut-gauche du composant dans l'espace monde
-            Vector2 worldHG = comp.CoinHG();
-
-            // Conversion monde → écran
-            Vector2 screenPos   = worldHG.Sub(Camera.positionHG).Mult(Camera.zoom);
-            Vector2 screenTaille = comp.TailleRel().Mult(Camera.zoom);
-
-            if (InCamera(screenPos, screenTaille))
+            List<Composant2D> compList = composants.get(l);
+            for (int i = 0; i < compList.size(); i++)
             {
-                drawable.drawImage(
-                    sprites.get(comp.spriteId),
-                    (int) screenPos.x,    (int) screenPos.y,
-                    (int) screenTaille.x, (int) screenTaille.y,
-                    null
-                );
+                Composant2D comp = compList.get(i);
+                if (comp instanceof Animation2D animation2D)
+                {
+                    animation2D.AddDelta(delta);
+                }
+                
+                // Vérification supplémentaire : s'assurer que le spriteId est valide
+                if (comp.spriteId < 0 || comp.spriteId >= sprites.size()) {
+                    System.err.println("Sprite invalide pour composant : " + comp.spriteId);
+                    continue; // Ignorer ce composant
+                }
+
+                // Coin haut-gauche du composant dans l'espace monde
+                Vector2 worldHG = comp.CoinHG();
+
+                // Conversion monde → écran
+                Vector2 screenPos   = worldHG.Sub(Camera.positionHG).Mult(Camera.zoom);
+                Vector2 screenTaille = comp.TailleRel().Mult(Camera.zoom);
+
+                if (InCamera(screenPos, screenTaille))
+                {
+                    drawable.drawImage(
+                        sprites.get(comp.spriteId),
+                        (int) screenPos.x,    (int) screenPos.y,
+                        (int) screenTaille.x, (int) screenTaille.y,
+                        null
+                    );
+                }
             }
         }
+        Camera.debut = System.currentTimeMillis();
     }
 
 
@@ -218,6 +237,10 @@ public class Camera extends JComponent {
     private void InitLists()
     {
         composants  = new ArrayList<>();
+        for (int i = 0; i < 8; i++)
+        {
+            composants.add(new ArrayList<>());
+        }
         spriteNames = new ArrayList<>();
         sprites     = new ArrayList<>();
     }
@@ -236,7 +259,7 @@ public class Camera extends JComponent {
     // Elles servent à ajouter des composants à la liste de dessinage
     public static void AddComposant(Composant2D comp)
     {
-        Camera.composants.add(comp);
+        Camera.composants.get(comp.couche).add(comp);
     }
 
     /**
@@ -311,5 +334,57 @@ public class Camera extends JComponent {
         index = Camera.nbreSprites;
         Camera.nbreSprites++;
         return index;
+    }
+
+    public static List<Integer> AddSpriteList
+    (List<String> nameList, List<java.awt.image.BufferedImage> image)
+    {
+        List<Integer> intList = new ArrayList<>();
+        for (int i = 0; i < nameList.size(); i++)
+        {
+            int index = Camera.spriteNames.indexOf(nameList.get(i));
+            if (index > -1) intList.add(index);
+
+            Camera.sprites.add(image.get(i));
+            Camera.spriteNames.add(nameList.get(i));
+            index = Camera.nbreSprites;
+            Camera.nbreSprites++;
+            intList.add(index);
+        }
+        return intList;
+    }
+
+    public static List<Integer> AddSpriteList(List<String> nameList)
+    {
+        List<Integer> intList = new ArrayList<>();
+        for (int i = 0; i < nameList.size(); i++)
+        {
+            String name = nameList.get(i);
+            int index = Camera.spriteNames.indexOf(name);
+            if (index > -1)
+            {
+                intList.add(index);
+                break;
+            }
+
+            Image img;
+            try {
+                InputStream in = new FileInputStream("Images/" + name + ".png");
+                img = ImageIO.read(in);
+            } catch (FileNotFoundException e) {
+                System.err.println("ERREUR : impossible de trouver le fichier : " + name);
+                return intList;
+            } catch (IOException e) {
+                System.err.println("ERREUR : impossible de charger l'image : " + name);
+                return intList;
+            }
+
+            Camera.sprites.add(img);
+            Camera.spriteNames.add(name);
+            index = Camera.nbreSprites;
+            Camera.nbreSprites++;
+            intList.add(index);
+        }
+        return intList;
     }
 }

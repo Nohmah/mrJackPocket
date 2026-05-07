@@ -6,7 +6,10 @@ public class Composant2D
     public Vector2 taille;    // Taille de base (en pixels, avant échelle)
     public Vector2 echelle;   // Facteur d'agrandissement/réduction
 
+    public boolean visible;
+    public boolean immobile; //N'est pas affecté par la caméra
     public int spriteId;
+    public int couche; // 0 =< x =< 7, plus petit = en dessous
 
     // T
     // CORRECTION de CoinHG() :
@@ -39,6 +42,25 @@ public class Composant2D
         this.taille = tail;
         this.echelle = new Vector2(1, 1);
         this.spriteId = Camera.AddSprite(spriteName);
+        this.couche = 0;
+        this.visible = true;
+        this.immobile = false;
         Camera.AddComposant(this);
+    }
+
+    public Composant2D(Vector2 pos, Vector2 tail, String spriteName, int cou)
+    {
+        this.position = pos;
+        this.taille = tail;
+        this.echelle = new Vector2(1, 1);
+        this.spriteId = Camera.AddSprite(spriteName);
+        this.couche = cou;
+        this.visible = true;
+        this.immobile = false;
+        Camera.AddComposant(this);
+    }
+
+    public Composant2D() {
+        //Nécessaire pour que Animation2D arrête de se plaindre de ses constructeurs
     }
 }
