@@ -20,7 +20,7 @@ public class Ia {
         this.difficulte = difficulte;
     }
 
-    public Action choisirAction(Partie partie, boolean estJack){
+    public CoupIa choisirAction(Partie partie, boolean estJack){
         switch (difficulte){
             case 0:
                 return choisirActionRandom(partie, estJack);
@@ -47,14 +47,27 @@ public class Ia {
         return 0;
     }
 
-    public Action choisirActionRandom(Partie partie, boolean estJack){
+    public CoupIa choisirActionRandom(Partie partie, boolean estJack){
+
+        try {
+            Thread.sleep(3000); // pause de 3 seconde
+        } catch (InterruptedException e) {
+            System.err.println("Erreur lors de la pause dans IA Random : ");
+        }
         List<Action> actionsPossibles = partie.actions.getActionsPossibles();
-        return actionsPossibles.get(r.nextInt(actionsPossibles.size()));
+        Action actionsChoisis = actionsPossibles.get(r.nextInt(actionsPossibles.size()));
+        CoupIa coup = new CoupIa(actionsChoisis);
+        if(!estJack && (coup.action == Action.JOKER)){
+            return new CoupIa(actionsChoisis, r.nextInt(3), 1);
+        }
+        return new CoupIa(actionsChoisis, r.nextInt(coup.para1Max(actionsChoisis)+1), r.nextInt(coup.para2Max(actionsChoisis)+1));
+
     }
 
-    public Action choisirActionFacile(Partie partie, boolean estJack){
+    public CoupIa choisirActionFacile(Partie partie, boolean estJack){
         // à définir
         //return choisirActionRandom(partie, estJack);
+        //vraiment pas encore fait 
 
         List<Action> actionsPossibles = partie.actions.getActionsPossibles();
         Action actionChoisie = null;
@@ -72,15 +85,16 @@ public class Ia {
                 }
             }
         }
-        return actionChoisie;
+        CoupIa coup = new CoupIa(actionChoisie);
+        return coup;
     }
 
-    public Action choisirActionMoyen(Partie partie, boolean estJack){
+    public CoupIa choisirActionMoyen(Partie partie, boolean estJack){
         //à définir
         return choisirActionRandom(partie, estJack);
     }
 
-    public Action choisirActionDifficile(Partie partie, boolean estJack){
+    public CoupIa choisirActionDifficile(Partie partie, boolean estJack){
         //à définir
         return choisirActionRandom(partie, estJack);
     }

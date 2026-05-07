@@ -1,5 +1,9 @@
 package src.modele;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.CompletableFuture;
+import javax.swing.*;
 
 public class Partie {
 
@@ -36,6 +40,11 @@ public class Partie {
     public int numeroTour = 0;
     private int totalActionsJouees;
     private boolean jackVisibleCeTour;
+
+    //pour l'ia et le thread
+    private Ia ia = new Ia();
+    private ExecutorService executor = Executors.newSingleThreadExecutor();
+    private boolean IaEnCours = false;
 
 
     public Partie(){
@@ -93,13 +102,14 @@ public class Partie {
         switch(totalActionsJouees){
             case 1, 3:
                 changerJoueur();
+                //lanceIa();
                 break;
             case 4:
                 appelATemoin();
+                //lanceIa();
                 break;
             default:
                 break;
-
         }
     }
 
@@ -121,6 +131,64 @@ public class Partie {
             }
             joueurCourant = Joueur.JACK;
         }
+    }
+
+    private void lanceIa() {
+        //System.out.println("entre dans Ia");
+        if(IaEnCours) return; // Empêche de lancer plusieurs tours d'IA en même temps
+        IaEnCours = true;
+        //System.out.println("Ia va calculer son coup...");
+        boolean estJack = (joueurCourant == Joueur.JACK);
+
+        CompletableFuture
+            .supplyAsync(() -> ia.choisirAction(this, estJack), executor)
+            .thenAccept(iaCoup -> {
+                System.out.println("Ia a choisi son coup.");
+                SwingUtilities.invokeLater(() -> {
+                    IaEnCours = false;
+                    jouerCoup(iaCoup); 
+                });
+            }); 
+    }
+
+    private void jouerCoup(CoupIa coupIa) {
+        //coupIa.afficher(); // Affiche le coup choisi par l'IA dans la console pour le debug
+        // Logique pour jouer l'action choisie par l'IA
+        switch (coupIa.action) {
+            case HOLMES:
+                actions.deplacerDetective(detectives.get(0), coupIa.para1 + 1); // +1 car les déplacements commencent à 1
+                // Logique pour l'action HOLMES
+                break;
+            case WATSON:
+                // Logique pour l'action WATSON
+                actions.deplacerDetective(detectives.get(1), coupIa.para1 + 1);
+                break;
+            case TOBY:
+                // Logique pour l'action TOBY
+                actions.deplacerDetective(detectives.get(2), coupIa.para1 + 1);
+                break;
+            case JOKER:
+                if(coupIa.para2 == 0){
+                    actions.joker(null); // Jack choisit de ne déplacer aucun détective
+                } else {
+                    actions.joker(detectives.get(coupIa.para1));
+                }
+                // Logique pour l'action JOKER
+                break;
+            case ROTATION:
+                actions.rotationQuartier(coupIa.para1 / 3, coupIa.para1 % 3, coupIa.para2);
+                // Logique pour l'action ROTATION
+                break;
+            case ECHANGE:
+                actions.echange(coupIa.para1 / 3, coupIa.para1 % 3, coupIa.para2 / 3, coupIa.para2 % 3);
+                // Logique pour l'action ECHANGE
+                break;
+            case ALIBI:
+                actions.piocherCarteAlibi();
+                // Logique pour l'action ALIBI
+                break;
+        }
+        //lanceIa();
     }
 
     /**
