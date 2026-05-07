@@ -89,10 +89,32 @@ public class Ia {
         return coup;
     }
 
-    public CoupIa choisirActionMoyen(Partie partie, boolean estJack){
-        //à définir
-        return choisirActionRandom(partie, estJack);
+    public CoupIa choisirActionMoyen(Partie partie, boolean estJack) {
+        List<Action> listeActions = partie.actions.getActionsPossibles();
+
+        CoupIa meilleurCoup = null;
+        double scoreMax = -1.0;
+
+        for (Action action : listeActions) {
+            Partie simulationPartie = new Partie(partie);
+            CoupIa simulationCoup = new CoupIa(action, 0, 0);
+
+            double note;
+            if (estJack) {
+                note = EvaluateurIa.jeSuisJack(simulationPartie);
+            } else {
+                note = EvaluateurIa.jeSuisEnqueteur(simulationPartie);
+            }
+
+            if (note > scoreMax) {
+                scoreMax = note;
+                meilleurCoup = simulationCoup;
+            }
+        }
+
+        return (meilleurCoup != null) ? meilleurCoup : choisirActionRandom(partie, estJack);
     }
+
 
     public CoupIa choisirActionDifficile(Partie partie, boolean estJack){
         //à définir

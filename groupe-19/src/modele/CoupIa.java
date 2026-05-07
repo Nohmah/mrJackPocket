@@ -38,9 +38,9 @@ public class CoupIa {
             case JOKER:
                 return 2;
             case ROTATION:
-                return 9;
+                return 8;
             case ECHANGE:
-                return 9;
+                return 8;
             case ALIBI:
                 return 1;
         }
@@ -60,7 +60,7 @@ public class CoupIa {
             case ROTATION:
                 return 3;
             case ECHANGE:
-                return 9;
+                return 8;
             case ALIBI:
                 return 0;
         }

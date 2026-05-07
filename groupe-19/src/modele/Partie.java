@@ -65,6 +65,24 @@ public class Partie {
 
         tourSuivant();
     }
+
+    public Partie(Partie p) {
+        this.district = p.district;
+        this.actions = new PartieActions(this);
+        this.jetonsAction = new ArrayList<>(p.jetonsAction);
+        this.cartesAlibiPioche = new ArrayList<>(p.cartesAlibiPioche);
+        this.detectives = new ArrayList<>(p.detectives);
+        this.suspects = new ArrayList<>(p.suspects);
+        this.joueurCourant = p.joueurCourant;
+        this.identiteJack = p.identiteJack;
+        this.sabliersDeJack = p.sabliersDeJack;
+        this.numeroTour = p.numeroTour;
+        this.totalActionsJouees = p.totalActionsJouees;
+        this.jackVisibleCeTour = p.jackVisibleCeTour;
+        this.coursePoursuiteActive = p.coursePoursuiteActive;
+        this.gagnant = p.gagnant;
+    }
+
     /**Réinitialise la partie.*/
     public void reset() {
         // Réinitialiser les variables
@@ -137,6 +155,9 @@ public class Partie {
             default:
                 break;
         }
+        /*if (!isPartieTerminee()) {
+            lanceIa();
+        }*/
     }
 
     public void tourSuivant(){
@@ -210,7 +231,8 @@ public class Partie {
                 // Logique pour l'action ECHANGE
                 break;
             case ALIBI:
-                actions.piocherCarteAlibi();
+                //actions.piocherCarteAlibi();
+                actions.alibi();
                 // Logique pour l'action ALIBI
                 break;
         }
