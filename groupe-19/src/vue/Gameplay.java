@@ -63,7 +63,21 @@ public class Gameplay {
         // Réactiver le bouton "Terminer tour"
         vue.enableValidateButton(true);
         // Enlever l'écran de fin de partie
-        vue.hideGameOverScreen();
+        resetAllTurnIndicators();
+
+        startTurn(currentTurn);
+    }
+
+        /**
+     * Remet les 8 indicateurs de tour dans leur état initial :
+     * face Pile (T1, T2, …, T8).
+     */
+    public void resetAllTurnIndicators() {
+        for (int i = 0; i < 8; i++) {
+            if (!vue.isTurnFacePile(i)) {
+                vue.switchTurnFace(i);
+            }
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -92,7 +106,6 @@ public class Gameplay {
         // vue.buildBoardComponents(initialGrid);
         District district = partie.district;  // accède au district
         vue.updateDistrictView(district);
-        startTurn(currentTurn);
     }
 
     /**
@@ -102,7 +115,6 @@ public class Gameplay {
      * @param turn Numéro du tour (1-8).
      */
     private void startTurn(int turn) {
-        if (turn != 0) { vue.switchTurnFace(turn - 1); }
         System.out.println("Gameplay — début du tour " + turn);
 
         // RÉCEPTION : Demande à IntermediaryGameState quel est le joueur actif
@@ -142,7 +154,7 @@ public class Gameplay {
      */
     private void endTurn() {
         System.out.println("Gameplay — fin du tour " + currentTurn + " : validation en cours");
-
+        if (currentTurn >= 1 && currentTurn <= 8) vue.switchTurnFace(currentTurn - 1);
         //partie.appelATemoin();
         vue.updateDistrictView(partie.district);
         vue.updateJetons(partie.actions.getJetonsActions());

@@ -136,6 +136,9 @@ public class VueJeu extends JFrame {
     /** true = face Pile, false = face Face, pour chacune des 4 balles d'action. */
     private final boolean[] ballFaceIsPile   = { true, true, true, true };
 
+    /** Nom du sprite actuellement affiché pour chacune des 4 boules d'action. */
+    private final String[] actionBallCurrentSprite = new String[4];
+
     /** true = face Pile, false = face Face, pour chacun des 8 indicateurs de tour. */
     private final boolean[] turnFaceIsPile   = { true, true, true, true, true, true, true, true };
 
@@ -273,6 +276,7 @@ public class VueJeu extends JFrame {
                 : BALL_FACE_FACE[ballIndex];
 
         actionBalls[ballIndex].spriteId = Camera.AddSprite(spriteName);
+        actionBallCurrentSprite[ballIndex] = spriteName; // maintient la synchronisation
         Camera.Repaint();
         System.out.println("switchBallFace[" + ballIndex + "] → " + spriteName);
     }
@@ -293,6 +297,17 @@ public class VueJeu extends JFrame {
         turnIndicators[turnIndex].spriteId = Camera.AddSprite(spriteName);
         Camera.Repaint();
         System.out.println("switchTurnFace[" + turnIndex + "] → " + spriteName);
+    }
+
+
+        /**
+     * Indique si l'indicateur de tour 'turnIndex' affiche la face Pile.
+     * @param turnIndex 0‑7 correspondant à T1‑T8
+     * @return true si la face Pile (T1..T8) est affichée, false si c'est la face Face (T0)
+     */
+    public boolean isTurnFacePile(int turnIndex) {
+        if (turnIndex < 0 || turnIndex >= 8) return false;
+        return turnFaceIsPile[turnIndex];
     }
 
     // =========================================================================
@@ -323,46 +338,49 @@ public class VueJeu extends JFrame {
      * @param detectiveNum Numéro du détective (1-3 → "detective1", "detective2", "detective3").
      */
     public void replaceOuterBall(int position, int detectiveNum) {
-        int idx = position - 1; // Conversion 1-indexé → 0-indexé
-        if (idx < 0 || idx >= 12) {
-            System.err.println("replaceOuterBall — position invalide : " + position);
-            return;
-        }
-        if (detectiveNum < 1 || detectiveNum > 3) {
-            System.err.println("replaceOuterBall — numéro de détective invalide : " + detectiveNum);
-            return;
-        }
-
-        int detIdx = detectiveNum - 1;
-
-        // Si ce détective était déjà quelque part, on retire son effet d'échelle là-bas
-        if (detectivePosition[detIdx] != -1) {
-            refreshOuterBallScale(detectivePosition[detIdx]);
-        }
-
-        // Met à jour la position mémorisée
-        detectivePosition[detIdx] = idx;
-
-        // Crée ou réutilise le Composant2D du détective
-        String spriteName = "detective" + detectiveNum;
-        if (detectiveComponents[detIdx] == null) {
-            detectiveComponents[detIdx] = new Composant2D(
-                OUTER_POSITIONS[idx],
-                new Vector2(OUTER_BALL_DIAM, OUTER_BALL_DIAM),
-                spriteName
-            );
-        } else {
-            detectiveComponents[detIdx].position = OUTER_POSITIONS[idx];
-            detectiveComponents[detIdx].spriteId = Camera.AddSprite(spriteName);
-        }
-
-        // Applique l'empilement (Z-Scale) sur la nouvelle case
-        refreshOuterBallScale(idx);
-
-        Camera.Repaint();
-        System.out.println("replaceOuterBall — détective " + detectiveNum + " → position " + position);
+    int idx = position - 1; // Conversion 1-indexé → 0-indexé
+    if (idx < 0 || idx >= 12) {
+        System.err.println("replaceOuterBall — position invalide : " + position);
+        return;
+    }
+    if (detectiveNum < 1 || detectiveNum > 3) {
+        System.err.println("replaceOuterBall — numéro de détective invalide : " + detectiveNum);
+        return;
     }
 
+    int detIdx = detectiveNum - 1;
+
+    // je corrige 
+    // 1. On mémorise l'ancienne position
+    int oldPos = detectivePosition[detIdx];
+
+    // 2. On met à jour la position AVANT de rafraîchir les échelles
+    detectivePosition[detIdx] = idx;
+
+    // 3. Gestion du composant graphique
+    String spriteName = "detective" + detectiveNum;
+    if (detectiveComponents[detIdx] == null) {
+        detectiveComponents[detIdx] = new Composant2D(
+            OUTER_POSITIONS[idx],
+            new Vector2(OUTER_BALL_DIAM, OUTER_BALL_DIAM),
+            spriteName
+        );
+    } else {
+        detectiveComponents[detIdx].position = OUTER_POSITIONS[idx];
+        detectiveComponents[detIdx].spriteId = Camera.AddSprite(spriteName);
+    }
+
+    // 4. On rafraîchit l'ancienne case (si elle existait)
+    if (oldPos != -1) {
+        refreshOuterBallScale(oldPos); 
+    }
+
+    // 5. On rafraîchit la nouvelle case
+    refreshOuterBallScale(idx);
+
+    Camera.Repaint();
+    System.out.println("replaceOuterBall — détective " + detectiveNum + " → position " + position);
+}
     /**
      * Avance un détective d'une case sur l'anneau (sens horaire).
      * Si le détective n'a pas encore été placé, il démarre à la position 0.
@@ -399,7 +417,17 @@ public class VueJeu extends JFrame {
             }
         }
 
-        // Applique les facteurs d'échelle selon l'ordre d'empilement
+        // Si un seul détective sur la case, échelle forcée à 1.0 — aucun grossissement.
+        // Le grossissement (1.3, 1.6) ne s'applique qu'à partir du 2ème détective empilé.
+        if (stackCount <= 1) {
+            if (stackCount == 1) {
+                detectiveComponents[onCell[0]].echelle = new Vector2(DETECTIVE_SCALE_1, DETECTIVE_SCALE_1);
+            }
+            return;
+        }
+
+        // 2 ou 3 détectives : applique les facteurs d'échelle selon l'ordre d'empilement
+        // onCell[0] → échelle 1.0 (en dessous), onCell[1] → 1.3, onCell[2] → 1.6
         double[] scales = { DETECTIVE_SCALE_1, DETECTIVE_SCALE_2, DETECTIVE_SCALE_3 };
         for (int k = 0; k < stackCount; k++) {
             double s = scales[k];
@@ -649,6 +677,7 @@ public class VueJeu extends JFrame {
                     new Vector2(ballDiam, ballDiam),
                     BALL_FACE_PILE[i]
             );
+            actionBallCurrentSprite[i] = BALL_FACE_PILE[i]; // état initial
         }
     }
 
@@ -666,6 +695,7 @@ public class VueJeu extends JFrame {
                 case ALIBI     -> "action_alibi";
             };
             actionBalls[i].spriteId = Camera.AddSprite(spriteName);
+            actionBallCurrentSprite[i] = spriteName; // mémorise le sprite courant
         }
         Camera.Repaint();
     }
@@ -819,6 +849,12 @@ public class VueJeu extends JFrame {
         iaBtn.addActionListener(e -> onIAPressed());
         uiOverlay.add(iaBtn);
 
+        // "Règles"
+        JButton reglesBtn = makeStripButton("Regles");
+        reglesBtn.setBounds(bx, 170, bw, bh);
+        reglesBtn.addActionListener(e -> onReglesPressed());
+        uiOverlay.add(reglesBtn);
+
         // "Terminer tour" (Valider)
         validateButton = makeStripButton("Terminer tour");
         validateButton.setBounds(bx, WINDOW_H - 75, bw, bh);
@@ -844,12 +880,15 @@ public class VueJeu extends JFrame {
     // Handlers des boutons LeftStrip
     // =========================================================================
 
+    private void onReglesPressed() {
+    advanceDetective(2);
+    System.out.println("VueJeu — Affichage des règles");}
+
     private void onRetourPressed() {
         switchBallFace(0);
         switchBallFace(1);
         switchBallFace(2);
         switchBallFace(3);
-        switchTurnFace(0);
         swapTiles(new Vector2(0,0),new Vector2(1,0));
         System.out.println("VueJeu — Retour (non implémenté)");
         // À connecter à une éventuelle navigation entre écrans
@@ -877,6 +916,7 @@ public class VueJeu extends JFrame {
 
     private void onIAPressed() {
         System.out.println("VueJeu — Basculer mode IA");
+        advanceDetective(1);
         // Exemple : demande au contrôleur de jouer l'IA pour le tour en cours
         if (gameplay != null) {
             gameplay.getControler().joueIa();
@@ -895,6 +935,53 @@ public class VueJeu extends JFrame {
         cameraComp.addKeyListener(controler);
         cameraComp.setFocusable(true);
         cameraComp.requestFocusInWindow();
+
+        // Branche un MouseListener dédié aux jetons d'action (actionBalls).
+        // Il est séparé du contrôleur principal pour ne pas mélanger
+        // la logique plateau et la logique jetons.
+        cameraComp.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                checkActionBallClick(e.getX(), e.getY());
+            }
+        });
+    }
+
+    /**
+     * Vérifie si les coordonnées écran (sx, sy) tombent dans le rayon d'une
+     * boule d'action. Si c'est le cas, affiche le nom de la face visible.
+     *
+     * <p>Les boules sont des Composant2D dont la position est en espace monde.
+     * On convertit d'abord le clic écran en espace monde via la Camera, puis
+     * on compare la distance au centre de chaque boule avec son rayon monde.</p>
+     *
+     * @param sx Coordonnée X du clic en pixels écran.
+     * @param sy Coordonnée Y du clic en pixels écran.
+     */
+    private void checkActionBallClick(int sx, int sy) {
+        // Conversion écran → monde (inverse de la projection Camera)
+        Vector2 screenPos = new Vector2(sx, sy);
+        Vector2 worldPos  = screenPos.Div(Camera.zoom).Add(Camera.positionHG);
+
+        for (int i = 0; i < actionBalls.length; i++) {
+            Composant2D ball = actionBalls[i];
+            if (ball == null) continue;
+
+            // Rayon en espace monde = moitié de la taille réelle (taille × échelle)
+            double rayonX = (ball.taille.x * ball.echelle.x) / 2.0;
+            double rayonY = (ball.taille.y * ball.echelle.y) / 2.0;
+            double rayon  = Math.min(rayonX, rayonY); // boules supposées circulaires
+
+            double dx = worldPos.x - ball.position.x;
+            double dy = worldPos.y - ball.position.y;
+
+            if (dx * dx + dy * dy <= rayon * rayon) {
+                // Utilise l'état interne synchronisé plutôt que les tableaux statiques
+                String nomAction = actionBallCurrentSprite[i];
+                System.out.println("J'ai cliqué sur " + nomAction);
+                return; // Un seul hit par clic
+            }
+        }
     }
 
     public void updateTurnIndicator(int turn) {
@@ -959,7 +1046,7 @@ public class VueJeu extends JFrame {
     public void showGameOverScreen() {
         validateButton.setEnabled(false);
         JLabel gameOverLabel = new JLabel("FIN DE PARTIE", SwingConstants.CENTER);
-        gameOverLabel.setFont(new Font("SansSerif", Font.BOLD, 48));
+        gameOverLabel.setFont(new Font("SansSerif", Font.BOLD, 64));
         gameOverLabel.setForeground(Color.RED);
         gameOverLabel.setBounds(300, 350, 600, 100);
         uiOverlay.add(gameOverLabel);
