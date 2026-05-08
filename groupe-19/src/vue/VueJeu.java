@@ -3,6 +3,8 @@ package src.vue;
 import src.modele.*;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +23,13 @@ import java.util.Map;
  *   - Interpreter les actions (switch sur nomAction).
  *   - Appeler partie.actions.*.
  *   - Prendre des decisions de jeu.
+ *
+ * Layout :
+ *   JFrame (BorderLayout)
+ *   ├─ WEST  : leftStrip  (JPanel, BoxLayout Y, largeur fixe STRIP_W_PX)
+ *   └─ CENTER: centerPane (JLayeredPane)
+ *                ├─ Camera      (couche DEFAULT)
+ *                └─ uiOverlay   (couche PALETTE, null-layout, transparent)
  */
 public class VueJeu extends JFrame {
 
@@ -28,11 +37,13 @@ public class VueJeu extends JFrame {
     // Constantes monde
     // =========================================================================
 
-    private static final int    WINDOW_W   = 1200;
-    private static final int    WINDOW_H   = 800;
-    private static final double STRIP_W    = 100;
-    private static final double BOARD_SIZE = 450;
-    private static final double TILE_SIZE  = 150;
+    private static final int    WINDOW_W    = 1200;
+    private static final int    WINDOW_H    = 800;
+    /** Largeur en pixels de la bande latérale Swing (boutons). */
+    private static final int    STRIP_W_PX  = 100;
+    private static final double STRIP_W     = 100;   // conservé pour les Composant2D monde
+    private static final double BOARD_SIZE  = 450;
+    private static final double TILE_SIZE   = 150;
 
     private static final Vector2 BOARD_ORIGIN = new Vector2(
             (WINDOW_W - BOARD_SIZE) / 2.0,
@@ -89,8 +100,13 @@ public class VueJeu extends JFrame {
     private final Composant2D[] detectiveComponents = new Composant2D[3];
 
     // =========================================================================
-    // Composants Swing overlay
+    // Composants Swing
     // =========================================================================
+
+    /** Bande latérale gauche — vrai composant Swing (Objectif A). */
+    private JPanel      leftStrip;
+    /** Panneau central qui empile Camera + uiOverlay. */
+    private JLayeredPane centerPane;
 
     private JPanel  uiOverlay;
     private JButton validateButton;
@@ -98,6 +114,13 @@ public class VueJeu extends JFrame {
 
     /** Panneau de regles actuellement affiche (null = ferme). */
     private JPanel panneauRegles = null;
+
+    // =========================================================================
+    // Letterbox / scale (Objectif B)
+    // =========================================================================
+
+    /** Scale courant calculé par le ComponentListener. */
+    private double currentScale = 1.0;
 
     // =========================================================================
     // Composant2D vivants
@@ -128,9 +151,13 @@ public class VueJeu extends JFrame {
     public VueJeu(Partie partie) {
         super("Mr. Jack Pocket");
         initFrame();
+        initLeftStrip();     // Objectif A — bande latérale Swing
+        initCenterPane();    // contient Camera + uiOverlay
         initCamera();
         initComponents();
         initUIOverlay();
+        initResizeListener();// Objectif B — letterbox
+        setVisible(true);
         this.gameplay = new Gameplay(this, partie);
         replaceOuterBall(12, 1);
         replaceOuterBall(4, 2);
@@ -147,8 +174,8 @@ public class VueJeu extends JFrame {
      * a {@link #notifyActionBallClick(int, int)}.
      */
     public void registerControler(IHMControler controler) {
-        Component cam = getContentPane().getComponent(
-                getContentPane().getComponentCount() - 1);
+        // La Camera est le premier composant du centerPane (couche DEFAULT)
+        Component cam = centerPane.getComponentsInLayer(JLayeredPane.DEFAULT_LAYER)[0];
         cam.addMouseListener(controler);
         cam.addKeyListener(controler);
         cam.setFocusable(true);
@@ -468,26 +495,156 @@ public class VueJeu extends JFrame {
     }
 
     // =========================================================================
-    // Initialisation Swing (inchange fonctionnellement)
+    // Initialisation Swing
     // =========================================================================
 
     private void initFrame() {
         setSize(WINDOW_W, WINDOW_H);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setResizable(true);
-        setLayout(null);
+        // ── Objectif A : BorderLayout remplace null-layout ──────────────────
+        getContentPane().setLayout(new BorderLayout());
+        getContentPane().setBackground(Color.BLACK); // bandes letterbox
         setLocationRelativeTo(null);
     }
 
-    private void initCamera() {
-        Camera cam = new Camera(new Vector2(WINDOW_W, WINDOW_H), this);
-        cam.setBounds(0, 0, WINDOW_W, WINDOW_H);
-        getContentPane().add(cam);
+    // -------------------------------------------------------------------------
+    // Objectif A — Bande latérale Swing (WEST)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Crée le JPanel leftStrip positionné en BorderLayout.WEST.
+     * Contient les boutons via BoxLayout vertical.
+     * Sa largeur est fixée par setPreferredSize ; sa hauteur suit le resize.
+     */
+    private void initLeftStrip() {
+        leftStrip = new JPanel();
+        leftStrip.setLayout(new BoxLayout(leftStrip, BoxLayout.Y_AXIS));
+        leftStrip.setPreferredSize(new Dimension(STRIP_W_PX, WINDOW_H));
+        leftStrip.setBackground(new Color(30, 30, 40));
+        leftStrip.setBorder(BorderFactory.createEmptyBorder(20, 5, 10, 5));
+
+        // ── Boutons ────────────────────────────────────────────────────────
+        JButton retour  = makeStripButton("Retour");
+        retour.addActionListener(e -> System.out.println("VueJeu — Retour (non implemente)"));
+
+        JButton newGame = makeStripButton("Nv. Partie");
+        newGame.addActionListener(e -> { if (gameplay != null) gameplay.resetGame(); });
+
+        JButton ia      = makeStripButton("IA");
+        ia.addActionListener(e -> { if (gameplay != null) gameplay.getControler().joueIa(); });
+
+        JButton regles  = makeStripButton("Regles");
+        regles.addActionListener(e -> onReglesPressed());
+
+        validateButton  = makeStripButton("Terminer tour");
+        validateButton.addActionListener(e -> { if (gameplay != null) gameplay.onValidatePressed(); });
+
+        leftStrip.add(retour);
+        leftStrip.add(Box.createVerticalStrut(8));
+        leftStrip.add(newGame);
+        leftStrip.add(Box.createVerticalStrut(8));
+        leftStrip.add(ia);
+        leftStrip.add(Box.createVerticalStrut(8));
+        leftStrip.add(regles);
+        leftStrip.add(Box.createVerticalGlue());   // pousse "Terminer tour" vers le bas
+        leftStrip.add(validateButton);
+        leftStrip.add(Box.createVerticalStrut(10));
+
+        getContentPane().add(leftStrip, BorderLayout.WEST);
     }
+
+    // -------------------------------------------------------------------------
+    // Objectif A — centerPane (JLayeredPane, CENTER) : Camera + uiOverlay
+    // -------------------------------------------------------------------------
+
+    private void initCenterPane() {
+        centerPane = new JLayeredPane();
+        centerPane.setBackground(Color.BLACK);
+        centerPane.setOpaque(true);
+        getContentPane().add(centerPane, BorderLayout.CENTER);
+    }
+
+    // -------------------------------------------------------------------------
+    // Camera (dans centerPane, couche DEFAULT)
+    // -------------------------------------------------------------------------
+
+    private void initCamera() {
+        Camera cam = new Camera(new Vector2(WINDOW_W, WINDOW_H), this) {
+            /** Ajoute VALUE_INTERPOLATION_BILINEAR lors du rendu (Objectif C). */
+            @Override
+            public void paintComponent(Graphics g) {
+                ((Graphics2D) g).setRenderingHint(
+                        RenderingHints.KEY_INTERPOLATION,
+                        RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                super.paintComponent(g);
+            }
+        };
+        cam.setBounds(0, 0, WINDOW_W, WINDOW_H);
+        centerPane.add(cam, JLayeredPane.DEFAULT_LAYER);
+    }
+
+    // -------------------------------------------------------------------------
+    // Objectif B — Letterbox resize listener
+    // -------------------------------------------------------------------------
+
+    /**
+     * À chaque redimensionnement de la JFrame :
+     *  1. Calcule scale = min(availW / WINDOW_W, availH / WINDOW_H)
+     *  2. Redimensionne la Camera en centrant avec des bandes noires (letterbox)
+     *  3. Applique le zoom à la Camera via Camera.SetZoomCamera()
+     *  4. Repositionne les éléments du uiOverlay proportionnellement
+     */
+    private void initResizeListener() {
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                applyLetterbox();
+            }
+        });
+    }
+
+    private void applyLetterbox() {
+        // Espace disponible dans centerPane (exclut déjà leftStrip via BorderLayout)
+        int availW = centerPane.getWidth();
+        int availH = centerPane.getHeight();
+        if (availW <= 0 || availH <= 0) return;
+
+        // Scale uniforme conservant le ratio WINDOW_W × WINDOW_H
+        double scaleX = (double) availW / WINDOW_W;
+        double scaleY = (double) availH / WINDOW_H;
+        currentScale  = Math.min(scaleX, scaleY);
+
+        int camW = (int) Math.round(WINDOW_W * currentScale);
+        int camH = (int) Math.round(WINDOW_H * currentScale);
+        int camX = (availW - camW) / 2;
+        int camY = (availH - camH) / 2;
+
+        // Repositionner la Camera (couche DEFAULT)
+        Component[] defaultLayer = centerPane.getComponentsInLayer(JLayeredPane.DEFAULT_LAYER);
+        if (defaultLayer.length > 0) {
+            defaultLayer[0].setBounds(camX, camY, camW, camH);
+        }
+
+        // Repositionner l'uiOverlay de façon identique (couche PALETTE)
+        Component[] paletteLayer = centerPane.getComponentsInLayer(JLayeredPane.PALETTE_LAYER);
+        if (paletteLayer.length > 0) {
+            paletteLayer[0].setBounds(camX, camY, camW, camH);
+        }
+
+        // Mise à jour du zoom Camera (utilise le mécanisme existant)
+        Camera.SetZoomCamera(new Vector2(currentScale, currentScale));
+
+        // Repositionnement proportionnel des playerRects (Objectif C)
+        repositionOverlayElements(camW, camH);
+    }
+
+    // =========================================================================
+    // Composants du monde
+    // =========================================================================
 
     private void initComponents() {
         initBackgroundComponent();
-        initStripComponent();
         initTileComponents();
         initActionBalls();
         initTurnIndicators();
@@ -498,11 +655,6 @@ public class VueJeu extends JFrame {
         backgroundComponent = new Composant2D(
                 new Vector2(WINDOW_W / 2.0, WINDOW_H / 2.0),
                 new Vector2(WINDOW_W, WINDOW_H), "Background");
-    }
-
-    private void initStripComponent() {
-        new Composant2D(new Vector2(STRIP_W / 2.0, WINDOW_H / 2.0),
-                new Vector2(STRIP_W, WINDOW_H), "LeftStrip");
     }
 
     private void initTileComponents() {
@@ -528,7 +680,9 @@ public class VueJeu extends JFrame {
     }
 
     private void initTurnIndicators() {
-        double diam = 60, cx = WINDOW_W - diam / 2.0 - 20;
+        double diam = 60;
+        double radius = diam / 2.0;
+        double cx = WINDOW_W - radius - 20 - (1.25 * radius);
         double spacing = BOARD_SIZE / 8.0;
         for (int i = 0; i < 8; i++) {
             double cy = BOARD_ORIGIN.y + spacing / 2.0 + i * spacing;
@@ -544,17 +698,18 @@ public class VueJeu extends JFrame {
     }
 
     // =========================================================================
-    // Overlay Swing
+    // Objectif A — uiOverlay résiduel (indicateurs joueurs uniquement)
     // =========================================================================
 
     private void initUIOverlay() {
         uiOverlay = new JPanel(null);
         uiOverlay.setOpaque(false);
         uiOverlay.setBounds(0, 0, WINDOW_W, WINDOW_H);
+
+        // Seuls les playerRects restent dans l'overlay ; les boutons sont dans leftStrip
         initPlayerRects();
-        initLeftStripButtons();
-        getContentPane().add(uiOverlay);
-        getContentPane().setComponentZOrder(uiOverlay, 0);
+
+        centerPane.add(uiOverlay, JLayeredPane.PALETTE_LAYER);
     }
 
     private void initPlayerRects() {
@@ -574,13 +729,10 @@ public class VueJeu extends JFrame {
             type.setFont(new Font("SansSerif", Font.PLAIN, 11));
             rect.add(name, BorderLayout.CENTER);
             rect.add(type, BorderLayout.SOUTH);
-            rect.addComponentListener(new java.awt.event.ComponentAdapter() {
-                @Override public void componentResized(java.awt.event.ComponentEvent e) { positionnerRectangle(rect, pi); }
-            });
             playerRects[p] = rect;
             uiOverlay.add(rect);
             rect.setSize(rectW, rectH);
-            positionnerRectangle(rect, p);
+            positionnerRectangle(rect, pi);
         }
     }
 
@@ -588,38 +740,40 @@ public class VueJeu extends JFrame {
         java.awt.Container parent = rect.getParent();
         if (parent == null) return;
         int x = (parent.getWidth() - rect.getWidth()) / 2;
-        int y = (playerIndex == 0) ? 0 : parent.getHeight() - rect.getHeight() - 40;
+        int y = (playerIndex == 0) ? 0 : parent.getHeight() - rect.getHeight();
         rect.setLocation(x, y);
     }
 
-    private void initLeftStripButtons() {
-        int bx = 5, bw = (int) STRIP_W - 10, bh = 38;
+    // -------------------------------------------------------------------------
+    // Objectif C — repositionnement proportionnel des éléments overlay
+    // -------------------------------------------------------------------------
 
-        JButton retour = makeStripButton("Retour");
-        retour.setBounds(bx, 20, bw, bh);
-        retour.addActionListener(e -> System.out.println("VueJeu — Retour (non implemente)"));
-        uiOverlay.add(retour);
-
-        JButton newGame = makeStripButton("Nv. Partie");
-        newGame.setBounds(bx, 70, bw, bh);
-        newGame.addActionListener(e -> { if (gameplay != null) gameplay.resetGame(); });
-        uiOverlay.add(newGame);
-
-        JButton ia = makeStripButton("IA");
-        ia.setBounds(bx, 120, bw, bh);
-        ia.addActionListener(e -> { if (gameplay != null) gameplay.getControler().joueIa(); });
-        uiOverlay.add(ia);
-
-        JButton regles = makeStripButton("Regles");
-        regles.setBounds(bx, 170, bw, bh);
-        regles.addActionListener(e -> onReglesPressed());
-        uiOverlay.add(regles);
-
-        validateButton = makeStripButton("Terminer tour");
-        validateButton.setBounds(bx, WINDOW_H - 75, bw, bh);
-        validateButton.addActionListener(e -> { if (gameplay != null) gameplay.onValidatePressed(); });
-        uiOverlay.add(validateButton);
+    /**
+     * Redimensionne et repositionne les éléments de l'uiOverlay en fonction
+     * des nouvelles dimensions de la zone Camera (camW × camH).
+     * Appelé depuis applyLetterbox() à chaque resize.
+     */
+    private void repositionOverlayElements(int camW, int camH) {
+        if (uiOverlay == null) return;
+        // L'uiOverlay occupe désormais exactement la surface de la Camera
+        // (setBounds déjà fait dans applyLetterbox), donc on repositionne
+        // les playerRects relativement à cette nouvelle taille.
+        uiOverlay.setSize(camW, camH);
+        for (int p = 0; p < 2; p++) {
+            if (playerRects[p] == null) continue;
+            positionnerRectangle(playerRects[p], p);
+        }
+        // Si le panneau de règles est ouvert, on l'adapte aussi
+        if (panneauRegles != null) {
+            panneauRegles.setBounds(0, 0, camW, camH);
+        }
+        uiOverlay.revalidate();
+        uiOverlay.repaint();
     }
+
+    // =========================================================================
+    // Bouton helper
+    // =========================================================================
 
     private JButton makeStripButton(String label) {
         JButton btn = new JButton("<html><center>" + label + "</center></html>");
@@ -629,14 +783,15 @@ public class VueJeu extends JFrame {
         btn.setBorder(BorderFactory.createLineBorder(new Color(100, 100, 120), 1));
         btn.setFocusable(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btn.setMaximumSize(new Dimension(STRIP_W_PX - 10, 38));
+        btn.setPreferredSize(new Dimension(STRIP_W_PX - 10, 38));
         return btn;
     }
 
     // =========================================================================
-// Panneau de regles — affichage purement visuel, zero logique metier
-// =========================================================================
-
-/** Panneau de regles actuellement affiche (null = ferme). */
+    // Panneau de regles — affichage purement visuel, zero logique metier
+    // =========================================================================
 
     private void onReglesPressed() {
         // Effet Toggle : si deja ouvert, on ferme
@@ -645,9 +800,7 @@ public class VueJeu extends JFrame {
             return;
         }
 
-        // ------------------------------------------------------------
-        // 1. Creation du panneau semi-transparent plein ecran
-        // ------------------------------------------------------------
+        // 1. Creation du panneau semi-transparent
         panneauRegles = new JPanel(new BorderLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -656,12 +809,11 @@ public class VueJeu extends JFrame {
             }
         };
         panneauRegles.setOpaque(false);
-        panneauRegles.setBounds(0, 0, WINDOW_W, WINDOW_H);
+        // Dimensionné sur la surface courante de l'uiOverlay
+        panneauRegles.setBounds(0, 0, uiOverlay.getWidth(), uiOverlay.getHeight());
         panneauRegles.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
 
-        // ------------------------------------------------------------
         // 2. Contenu HTML complet
-        // ------------------------------------------------------------
         String html = "<html>"
             + "<body style='color:white; font-family:SansSerif;'>"
 
@@ -731,9 +883,7 @@ public class VueJeu extends JFrame {
 
         panneauRegles.add(scroll, BorderLayout.CENTER);
 
-        // ------------------------------------------------------------
         // 3. MouseListener : clic n'importe → fermer
-        // ------------------------------------------------------------
         java.awt.event.MouseAdapter fermetureListener = new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -741,27 +891,24 @@ public class VueJeu extends JFrame {
             }
         };
         panneauRegles.addMouseListener(fermetureListener);
-        // Propagation aux enfants pour que le clic sur le label/scroll ferme aussi
         scroll.addMouseListener(fermetureListener);
         labelRegles.addMouseListener(fermetureListener);
 
-        // ------------------------------------------------------------
-        // 4. Ajout au premier plan (devant tout)
-        // ------------------------------------------------------------
-        this.add(panneauRegles, 0);
-        this.revalidate();
-        this.repaint();
+        // 4. Ajout au premier plan dans l'uiOverlay (devant les playerRects)
+        uiOverlay.add(panneauRegles, 0);
+        uiOverlay.revalidate();
+        uiOverlay.repaint();
 
         System.out.println("VueJeu — Panneau de regles affiche");
     }
 
     private void fermerPanneauRegles() {
         if (panneauRegles != null) {
-            this.remove(panneauRegles);
+            uiOverlay.remove(panneauRegles);
             panneauRegles = null;
-            this.revalidate();
-            this.repaint();
+            uiOverlay.revalidate();
+            uiOverlay.repaint();
             System.out.println("VueJeu — Panneau de regles ferme");
         }
     }
-    }
+}
