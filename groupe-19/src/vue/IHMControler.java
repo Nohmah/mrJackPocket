@@ -1,204 +1,175 @@
 package src.vue;
 
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.*;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
 /**
- * IHMControler — Contrôleur des interactions utilisateur.
+ * IHMControler — Interpréteur d'intentions utilisateur.
  *
  * Responsabilités :
- *   - Intercepter les clics souris et les traduire en intentions d'action.
- *   - Gérer la pile d'annulation/rétablissement locale (Undo/Redo).
- *   - Lancer l'action automatique de l'IA si le joueur actif n'est pas humain.
+ *   - Intercepter les clics souris / touches clavier et les traduire en
+ *     intentions typées ({@link ClickIntent}, {@link ActionIntent}).
+ *   - Gérer la pile Undo/Redo locale.
+ *   - Transmettre immédiatement les intentions à {@link Gameplay} sans
+ *     prendre aucune décision métier.
  *
- * Ce contrôleur est instancié par Gameplay et reçoit les événements
- * délégués par VueJeu (MouseListener, KeyListener).
+ * Ce que IHMControler NE fait plus :
+ *   - Afficher des dialogues JOptionPane.
+ *   - Appeler partie.actions.*.
+ *   - Décider quoi faire d'une action (c'est Gameplay qui décide).
  */
 public class IHMControler implements MouseListener, KeyListener {
 
-    // -------------------------------------------------------------------------
-    // Record Java 16 : représente un clic utilisateur normalisé
-    // -------------------------------------------------------------------------
+    // =========================================================================
+    // Records d'intentions
+    // =========================================================================
 
     /**
-     * ClickIntent — données immuables d'un clic sur le plateau.
+     * ClickIntent — clic sur une cellule du plateau.
      *
-     * @param cellRow    Ligne de la grille (0-2) sur laquelle le joueur a cliqué.
-     * @param cellCol    Colonne de la grille (0-2).
-     * @param worldPos   Position monde du clic (en pixels, espace Camera).
-     * @param isRightClick Vrai si clic droit (action secondaire).
+     * @param cellRow      Ligne (0-2).
+     * @param cellCol      Colonne (0-2).
+     * @param worldPos     Position monde du clic.
+     * @param isRightClick Vrai si clic droit.
      */
     public record ClickIntent(int cellRow, int cellCol, Vector2 worldPos, boolean isRightClick) {}
 
-    // -------------------------------------------------------------------------
-    // Constantes de mapping plateau → monde
-    // -------------------------------------------------------------------------
+    /**
+     * ActionIntent — clic confirmé sur une boule d'action.
+     *
+     * @param ballIndex  Index de la boule (0-3).
+     * @param actionName Nom du sprite courant (ex: "action_holmes").
+     */
+    public record ActionIntent(int ballIndex, String actionName) {}
 
-    /** Taille d'une tuile en unités monde (doit correspondre à VueJeu). */
-    private static final double TILE_WORLD_SIZE = 150.0;
+    // =========================================================================
+    // Constantes plateau
+    // =========================================================================
 
-    /** Coin haut-gauche du plateau en unités monde (doit correspondre à VueJeu). */
+    private static final double  TILE_WORLD_SIZE   = 150.0;
     private static final Vector2 BOARD_WORLD_ORIGIN = new Vector2(375, 175);
 
-    // -------------------------------------------------------------------------
+    // =========================================================================
     // État interne
-    // -------------------------------------------------------------------------
+    // =========================================================================
 
-    /** Pile d'actions réalisées (pour Undo). */
-    private final Deque<ClickIntent> undoStack = new ArrayDeque<>();
+    private final Deque<ClickIntent> undoStack    = new ArrayDeque<>();
+    private final Deque<ClickIntent> redoStack    = new ArrayDeque<>();
+    private ClickIntent              pendingIntent = null;
+    private final Gameplay           gameplay;
+    private String                   activePlayerType = "HUMAN";
 
-    /** Pile d'actions annulées (pour Redo). */
-    private final Deque<ClickIntent> redoStack = new ArrayDeque<>();
-
-    /** Intention en cours de construction (avant validation). */
-    private ClickIntent pendingIntent = null;
-
-    /** Référence au pont logique. */
-    private final Gameplay gameplay;
-
-    /** Type du joueur actif : "HUMAN" ou "AI". */
-    private String activePlayerType = "HUMAN";
-
-    // -------------------------------------------------------------------------
+    // =========================================================================
     // Constructeur
-    // -------------------------------------------------------------------------
+    // =========================================================================
 
     public IHMControler(Gameplay gameplay) {
         this.gameplay = gameplay;
     }
 
-    // -------------------------------------------------------------------------
-    // API publique
-    // -------------------------------------------------------------------------
+    // =========================================================================
+    // API publique — configuration
+    // =========================================================================
 
-    /**
-     * Définit le type du joueur actif avant chaque tour.
-     * Appelé par Gameplay au début de chaque tour.
-     *
-     * @param type "HUMAN" ou "AI"
-     */
+    /** Définit le type du joueur actif avant chaque tour ("HUMAN" ou "AI"). */
     public void setActivePlayerType(String type) {
         this.activePlayerType = type;
     }
 
+    public ClickIntent getPendingIntent() { return pendingIntent; }
+
+    // =========================================================================
+    // Point d'entrée : hit sur une boule d'action (appelé par VueJeu)
+    // =========================================================================
+
     /**
-     * Retourne l'intention en attente (peut être null si aucun clic en cours).
+     * Reçoit la notification d'un hit sur une boule d'action depuis VueJeu.
+     * Construit un {@link ActionIntent} et le transmet immédiatement à Gameplay.
+     *
+     * VueJeu a déjà fait la conversion écran→monde et le hitTest.
+     * IHMControler n'interprète pas le sens de l'action.
+     *
+     * @param ballIndex  Index de la boule touchée (0-3).
+     * @param actionName Nom du sprite courant (ex: "action_holmes").
      */
-    public ClickIntent getPendingIntent() {
-        return pendingIntent;
+    public void onActionBallHit(int ballIndex, String actionName) {
+        ActionIntent intent = new ActionIntent(ballIndex, actionName);
+        System.out.println("IHMControler — ActionIntent créé : [" + ballIndex + "] " + actionName);
+
+        // Transmission directe à Gameplay : aucune décision ici.
+        gameplay.onActionBallClicked(intent);
     }
 
-    /**
-     * Confirme l'intention en cours : la pousse dans undoStack et la signale à
-     * Gameplay pour qu'il la transmette à la logique.
-     */
+    // =========================================================================
+    // Gestion Undo / Redo / Confirmation
+    // =========================================================================
+
+    /** Confirme l'intention en cours et la pousse dans undoStack. */
     public void confirmPendingIntent() {
         if (pendingIntent == null) return;
-
         undoStack.push(pendingIntent);
-        redoStack.clear(); // Toute nouvelle action efface le Redo
-
-        // ENVOI : Transmet le ClickIntent validé à Gameplay,
-        // qui le propagera vers IntermediaryGameState pour application provisoire.
+        redoStack.clear();
         gameplay.onActionConfirmed(pendingIntent);
-
         pendingIntent = null;
     }
 
-    /**
-     * Annule la dernière action confirmée (Undo local).
-     * Ne touche pas encore à FinalGameState ; seul l'état intermédiaire est affecté.
-     */
+    /** Annule la dernière action confirmée. */
     public void undo() {
         if (undoStack.isEmpty()) return;
-
         ClickIntent last = undoStack.pop();
         redoStack.push(last);
-
-        // ENVOI : Notifie Gameplay d'annuler la dernière action dans
-        // IntermediaryGameState (rollback de l'état provisoire).
         gameplay.onUndoRequested(last);
     }
 
-    /**
-     * Rétablit la dernière action annulée (Redo local).
-     */
+    /** Rétablit la dernière action annulée. */
     public void redo() {
         if (redoStack.isEmpty()) return;
-
         ClickIntent next = redoStack.pop();
         undoStack.push(next);
-
-        // ENVOI : Notifie Gameplay de ré-appliquer l'action dans
-        // IntermediaryGameState.
         gameplay.onRedoRequested(next);
     }
 
+    // =========================================================================
+    // Action IA
+    // =========================================================================
+
     /**
-     * Simule une action automatique si le joueur actif est de type IA.
-     * Doit être appelée par Gameplay en début de tour IA.
-     *
-     * La méthode calcule une action fictive, la pré-valide, puis appelle
-     * confirmPendingIntent() pour l'intégrer dans le flux normal.
+     * Simule une action IA sur la cellule (0,0) par défaut.
+     * À brancher sur la vraie logique de sélection de coup.
      */
     public void joueIa() {
         if (!"AI".equals(activePlayerType)) return;
-
-        // RÉCEPTION : Récupère depuis IntermediaryGameState la liste des
-        // mouvements légaux disponibles pour l'IA afin de choisir parmi eux.
-        // List<ClickIntent> legalMoves = IntermediaryGameState.getLegalMoves();
-
-        // Simulation : l'IA choisit la cellule (0,0) par défaut.
-        // À remplacer par la logique de sélection de GameEngine.
-        Vector2 iaWorldPos = BOARD_WORLD_ORIGIN.Add(new Vector2(
-                TILE_WORLD_SIZE / 2,
-                TILE_WORLD_SIZE / 2
-        ));
-        pendingIntent = new ClickIntent(0, 0, iaWorldPos, false);
-
-        // ENVOI : L'action IA est traitée de façon identique à un clic humain ;
-        // GameEngine sera notifié via Gameplay.onActionConfirmed().
+        Vector2 pos = BOARD_WORLD_ORIGIN.Add(new Vector2(TILE_WORLD_SIZE / 2, TILE_WORLD_SIZE / 2));
+        pendingIntent = new ClickIntent(0, 0, pos, false);
         confirmPendingIntent();
     }
 
-    // -------------------------------------------------------------------------
+    // =========================================================================
     // MouseListener
-    // -------------------------------------------------------------------------
+    // =========================================================================
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        // Convertit les coordonnées écran en coordonnées monde via la Camera
-        Vector2 screenPos = new Vector2(e.getX(), e.getY());
-        Vector2 worldPos  = screenToWorld(screenPos);
+        Vector2 world = screenToWorld(new Vector2(e.getX(), e.getY()));
+        int col = (int) ((world.x - BOARD_WORLD_ORIGIN.x) / TILE_WORLD_SIZE);
+        int row = (int) ((world.y - BOARD_WORLD_ORIGIN.y) / TILE_WORLD_SIZE);
 
-        // Détermine la cellule de grille correspondante
-        int col = (int) ((worldPos.x - BOARD_WORLD_ORIGIN.x) / TILE_WORLD_SIZE);
-        int row = (int) ((worldPos.y - BOARD_WORLD_ORIGIN.y) / TILE_WORLD_SIZE);
-
-        // Ignore les clics hors du plateau 3x3
-        if (col < 0 || col > 2 || row < 0 || row > 2){
+        if (col < 0 || col > 2 || row < 0 || row > 2) {
+            // Clic hors plateau — Gameplay décide si c'est significatif
+            // (ex: sortir du mode rotation).
             gameplay.clicHorsDistrict();
             return;
         }
 
         boolean isRight = (e.getButton() == MouseEvent.BUTTON3);
-        pendingIntent = new ClickIntent(row, col, worldPos, isRight);
+        pendingIntent = new ClickIntent(row, col, world, isRight);
 
-        // RÉCEPTION : Demande à IntermediaryGameState de tester la validité
-        // du mouvement temporaire (row, col) AVANT tout envoi à GameEngine.
-        // boolean valid = IntermediaryGameState.isMoveLegal(row, col);
-        // if (!valid) { pendingIntent = null; return; }
-
-        // Notifie la Vue pour un retour visuel immédiat (highlight de la cellule)
+        // Notification plateau — Gameplay orchestre la réponse.
         gameplay.onCellHovered(row, col);
 
-        System.out.println("Clic détecté : cellule (" + row + "," + col + ") "
-                + (isRight ? "[droit]" : "[gauche]")
-                + " → monde " + worldPos.ToString());
+        System.out.println("IHMControler — ClickIntent : (" + row + "," + col + ")"
+                + (isRight ? " [droit]" : "") + " monde=" + world.ToString());
     }
 
     @Override public void mousePressed(MouseEvent e)  {}
@@ -206,16 +177,16 @@ public class IHMControler implements MouseListener, KeyListener {
     @Override public void mouseEntered(MouseEvent e)  {}
     @Override public void mouseExited(MouseEvent e)   {}
 
-    // -------------------------------------------------------------------------
-    // KeyListener (raccourcis clavier)
-    // -------------------------------------------------------------------------
+    // =========================================================================
+    // KeyListener
+    // =========================================================================
 
     @Override
     public void keyPressed(KeyEvent e) {
         switch (e.getKeyCode()) {
             case KeyEvent.VK_Z -> { if (e.isControlDown()) undo(); }
             case KeyEvent.VK_Y -> { if (e.isControlDown()) redo(); }
-            case KeyEvent.VK_ENTER -> confirmPendingIntent();
+            case KeyEvent.VK_ENTER  -> confirmPendingIntent();
             case KeyEvent.VK_ESCAPE -> pendingIntent = null;
         }
     }
@@ -223,15 +194,12 @@ public class IHMControler implements MouseListener, KeyListener {
     @Override public void keyTyped(KeyEvent e)    {}
     @Override public void keyReleased(KeyEvent e) {}
 
-    // -------------------------------------------------------------------------
-    // Helpers privés
-    // -------------------------------------------------------------------------
+    // =========================================================================
+    // Helper
+    // =========================================================================
 
-    /**
-     * Convertit des coordonnées écran (pixels Swing) en coordonnées monde.
-     * Inverse de la projection Camera : worldPos = screenPos / zoom + positionHG
-     */
-    private Vector2 screenToWorld(Vector2 screenPos) {
-        return screenPos.Div(Camera.zoom).Add(Camera.positionHG);
+    /** Coordonnées écran → monde (inverse de la projection Camera). */
+    private Vector2 screenToWorld(Vector2 screen) {
+        return screen.Div(Camera.zoom).Add(Camera.positionHG);
     }
 }
