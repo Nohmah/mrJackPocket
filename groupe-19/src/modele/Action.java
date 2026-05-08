@@ -1,8 +1,9 @@
 package src.modele;
 
 /**
- * Liste des 7 actions possibles des jetons Action
- * */
+ * Liste les 7 actions des jetons Action.
+ **/
+
 public enum Action {
 
     HOLMES("Holmes"),
@@ -15,7 +16,7 @@ public enum Action {
 
     public final String nom;
 
-    /** Constructeur */
+    /** Constructeur **/
     Action(String nom){
         this.nom = nom;
     }

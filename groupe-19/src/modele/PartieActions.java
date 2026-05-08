@@ -18,7 +18,7 @@ public class PartieActions {
     public List<Action> getActionsPossibles() {
         List<Action> actionsPossibles = new ArrayList<>();
         for (JetonAction j : partie.jetonsAction) {
-            if (!j.isJouee()) {
+            if (!j.isJoue()) {
                 actionsPossibles.add(j.getActionVisible());
             }
         }
@@ -47,7 +47,7 @@ public class PartieActions {
         }
         detective.deplacer(pas);
         System.out.println(detective.getType() + " avance de " + pas);
-        jeton.setJouee(true);
+        jeton.setJoue(true);
         partie.apresAction();
     }
 
@@ -68,26 +68,25 @@ public class PartieActions {
             }
         }
         partie.verifFinDePartie();
-        jeton.setJouee(true);
+        jeton.setJoue(true);
         if (partie.isPartieTerminee()) return;
         partie.apresAction();
     }
 
     public void rotationQuartier(int JetonIndex, int x, int y, int quarts) {
         JetonAction jeton = partie.jetonsAction.get(JetonIndex);
-        if (jeton.isJouee()){
+        if (jeton.isJoue()){
             System.out.println("JETON ACTION DEJA JOUE");
             return;
         }
         Quartier q = partie.district.get(x, y);
-        if (q.getADejaPivoteTour()) {
+        if (q.getAPivote()) {
             System.out.println("Il est interdit de pivoter un quartier déjà pivoté dans le même tour de jeu");
             return;
         }
         q.pivoter(quarts);
-        q.setADejaPivoteTour(true);
         System.out.println("Quartier pivoté");
-        jeton.setJouee(true);
+        jeton.setJoue(true);
         partie.apresAction();
     }
 
@@ -98,7 +97,7 @@ public class PartieActions {
         }
         partie.district.echanger(x1, y1, x2, y2);
         System.out.println("Échange");
-        jeton.setJouee(true);
+        jeton.setJoue(true);
         partie.apresAction();
     }
 
@@ -116,13 +115,13 @@ public class PartieActions {
             partie.suspects.remove(carte.getPersonnage());
             partie.district.innocenter(carte.getPersonnage());
         }
-        jeton.setJouee(true);
+        jeton.setJoue(true);
         partie.apresAction();
     }
 
     private JetonAction getSiJetonDisponible(Action action) {
         for (JetonAction j : partie.jetonsAction) {
-            if (j.getActionVisible() == action && !j.isJouee()) {
+            if (j.getActionVisible() == action && !j.isJoue()) {
                 return j;
             }
         }

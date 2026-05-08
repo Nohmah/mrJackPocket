@@ -1,55 +1,59 @@
 package src.modele;
+
 /**
- *
- * Jeton Action : Deux faces, deux actions.
- * Choix aléatoire de la face lors des tours impairs (detective)
- * Au tour pair, on retourne le jeton, sa 2ème face devient visible.
- *
- */
+ * Représente un jeton Action. Chaque jeton a deux faces avec une action (différente) sur chaque face.
+ * Chaque jeton a une seule face visible, l'autre face est cachée.
+ * Lors d'une partie, à chaque début de tours Impairs (1-3-5-7) les jetons sont lancés.
+ * À chaque début de tours Pairs (2-4-6-8) les jetons préalablement lancés sont retournés,
+ * et la face cachée devient visible (et inversement).
+ * Les jetons Actions ne peuvent être joués qu'une fois dans un tour.
+ **/
+
 public class JetonAction {
-    private final Action faceA;
-    private final Action faceB;
-    private boolean faceAVisible; //true = le face A visible, false = face B visible.
-    private boolean jouee; // le jeton à déjà été jouée a ce tour ?
+    private final Action faceRecto;
+    private final Action faceVerso;
+    private boolean faceRectoVisible;
+    private boolean joue;
 
-    private JetonAction(Action faceA, Action faceB){
-        this.faceA = faceA;
-        this.faceB = faceB;
-        faceAVisible = true;
-        jouee = false;
+    /** Constructeur
+     * Assigne une action à chaque face du jeton
+     * Définit le jeton comme non joué
+     **/
+    private JetonAction(Action faceRecto, Action faceVerso){
+        this.faceRecto = faceRecto;
+        this.faceVerso = faceVerso;
+        joue = false;
     }
 
-    public static JetonAction creerJeton(Action faceA, Action faceB){
-        return new JetonAction(faceA, faceB);
+    /** Construit l'objet JetonAction **/
+    public static JetonAction creerJetonAction(Action faceRecto, Action faceVerso){
+        return new JetonAction(faceRecto, faceVerso);
     }
 
-    /** Lance le jeton - determine la face visible. **/
+    /** Lance le jeton (determine la face visible) **/
     public void lancer(){
-        faceAVisible = Math.random() < 0.5;
-        jouee = false;
+        this.faceRectoVisible = Math.random() < 0.5;
+        this.setJoue(false);
     }
 
-    /** Retourne le jeton - uniquement pour le tour pair (Jack) **/
+    /** Retourne le jeton **/
     public void retourner() {
-        faceAVisible = !faceAVisible;
-        jouee = false;
+        this.faceRectoVisible = !faceRectoVisible;
+        this.setJoue(false);
     }
 
-    /** Retourne l'action du jeton sur sa face visible **/
+    /** Renvoie si le jeton a été joué **/
+    public boolean isJoue(){
+        return joue;
+    }
+
+    /** Renvoie l'action de la face visible du jeton **/
     public Action getActionVisible(){
-        return faceAVisible ? faceA : faceB;
+        return faceRectoVisible ? faceRecto : faceVerso;
     }
 
-    /** Retourne l'action cachée **/
-    public Action getActionCache(){
-        return faceAVisible ? faceB : faceA;
-    }
-
-    public boolean isJouee(){
-        return jouee;
-    }
-
-    public void setJouee(boolean jouee){
-        this.jouee = jouee;
+    /** Définit le jeton comme joué ou non joué **/
+    public void setJoue(boolean joue){
+        this.joue = joue;
     }
 }

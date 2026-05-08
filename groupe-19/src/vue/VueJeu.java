@@ -3,7 +3,6 @@ package src.vue;
 import src.modele.*;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.List;
@@ -219,7 +218,7 @@ public class VueJeu extends JFrame {
             for (int j = 0; j < 3; j++) {
                 Quartier q = district.get(i, j);
                 String baseName;
-                if (q.estSuspect()) {
+                if (q.estFaceSuspect()) {
                     baseName = q.getPersonnage().nom.replace(" ", "");
                 } else {
                     baseName = (q.getPersonnage() == Personnage.JOSEPH_LANE)

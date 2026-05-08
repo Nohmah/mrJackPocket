@@ -48,7 +48,7 @@ public class Partie {
 
 
     public Partie(){
-        district = new District();
+        district = District.creerDistrict();
         actions = new PartieActions(this);
         // Création des listes
         jetonsAction = new ArrayList<>();
@@ -93,7 +93,7 @@ public class Partie {
         jackVisibleCeTour = false;
         sabliersDeJack = 0;
 
-        district = new District();
+        district = District.creerDistrict();
 
         // Vider et recréer les listes
         jetonsAction.clear();
@@ -225,7 +225,7 @@ public class Partie {
             case ROTATION:
                 // (car il peut y avoir 2 jetons face rotation en même temps au cours d'un tour).
                 for(int i = 0; i < jetonsAction.size(); i++){
-                    if(jetonsAction.get(i).getActionVisible() == Action.ROTATION && !jetonsAction.get(i).isJouee()){
+                    if(jetonsAction.get(i).getActionVisible() == Action.ROTATION && !jetonsAction.get(i).isJoue()){
                         actions.rotationQuartier(i, coupIa.para1 / 3, coupIa.para1 % 3, coupIa.para2);
                         break;
                     }

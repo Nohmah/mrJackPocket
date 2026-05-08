@@ -11,10 +11,10 @@ public class PartieInit {
     }
 
     public static void initialiserJetons(Partie partie) {
-        partie.jetonsAction.add(JetonAction.creerJeton(Action.ALIBI, Action.HOLMES));
-        partie.jetonsAction.add(JetonAction.creerJeton(Action.TOBY, Action.WATSON));
-        partie.jetonsAction.add(JetonAction.creerJeton(Action.ROTATION, Action.ECHANGE));
-        partie.jetonsAction.add(JetonAction.creerJeton(Action.ROTATION, Action.JOKER));
+        partie.jetonsAction.add(JetonAction.creerJetonAction(Action.ALIBI, Action.HOLMES));
+        partie.jetonsAction.add(JetonAction.creerJetonAction(Action.TOBY, Action.WATSON));
+        partie.jetonsAction.add(JetonAction.creerJetonAction(Action.ROTATION, Action.ECHANGE));
+        partie.jetonsAction.add(JetonAction.creerJetonAction(Action.ROTATION, Action.JOKER));
     }
 
     public static void initialiserCartes(Partie partie) {

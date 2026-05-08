@@ -1,7 +1,8 @@
 package src.modele;
 
 /**
- * Les trois détectives se déplacent sur un circuit périphérique de 12 espaces
+ * Représente et gère la position des (trois) détectives : Holmes, Watson et le chien Toby.
+ * Les détectives se déplacent sur un circuit périphérique de 12 espaces
  * autour du district 3×3.
  *
  * Circuit (sens horaire, 0 = haut-gauche) :
@@ -14,9 +15,9 @@ package src.modele;
  *
  *              [8]   [7]   [6]
  *
- *
- * Chaque espace fait face à un quartier (x,y) depuis un côté donné.
- */
+ * Chaque détective est placé sur un espace, d’où il fait face à un quartier (x,y) avec une certaine orientation.
+ **/
+
 public class Detective {
 
     public enum Type{
@@ -24,20 +25,21 @@ public class Detective {
         WATSON("Watson"),
         TOBY("Toby");
 
-        private final String nom;
+        public final String nom;
 
+        /** Constructeur **/
         Type(String nom){
             this.nom = nom;
         }
     }
 
     /**
-     * Mapping des 12 positions possible des détectives.
+     * Mapping des 12 positions possible des détectives autour du District.
      * pos <- {x, y, orientation} : x, y représente la position du quartier dans le district,
      * orientation représente l'orientation du détective.
      *
      * Index d'orientation 0 = NORD, 1 = EST, 2 = SUD, 3 = OUEST.
-     */
+     **/
     public static final int[][] CIRCUIT = {
             /* 0 */ {0, 0, 0}, // face au quartier 0,0 depuis le NORD.
             /* 1 */ {0, 1, 0}, // face au quartier 0,1 depuis le NORD.
@@ -51,9 +53,9 @@ public class Detective {
             /* 7 */ {2, 1, 2}, // face au quartier 2,1 depuis le SUD.
             /* 8 */ {2, 0, 2}, // face au quartier 2,0 depuis le SUD.
 
-            /* 9 */ {2, 0, 3}, // face au quartier 2,0 depuis le OUEST.
-            /*10 */ {1, 0, 3}, // face au quartier 1,0 depuis le OUEST.
-            /*11 */ {0, 0, 3}, // face au quartier 0,0 depuis le OUEST.
+            /* 9 */ {2, 0, 3}, // face au quartier 2,0 depuis l'OUEST.
+            /*10 */ {1, 0, 3}, // face au quartier 1,0 depuis l'OUEST.
+            /*11 */ {0, 0, 3}, // face au quartier 0,0 depuis l'OUEST.
     };
 
     public static final int NB_POSITIONS = 12;
@@ -61,27 +63,33 @@ public class Detective {
     private final Type type;
     private int position;
 
-    public Detective(Type type, int pos){
+    /** Constructeur **/
+    public Detective(Type type, int position){
         this.type = type;
-        position = pos;
+        this.position = position;
     }
 
-    public static Detective creerDetective(Type type, int pos){
-        return new Detective(type, pos);
+    /** Construit et renvoie l'objet Detective **/
+    public static Detective creerDetective(Type type, int position){
+        return new Detective(type, position);
     }
 
+    /** Déplace le détective dans le sens horaire, de 1 ou 2 pas **/
+    public void deplacer(int pas){
+        position = (position + pas) % NB_POSITIONS;
+    }
+
+    /** Retourne le type de détective **/
     public Type getType(){
         return this.type;
     }
 
+    /** Retourne la position du détective **/
     public int getPosition(){
         return this.position;
     }
-    /** Déplace le détective dans le sens horaire, de 1 ou 2 pas*/
-    public void deplacer(int pas){
-        position = (position + pas) % NB_POSITIONS;
-    }
-    /** Renvoi la ligne du quartier observé par le détective */
+
+    /** Renvoi la ligne du quartier observé par le détective **/
     public int getQx(){
         return CIRCUIT[position][0];
     }
@@ -91,7 +99,7 @@ public class Detective {
         return CIRCUIT[position][1];
     }
 
-    /** Renvoi l'orientation où se trouve le détective */
+    /** Renvoi l'orientation du détective */
     public Orientation getOrientation(){
         return Orientation.CARDINAUX[CIRCUIT[position][2]];
     }
