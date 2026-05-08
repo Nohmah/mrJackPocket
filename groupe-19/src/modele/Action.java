@@ -1,5 +1,8 @@
 package src.modele;
 
+/**
+ * Liste des 7 actions possibles des jetons Action
+ * */
 public enum Action {
 
     HOLMES("Holmes"),
@@ -7,11 +10,12 @@ public enum Action {
     TOBY("Toby"),
     JOKER("Joker"),
     ROTATION("Rotation"),
-    ECHANGE("Echange"),
+    ECHANGE("Échange"),
     ALIBI("Alibi");
 
     public final String nom;
 
+    /** Constructeur */
     Action(String nom){
         this.nom = nom;
     }

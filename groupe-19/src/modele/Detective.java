@@ -1,4 +1,5 @@
 package src.modele;
+
 /**
  * Les trois détectives se déplacent sur un circuit périphérique de 12 espaces
  * autour du district 3×3.

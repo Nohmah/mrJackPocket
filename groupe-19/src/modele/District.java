@@ -2,42 +2,45 @@ package src.modele;
 import java.util.*;
 
 /**
- * Le District est la grille 3x3 de Quartiers.
+ * Le District est la grille 3x3 de Quartiers (ou tuiles).
+ * (ligne, colonne)
  *
- * Coordonées (convention ligne-colonne) :
- *   (0,0) haut-gauche ... (0,2) haut-droite
- *   (1,0) milieu-gauche ... (1,2) milieu-droite
- *   (2,0) bas-gauche ... (2,2) bas-droite
+ *      (0,0) (0,1) (0,2)
+ *      (1,0) (1,1) (1,2)
+ *      (2,0) (2,1) (2,2)
  *
- *   Chaque quartier est placé aléatoirement avec une orientation aléatoire.
- *
+ *   Chaque quartier est placé à une position aléatoire avec une orientation aléatoire
+ *   (à part les quartiers à côté des détectives qui doivent leur montrer un mur).
  */
 
 public class District {
     private final Quartier[][] grille = new Quartier[3][3];
 
+    /**Constructeur*/
     public District(){ initialiser(); }
 
     private void initialiser(){
         List<Personnage> personnages = new ArrayList<>(Arrays.asList(Personnage.values()));
         Collections.shuffle(personnages);
-
-        Orientation[] orientations = Orientation.values();
         Random rng = new Random();
 
         int index = 0;
         for(int x = 0; x < 3; x++){
             for(int y = 0; y < 3; y++){
-                Orientation orMur = Orientation.CARDINAUX[rng.nextInt(4)];
+                Orientation orMur;
+                if (x==0 && y==0){
+                    orMur = Orientation.OUEST;
+                } else if (x==0 && y==2){
+                    orMur = Orientation.EST;
+                } else if (x==2 && y==1){
+                    orMur = Orientation.SUD;
+                } else {
+                    orMur = Orientation.CARDINAUX[rng.nextInt(4)];
+                }
                 grille[x][y] = new Quartier(personnages.get(index++), orMur);
-                //Pour vérifier si le modele correspond à la vue future
-                System.out.println(personnages.get(index-1).nom + " - Mur : " + orMur);
+                System.out.println(personnages.get(index - 1).nom + " - Mur : " + orMur);
             }
         }
-        //Pour init selon les règles (chaque detective face a un mur)
-        grille[0][0].setOrientationMur(Orientation.OUEST);
-        grille[0][2].setOrientationMur(Orientation.EST);
-        grille[2][1].setOrientationMur(Orientation.SUD);
     }
 
     public Quartier get(int x, int y){
