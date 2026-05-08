@@ -33,8 +33,11 @@ public class District {
                 //Pour vérifier si le modele correspond à la vue future
                 System.out.println(personnages.get(index-1).nom + " - Mur : " + orMur);
             }
-
         }
+        //Pour init selon les règles (chaque detective face a un mur)
+        grille[0][0].setOrientationMur(Orientation.OUEST);
+        grille[0][2].setOrientationMur(Orientation.EST);
+        grille[2][1].setOrientationMur(Orientation.SUD);
     }
 
     public Quartier get(int x, int y){

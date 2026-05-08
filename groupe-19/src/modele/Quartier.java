@@ -33,6 +33,10 @@ public class Quartier {
         return this.personnage;
     }
 
+    public void setOrientationMur(Orientation orientationMur) {
+        this.orientationMur = orientationMur;
+    }
+
     public Orientation getOrientationMur(){
         return this.orientationMur;
     }

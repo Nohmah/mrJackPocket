@@ -223,9 +223,13 @@ public class Partie {
                 // Logique pour l'action JOKER
                 break;
             case ROTATION:
-                //rotationQuartier prend un int maintenant, qui indiquer l'index du jeton action rotation qui a été choisi
-                // (car il peut y avoir 2 jetons face rotation en même temps au cours d'un tour). (Bone chance)
-                //actions.rotationQuartier(coupIa.para1 / 3, coupIa.para1 % 3, coupIa.para2);
+                // (car il peut y avoir 2 jetons face rotation en même temps au cours d'un tour).
+                for(int i = 0; i < jetonsAction.size(); i++){
+                    if(jetonsAction.get(i).getActionVisible() == Action.ROTATION && !jetonsAction.get(i).isJouee()){
+                        actions.rotationQuartier(i, coupIa.para1 / 3, coupIa.para1 % 3, coupIa.para2);
+                        break;
+                    }
+                }
                 // Logique pour l'action ROTATION
                 break;
             case ECHANGE:
