@@ -17,23 +17,23 @@ import java.util.Map;
 import javax.swing.JOptionPane;
 
 /**
- * VueJeu — Fenêtre principale du jeu (1200×800).
+ * VueJeu — Fenetre principale du jeu (1200×800).
  *
- * Responsabilités :
- *   - Créer et initialiser la JFrame ainsi que la Camera.
+ * Responsabilites :
+ *   - Creer et initialiser la JFrame ainsi que la Camera.
  *   - Instancier tous les Composant2D visuels (tuiles, boules, indicateurs).
- *   - Fournir les méthodes de mise à jour visuelle appelées par Gameplay.
+ *   - Fournir les methodes de mise à jour visuelle appelees par Gameplay.
  *   - Exposer le bouton "Terminer tour" et les listeners au contrôleur.
  *
- * IMPORTANT : Aucun fillRect/fillOval Swing n'est utilisé pour les éléments
+ * IMPORTANT : Aucun fillRect/fillOval Swing n'est utilise pour les elements
  * du plateau ou les boules d'interface ; tout passe par des Composant2D
  * rendus par la Camera.
  *
- * Coordonnées monde utilisées :
- *   - Fenêtre : 1200 × 800
- *   - Plateau 3×3 centré : coin HG monde = (375, 175), taille = 450×450
- *   - Tuile            : 150×150 (taille de base, échelle 1×1)
- *   - Bande latérale   : x ∈ [0, 100] — rendue avec un Composant2D de fond
+ * Coordonnees monde utilisees :
+ *   - Fenetre : 1200 × 800
+ *   - Plateau 3×3 centre : coin HG monde = (375, 175), taille = 450×450
+ *   - Tuile            : 150×150 (taille de base, echelle 1×1)
+ *   - Bande laterale   : x ∈ [0, 100] — rendue avec un Composant2D de fond
  */
 public class VueJeu extends JFrame {
     // =========================================================================
@@ -45,7 +45,7 @@ public class VueJeu extends JFrame {
 
     private static final double STRIP_W     = 100;   // Bande noire gauche
 
-    private static final double BOARD_SIZE  = 450;   // Plateau carré
+    private static final double BOARD_SIZE  = 450;   // Plateau carre
     private static final double TILE_SIZE   = 150;   // Tuile unitaire
 
     // Coin HG du plateau dans l'espace monde
@@ -75,7 +75,7 @@ public class VueJeu extends JFrame {
     private static final String   TURN_FACE_FACE = "T0";
 
     // =========================================================================
-    // Boules extérieures — anneau de 12 positions
+    // Boules exterieures — anneau de 12 positions
     // =========================================================================
 
     /**
@@ -125,37 +125,37 @@ public class VueJeu extends JFrame {
     // Taille de base d'une OuterBall
     private static final double OUTER_BALL_DIAM = 30.0;
 
-    // Facteurs d'échelle pour l'empilement des détectives
+    // Facteurs d'echelle pour l'empilement des detectives
     private static final double DETECTIVE_SCALE_1 = 1.0;  // seul sur la case
-    private static final double DETECTIVE_SCALE_2 = 1.3;  // 2ème détective empilé
-    private static final double DETECTIVE_SCALE_3 = 1.6;  // 3ème détective empilé
+    private static final double DETECTIVE_SCALE_2 = 1.3;  // 2eme detective empile
+    private static final double DETECTIVE_SCALE_3 = 1.6;  // 3eme detective empile
 
     // =========================================================================
-    // État interne — faces des boules et tours
+    // etat interne — faces des boules et tours
     // =========================================================================
 
     /** true = face Pile, false = face Face, pour chacune des 4 balles d'action. */
     private final boolean[] ballFaceIsPile   = { true, true, true, true };
 
-    /** Nom du sprite actuellement affiché pour chacune des 4 boules d'action. */
+    /** Nom du sprite actuellement affiche pour chacune des 4 boules d'action. */
     private final String[] actionBallCurrentSprite = new String[4];
 
     /** true = face Pile, false = face Face, pour chacun des 8 indicateurs de tour. */
     private final boolean[] turnFaceIsPile   = { true, true, true, true, true, true, true, true };
 
     // =========================================================================
-    // État interne — détectives sur l'anneau
+    // etat interne — detectives sur l'anneau
     // =========================================================================
 
     /**
-     * Position courante (0-11) de chacun des 3 détectives sur l'anneau.
-     * -1 signifie "pas encore placé".
+     * Position courante (0-11) de chacun des 3 detectives sur l'anneau.
+     * -1 signifie "pas encore place".
      */
     private final int[] detectivePosition = { -1, -1, -1 };
 
     /**
-     * Composant2D représentant chaque détective sur l'anneau.
-     * null si non encore placé.
+     * Composant2D representant chaque detective sur l'anneau.
+     * null si non encore place.
      */
     private final Composant2D[] detectiveComponents = new Composant2D[3];
 
@@ -170,7 +170,7 @@ public class VueJeu extends JFrame {
     private final JPanel[] playerRects = new JPanel[2];
 
     // =========================================================================
-    // Références Composant2D vivantes (pour mises à jour dynamiques)
+    // References Composant2D vivantes (pour mises à jour dynamiques)
     // =========================================================================
 
     /** Grille 3×3 des composants de tuiles. */
@@ -182,26 +182,26 @@ public class VueJeu extends JFrame {
     /**
      * Nom de base du sprite de chaque tuile (sans suffixe d'angle).
      * Correspond au nom du fichier image, ex: "NoraNoire", "JohnSmith".
-     * Initialisé dans updateDistrictView et mis à jour par swapTiles.
+     * Initialise dans updateDistrictView et mis à jour par swapTiles.
      */
     private final String[][] tileBaseNames = new String[3][3];
 
-    /** Composant du fond plein-écran (modifié par setBackgroundColor). */
+    /** Composant du fond plein-ecran (modifie par setBackgroundColor). */
     private Composant2D backgroundComponent;
 
-    /** Boules d'action A-D (4 boules, côté gauche). */
+    /** Boules d'action A-D (4 boules, côte gauche). */
     private final Composant2D[] actionBalls = new Composant2D[4];
 
-    /** Indicateurs de tour 1-8 (côté droit). */
+    /** Indicateurs de tour 1-8 (côte droit). */
     private final Composant2D[] turnIndicators = new Composant2D[8];
 
     /** 12 boules de contour autour du plateau. */
     private final Composant2D[] outerBalls = new Composant2D[12];
 
-    /** Cache d'images tournées (clé = "nom_angle"). */
+    /** Cache d'images tournees (cle = "nom_angle"). */
     private final Map<String, Integer> rotatedSpriteCache = new HashMap<>();
 
-    /** Référence au pont logique — instanciée après la Camera. */
+    /** Reference au pont logique — instanciee apres la Camera. */
     private Gameplay gameplay;
 
     // =========================================================================
@@ -222,13 +222,13 @@ public class VueJeu extends JFrame {
 
 
     /**
-     * Fait pivoter une BufferedImage d'un angle donné (en radians) autour de
-     * son centre. Retourne une nouvelle BufferedImage de dimensions ajustées
-     * pour que l'image pivotée tienne entièrement dedans.
+     * Fait pivoter une BufferedImage d'un angle donne (en radians) autour de
+     * son centre. Retourne une nouvelle BufferedImage de dimensions ajustees
+     * pour que l'image pivotee tienne entierement dedans.
      *
      * @param img   Image source.
      * @param angle Angle de rotation en radians (ex: Math.PI / 2 = 90°).
-     * @return Nouvelle image pivotée.
+     * @return Nouvelle image pivotee.
      */
     public static BufferedImage rotateImage(BufferedImage img, double angle) {
         if (img == null) return null;
@@ -304,7 +304,7 @@ public class VueJeu extends JFrame {
         /**
      * Indique si l'indicateur de tour 'turnIndex' affiche la face Pile.
      * @param turnIndex 0‑7 correspondant à T1‑T8
-     * @return true si la face Pile (T1..T8) est affichée, false si c'est la face Face (T0)
+     * @return true si la face Pile (T1..T8) est affichee, false si c'est la face Face (T0)
      */
     public boolean isTurnFacePile(int turnIndex) {
         if (turnIndex < 0 || turnIndex >= 8) return false;
@@ -328,34 +328,34 @@ public class VueJeu extends JFrame {
     }
 
     // =========================================================================
-    // 4. Logique des détectives sur l'anneau OuterBall
+    // 4. Logique des detectives sur l'anneau OuterBall
     // =========================================================================
 
     /**
-     * Remplace l'affichage d'une OuterBall (position 1-12) par l'image d'un détective.
+     * Remplace l'affichage d'une OuterBall (position 1-12) par l'image d'un detective.
      * Le tableau outerBalls utilise un index 0-11 en interne.
      *
      * @param position     Position sur l'anneau (1-12, sens horaire depuis le coin HG).
-     * @param detectiveNum Numéro du détective (1-3 → "detective1", "detective2", "detective3").
+     * @param detectiveNum Numero du detective (1-3 → "detective1", "detective2", "detective3").
      */
     public void replaceOuterBall(int position, int detectiveNum) {
-    int idx = position - 1; // Conversion 1-indexé → 0-indexé
+    int idx = position - 1; // Conversion 1-indexe → 0-indexe
     if (idx < 0 || idx >= 12) {
         System.err.println("replaceOuterBall — position invalide : " + position);
         return;
     }
     if (detectiveNum < 1 || detectiveNum > 3) {
-        System.err.println("replaceOuterBall — numéro de détective invalide : " + detectiveNum);
+        System.err.println("replaceOuterBall — numero de detective invalide : " + detectiveNum);
         return;
     }
 
     int detIdx = detectiveNum - 1;
 
     // je corrige 
-    // 1. On mémorise l'ancienne position
+    // 1. On memorise l'ancienne position
     int oldPos = detectivePosition[detIdx];
 
-    // 2. On met à jour la position AVANT de rafraîchir les échelles
+    // 2. On met à jour la position AVANT de rafraîchir les echelles
     detectivePosition[detIdx] = idx;
 
     // 3. Gestion du composant graphique
@@ -380,13 +380,13 @@ public class VueJeu extends JFrame {
     refreshOuterBallScale(idx);
 
     Camera.Repaint();
-    System.out.println("replaceOuterBall — détective " + detectiveNum + " → position " + position);
+    System.out.println("replaceOuterBall — detective " + detectiveNum + " → position " + position);
 }
     /**
-     * Avance un détective d'une case sur l'anneau (sens horaire).
-     * Si le détective n'a pas encore été placé, il démarre à la position 0.
+     * Avance un detective d'une case sur l'anneau (sens horaire).
+     * Si le detective n'a pas encore ete place, il demarre à la position 0.
      *
-     * @param detectiveID Identifiant du détective (1-3).
+     * @param detectiveID Identifiant du detective (1-3).
      */
     public void advanceDetective(int detectiveID) {
         int detIdx = detectiveID - 1;
@@ -400,26 +400,26 @@ public class VueJeu extends JFrame {
     }
 
     /**
-     * Recalcule l'échelle de tous les détectives présents sur la case `posIdx`
-     * selon la règle d'empilement :
-     *   - 1 détective : échelle 1.0
-     *   - 2ème détective sur la même case : échelle 1.3
-     *   - 3ème détective sur la même case : échelle 1.6
+     * Recalcule l'echelle de tous les detectives presents sur la case `posIdx`
+     * selon la regle d'empilement :
+     *   - 1 detective : echelle 1.0
+     *   - 2eme detective sur la meme case : echelle 1.3
+     *   - 3eme detective sur la meme case : echelle 1.6
      *
      * @param posIdx Index de la case (0-11).
      */
     private void refreshOuterBallScale(int posIdx) {
-        // Collecte les détectives présents sur cette case
+        // Collecte les detectives presents sur cette case
         int stackCount = 0;
-        int[] onCell   = new int[3]; // Indices des détectives sur cette case
+        int[] onCell   = new int[3]; // Indices des detectives sur cette case
         for (int d = 0; d < 3; d++) {
             if (detectivePosition[d] == posIdx && detectiveComponents[d] != null) {
                 onCell[stackCount++] = d;
             }
         }
 
-        // Si un seul détective sur la case, échelle forcée à 1.0 — aucun grossissement.
-        // Le grossissement (1.3, 1.6) ne s'applique qu'à partir du 2ème détective empilé.
+        // Si un seul detective sur la case, echelle forcee à 1.0 — aucun grossissement.
+        // Le grossissement (1.3, 1.6) ne s'applique qu'à partir du 2eme detective empile.
         if (stackCount <= 1) {
             if (stackCount == 1) {
                 detectiveComponents[onCell[0]].echelle = new Vector2(DETECTIVE_SCALE_1, DETECTIVE_SCALE_1);
@@ -427,8 +427,8 @@ public class VueJeu extends JFrame {
             return;
         }
 
-        // 2 ou 3 détectives : applique les facteurs d'échelle selon l'ordre d'empilement
-        // onCell[0] → échelle 1.0 (en dessous), onCell[1] → 1.3, onCell[2] → 1.6
+        // 2 ou 3 detectives : applique les facteurs d'echelle selon l'ordre d'empilement
+        // onCell[0] → echelle 1.0 (en dessous), onCell[1] → 1.3, onCell[2] → 1.6
         double[] scales = { DETECTIVE_SCALE_1, DETECTIVE_SCALE_2, DETECTIVE_SCALE_3 };
         for (int k = 0; k < stackCount; k++) {
             double s = scales[k];
@@ -441,14 +441,14 @@ public class VueJeu extends JFrame {
     // =========================================================================
 
     /**
-     * Échange deux tuiles du plateau identifiées par leur position de grille
+     * echange deux tuiles du plateau identifiees par leur position de grille
      * (Vector2 dont x = col, y = row) et rafraîchit l'affichage via la Camera.
      *
      * Exemple : swapTiles(new Vector2(0,0), new Vector2(2,1))
-     * échange la tuile (ligne 0, col 0) avec (ligne 1, col 2).
+     * echange la tuile (ligne 0, col 0) avec (ligne 1, col 2).
      *
-     * @param pos1 Position (col, row) de la première tuile  (0-2 chacune).
-     * @param pos2 Position (col, row) de la deuxième tuile.
+     * @param pos1 Position (col, row) de la premiere tuile  (0-2 chacune).
+     * @param pos2 Position (col, row) de la deuxieme tuile.
      */
     public void swapTiles(Vector2 pos1, Vector2 pos2) {
         int row1 = (int) pos1.y, col1 = (int) pos1.x;
@@ -456,23 +456,23 @@ public class VueJeu extends JFrame {
 
         if (row1 < 0 || row1 > 2 || col1 < 0 || col1 > 2
          || row2 < 0 || row2 > 2 || col2 < 0 || col2 > 2) {
-            System.err.println("swapTiles — coordonnées hors-plateau : " + pos1.ToString() + " / " + pos2.ToString());
+            System.err.println("swapTiles — coordonnees hors-plateau : " + pos1.ToString() + " / " + pos2.ToString());
             return;
         }
 
         if (row1 == row2 && col1 == col2) return; // Rien à faire
 
-        // Échange des spriteId
+        // echange des spriteId
         int tmpSprite = tileComponents[row1][col1].spriteId;
         tileComponents[row1][col1].spriteId = tileComponents[row2][col2].spriteId;
         tileComponents[row2][col2].spriteId = tmpSprite;
 
-        // Échange des noms de base
+        // echange des noms de base
         String tmpBase = tileBaseNames[row1][col1];
         tileBaseNames[row1][col1] = tileBaseNames[row2][col2];
         tileBaseNames[row2][col2] = tmpBase;
 
-        // Échange des angles de rotation
+        // echange des angles de rotation
         int tmpRot = tileRotations[row1][col1];
         tileRotations[row1][col1] = tileRotations[row2][col2];
         tileRotations[row2][col2] = tmpRot;
@@ -482,22 +482,22 @@ public class VueJeu extends JFrame {
     }
 
     /**
-     * Fait pivoter la tuile en position (row, col) d'un angle supplémentaire.
+     * Fait pivoter la tuile en position (row, col) d'un angle supplementaire.
      *
-     * <p>L'angle courant est incrémenté de {@code angleToAdd} puis réduit modulo 360.
+     * <p>L'angle courant est incremente de {@code angleToAdd} puis reduit modulo 360.
      * Seuls les multiples de 90 sont significatifs (0, 90, 180, 270).
      *
-     * <p>Le sprite tourné est nommé {@code "<baseName>_<angle>"} (ex: {@code "NoraNoire_90"}).
-     * S'il n'existe pas encore dans la Camera, l'image originale est récupérée,
-     * pivotée avec {@link #rotateImage}, puis enregistrée.
+     * <p>Le sprite tourne est nomme {@code "<baseName>_<angle>"} (ex: {@code "NoraNoire_90"}).
+     * S'il n'existe pas encore dans la Camera, l'image originale est recuperee,
+     * pivotee avec {@link #rotateImage}, puis enregistree.
      *
      * @param row        Ligne de la grille (0-2).
      * @param col        Colonne de la grille (0-2).
-     * @param angleToAdd Angle à ajouter en degrés (typiquement 90, 180 ou 270).
+     * @param angleToAdd Angle à ajouter en degres (typiquement 90, 180 ou 270).
      */
     public void rotateTile(int row, int col, int angleToAdd) {
         if (row < 0 || row > 2 || col < 0 || col > 2) {
-            System.err.println("rotateTile — coordonnées hors-plateau : (" + row + "," + col + ")");
+            System.err.println("rotateTile — coordonnees hors-plateau : (" + row + "," + col + ")");
             return;
         }
 
@@ -507,7 +507,7 @@ public class VueJeu extends JFrame {
 
         String baseName = tileBaseNames[row][col];
 
-        // 2. Pour l'angle 0 on réutilise directement le sprite de base
+        // 2. Pour l'angle 0 on reutilise directement le sprite de base
         if (newAngle == 0) {
             tileComponents[row][col].spriteId = Camera.AddSprite(baseName);
             Camera.RecalculateZoom();
@@ -515,13 +515,13 @@ public class VueJeu extends JFrame {
             return;
         }
 
-        // 3. Nom unique du sprite tourné
+        // 3. Nom unique du sprite tourne
         String newName = baseName + "_" + newAngle;
 
-        // 4. Vérification du cache
+        // 4. Verification du cache
         int spriteId = Camera.GetSpriteId(newName);
         if (spriteId == -1) {
-            // 4a. Récupère l'image originale (sprite de base, jamais tourné)
+            // 4a. Recupere l'image originale (sprite de base, jamais tourne)
             java.awt.image.BufferedImage original = Camera.GetSpriteImage(baseName);
             if (original == null) {
                 // Image de base absente : on tente de la charger d'abord
@@ -548,7 +548,7 @@ public class VueJeu extends JFrame {
     }
 
     // =========================================================================
-    // Mise à jour de la vue du district (appelée par Gameplay)
+    // Mise à jour de la vue du district (appelee par Gameplay)
     // =========================================================================
 
     public void updateDistrictView(District district) {
@@ -580,7 +580,7 @@ public class VueJeu extends JFrame {
                     default    -> 0;
                 };
 
-                // Calcul du delta (rotation supplémentaire à appliquer)
+                // Calcul du delta (rotation supplementaire à appliquer)
                 int angleActuel = tileRotations[i][j];
                 int delta = (angle - angleActuel) % 360;
                 if (delta < 0) delta += 360;
@@ -628,7 +628,7 @@ public class VueJeu extends JFrame {
     }
 
     /**
-     * Background plein-écran (rendu par Camera comme tout autre composant).
+     * Background plein-ecran (rendu par Camera comme tout autre composant).
      */
     private void initBackgroundComponent() {
         backgroundComponent = new Composant2D(
@@ -639,7 +639,7 @@ public class VueJeu extends JFrame {
     }
 
     /**
-     * Bande latérale gauche (LeftStrip) avec les boutons.
+     * Bande laterale gauche (LeftStrip) avec les boutons.
      */
     private void initStripComponent() {
         new Composant2D(
@@ -672,17 +672,17 @@ public class VueJeu extends JFrame {
 
         for (int i = 0; i < BALL_FACE_PILE.length; i++) {
             double cy = BOARD_ORIGIN.y + spacing / 2.0 + i * spacing;
-            // Affiche la face Pile par défaut
+            // Affiche la face Pile par defaut
             actionBalls[i] = new Composant2D(
                     new Vector2(cx, cy),
                     new Vector2(ballDiam, ballDiam),
                     BALL_FACE_PILE[i]
             );
-            actionBallCurrentSprite[i] = BALL_FACE_PILE[i]; // état initial
+            actionBallCurrentSprite[i] = BALL_FACE_PILE[i]; // etat initial
         }
     }
 
-    /**Pour afficher les jetons qui ont étés lancés/retournés*/
+    /**Pour afficher les jetons qui ont etes lances/retournes*/
     public void updateJetons(List<JetonAction> jetons) {
         for (int i = 0; i < 4 && i < actionBalls.length; i++) {
             Action a = jetons.get(i).getActionVisible();
@@ -696,7 +696,7 @@ public class VueJeu extends JFrame {
                 case ALIBI     -> "action_alibi";
             };
             actionBalls[i].spriteId = Camera.AddSprite(spriteName);
-            actionBallCurrentSprite[i] = spriteName; // mémorise le sprite courant
+            actionBallCurrentSprite[i] = spriteName; // memorise le sprite courant
         }
         Camera.Repaint();
     }
@@ -708,7 +708,7 @@ public class VueJeu extends JFrame {
 
         for (int i = 0; i < 8; i++) {
             double cy = BOARD_ORIGIN.y + spacing / 2.0 + i * spacing;
-            // Affiche la face Pile par défaut (T1-T8)
+            // Affiche la face Pile par defaut (T1-T8)
             turnIndicators[i] = new Composant2D(
                     new Vector2(cx, cy),
                     new Vector2(ballDiam, ballDiam),
@@ -719,7 +719,7 @@ public class VueJeu extends JFrame {
 
     /**
      * Instancie les 12 boules de contour (OuterBall) en suivant l'ordre
-     * horaire défini par OUTER_POSITIONS.
+     * horaire defini par OUTER_POSITIONS.
      */
     private void initOuterBalls() {
         double ballDiam = OUTER_BALL_DIAM;
@@ -752,9 +752,9 @@ public class VueJeu extends JFrame {
     }
 
 /**
- * Crée les deux rectangles d'indicateur de joueurs :
- *   - Joueur 1 (rouge) collé en haut au milieu de l'interface
- *   - Joueur 2 (bleu)  collé en bas au milieu de l'interface
+ * Cree les deux rectangles d'indicateur de joueurs :
+ *   - Joueur 1 (rouge) colle en haut au milieu de l'interface
+ *   - Joueur 2 (bleu)  colle en bas au milieu de l'interface
  */
     private void initPlayerRects() {
         String[] labels     = { "Joueur 1", "Joueur 2" };
@@ -781,7 +781,7 @@ public class VueJeu extends JFrame {
             rect.add(name, BorderLayout.CENTER);
             rect.add(type, BorderLayout.SOUTH);
 
-            // Positionnement centré horizontalement et collé en haut/bas de l'interface
+            // Positionnement centre horizontalement et colle en haut/bas de l'interface
             rect.addComponentListener(new java.awt.event.ComponentAdapter() {
                 @Override
                 public void componentResized(java.awt.event.ComponentEvent e) {
@@ -800,8 +800,8 @@ public class VueJeu extends JFrame {
 
     /**
      * Positionne un rectangle d'indicateur joueur :
-     *   - playerIndex == 0 : collé en haut au milieu de l'interface
-     *   - playerIndex == 1 : collé en bas au milieu de l'interface
+     *   - playerIndex == 0 : colle en haut au milieu de l'interface
+     *   - playerIndex == 1 : colle en bas au milieu de l'interface
      */
     private void positionnerRectangle(JPanel rect, int playerIndex) {
         java.awt.Container parent = rect.getParent();
@@ -812,18 +812,18 @@ public class VueJeu extends JFrame {
         int rectW = rect.getWidth();
         int rectH = rect.getHeight();
         
-        // Centré horizontalement
+        // Centre horizontalement
         int rectX = (parentWidth - rectW) / 2;
         
-        // Collé en haut (joueur 1) ou en bas (joueur 2)
+        // Colle en haut (joueur 1) ou en bas (joueur 2)
         int rectY = (playerIndex == 0) 
-            ? 0                           // Collé en haut
-            : parentHeight - rectH - 40;       // Collé en bas
+            ? 0                           // Colle en haut
+            : parentHeight - rectH - 40;       // Colle en bas
         
         rect.setLocation(rectX, rectY);
     }
     /**
-     * Ajoute les boutons dans la bande latérale gauche :
+     * Ajoute les boutons dans la bande laterale gauche :
      *   - "Retour"
      *   - "Nouvelle partie"
      *   - "IA"
@@ -850,7 +850,7 @@ public class VueJeu extends JFrame {
         iaBtn.addActionListener(e -> onIAPressed());
         uiOverlay.add(iaBtn);
 
-        // "Règles"
+        // "Regles"
         JButton reglesBtn = makeStripButton("Regles");
         reglesBtn.setBounds(bx, 170, bw, bh);
         reglesBtn.addActionListener(e -> onReglesPressed());
@@ -865,7 +865,7 @@ public class VueJeu extends JFrame {
         uiOverlay.add(validateButton);
     }
 
-    /** Crée un JButton stylisé pour la bande latérale. */
+    /** Cree un JButton stylise pour la bande laterale. */
     private JButton makeStripButton(String label) {
         JButton btn = new JButton("<html><center>" + label + "</center></html>");
         btn.setFont(new Font("SansSerif", Font.BOLD, 10));
@@ -881,9 +881,145 @@ public class VueJeu extends JFrame {
     // Handlers des boutons LeftStrip
     // =========================================================================
 
+    /** Panneau de regles actuellement affiche (null = ferme). */
+    private JPanel panneauRegles = null;
+
     private void onReglesPressed() {
-    advanceDetective(2);
-    System.out.println("VueJeu — Affichage des règles");}
+        // --- Effet Toggle : si dejà ouvert, on ferme ---
+        if (panneauRegles != null && panneauRegles.isShowing()) {
+            fermerPanneauRegles();
+            return;
+        }
+
+        // ----------------------------------------------------------------
+        // 1. Creation du panneau semi-transparent plein-ecran
+        // ----------------------------------------------------------------
+        panneauRegles = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                // Fond noir semi-transparent avec support alpha
+                g.setColor(new Color(0, 0, 0, 230));
+                g.fillRect(0, 0, getWidth(), getHeight());
+                // Ne pas appeler super pour eviter que le L&F repeigne par-dessus
+            }
+        };
+        panneauRegles.setOpaque(false);
+        panneauRegles.setBounds(0, 0, WINDOW_W, WINDOW_H);
+        panneauRegles.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
+
+        // ----------------------------------------------------------------
+        // 2. Contenu HTML — regles completes
+        // ----------------------------------------------------------------
+        String html = "<html>"
+            + "<body style='color:white; font-family:SansSerif;'>"
+
+            // Titre principal
+            + "<h1 style='color:red; text-align:center; margin-bottom:6px;'>"
+            + "&#x1F50E;&nbsp; Regles de Mr. Jack Pocket &nbsp;&#x1F50E;</h1>"
+            + "<hr style='border:1px solid red; margin-bottom:14px;'/>"
+
+            // ---- BUT DU JEU ----
+            + "<h2 style='color:red; margin-bottom:4px;'>&#x1F3AF; But du Jeu</h2>"
+            + "<ul>"
+            + "<li><b>Victoire de l'Enqueteur :</b> Un seul suspect reste en jeu.</li>"
+            + "<li><b>Victoire de Jack :</b> Il possede 6 sabliers "
+            + "<i>ou</i> n'a pas ete capture apres 8 tours.</li>"
+            + "</ul>"
+
+            // ---- DeROULEMENT ----
+            + "<h2 style='color:red; margin-top:10px; margin-bottom:4px;'>"
+            + "&#x23F1; Deroulement d'un Tour</h2>"
+            + "<p>Chaque tour se compose de deux etapes : "
+            + "<b>La Traque</b> et <b>l'Appel à Temoins</b>.</p>"
+
+            // La Traque
+            + "<h3 style='color:#FFD700; margin-bottom:2px;'>1. La Traque (Actions)</h3>"
+            + "<p>L'ordre de jeu change selon la parite du tour :</p>"
+            + "<ul>"
+            + "<li><b>Tours Impairs (1, 3, 5, 7) :</b> L'Enqueteur choisit 1 action, "
+            + "Jack en choisit 2, l'Enqueteur joue la derniere.</li>"
+            + "<li><b>Tours Pairs (2, 4, 6, 8) :</b> Jack choisit 1 action, "
+            + "l'Enqueteur en choisit 2, Jack joue la derniere.</li>"
+            + "</ul>"
+            + "<p><b>Detail des actions disponibles :</b></p>"
+            + "<ul>"
+            + "<li><b> Deplacement :</b> Avancer Holmes, Watson ou Toby "
+            + "de 1 ou 2 cases (leurs tete est sur le jeton) <i>(sens horaire)</i>.</li>"
+            + "<li><b> echange :</b> echanger deux tuiles de place "
+            + "sans changer leur orientation.</li>"
+            + "<li><b> Rotation :</b> Faire pivoter une tuile "
+            + "(90 ou 180). <i>Une seule fois par tour.</i></li>"
+            + "<li><b> Joker :</b> Deplacer l'enqueteur de son choix de 0 "
+            + "<i>(Jack seulement)</i> ou 1 case.</li>"
+            + "<li><b> Alibi :</b> Piocher une carte Alibi. "
+            + "L'Enqueteur innocente le personnage ; Jack gagne des sabliers.</li>"
+            + "</ul>"
+
+            // Appel à Temoins
+            + "<h3 style='color:#FFD700; margin-top:8px; margin-bottom:2px;'>"
+            + "2. L'Appel à Temoins</h3>"
+            + "<p>Jack annonce s'il est <b>visible</b> "
+            + "(ligne de mire d'un enqueteur sans mur) :</p>"
+            + "<ul>"
+            + "<li></b> Jack visible :</b> On elimine les suspects invisibles. "
+            + "L'Enqueteur prend le jeton Temps.</li>"
+            + "<li><b> Jack invisible :</b> On elimine les suspects visibles. "
+            + "Jack prend le jeton Temps <i>(côte sablier)</i>.</li>"
+            + "</ul>"
+
+            // Fermeture
+            + "<p style='text-align:center; color:#888; margin-top:16px; font-size:11px;'>"
+            + "&#x2715;&nbsp; Cliquez n'importe où pour fermer</p>"
+            + "</body></html>";
+
+        JLabel labelRegles = new JLabel(html);
+        labelRegles.setVerticalAlignment(SwingConstants.TOP);
+
+        // Scroll pour les petits ecrans
+        JScrollPane scroll = new JScrollPane(labelRegles,
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scroll.setOpaque(false);
+        scroll.getViewport().setOpaque(false);
+        scroll.setBorder(BorderFactory.createLineBorder(new Color(200, 140, 0, 180), 2));
+        scroll.getVerticalScrollBar().setUnitIncrement(16);
+
+        panneauRegles.add(scroll, BorderLayout.CENTER);
+
+        // ----------------------------------------------------------------
+        // 3. MouseListener : clic anywhere → fermer
+        // ----------------------------------------------------------------
+        java.awt.event.MouseAdapter fermetureListener = new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                fermerPanneauRegles();
+            }
+        };
+        panneauRegles.addMouseListener(fermetureListener);
+        // Propagation aux enfants directs pour que le clic sur le label ferme aussi
+        scroll.addMouseListener(fermetureListener);
+        labelRegles.addMouseListener(fermetureListener);
+
+        // ----------------------------------------------------------------
+        // 4. Ajout au premier plan (devant Camera ET uiOverlay)
+        // ----------------------------------------------------------------
+        this.add(panneauRegles, 0);
+        this.revalidate();
+        this.repaint();
+
+        System.out.println("VueJeu — Panneau de regles affiche");
+    }
+
+    /** Retire proprement le panneau de regles de la hierarchie de composants. */
+    private void fermerPanneauRegles() {
+        if (panneauRegles != null) {
+            this.remove(panneauRegles);
+            panneauRegles = null;
+            this.revalidate();
+            this.repaint();
+            System.out.println("VueJeu — Panneau de regles ferme");
+        }
+    }
 
     private void onRetourPressed() {
         //switchBallFace(0);
@@ -891,13 +1027,13 @@ public class VueJeu extends JFrame {
         //switchBallFace(2);
         //switchBallFace(3);
         //swapTiles(new Vector2(0,0),new Vector2(1,0));
-        System.out.println("VueJeu — Retour (non implémenté)");
-        // À connecter à une éventuelle navigation entre écrans
+        System.out.println("VueJeu — Retour (non implemente)");
+        // À connecter à une eventuelle navigation entre ecrans
     }
 
     private void onNewGamePressed() {
         System.out.println("VueJeu — Nouvelle partie");
-        // Recrée la partie via Gameplay si nécessaire
+        // Recree la partie via Gameplay si necessaire
         gameplay.resetGame();
     }
 
@@ -925,7 +1061,7 @@ public class VueJeu extends JFrame {
     }
 
     // =========================================================================
-    // API publique appelée par Gameplay
+    // API publique appelee par Gameplay
     // =========================================================================
 
     public void registerControler(IHMControler controler) {
@@ -937,8 +1073,8 @@ public class VueJeu extends JFrame {
         cameraComp.setFocusable(true);
         cameraComp.requestFocusInWindow();
 
-        // Branche un MouseListener dédié aux jetons d'action (actionBalls).
-        // Il est séparé du contrôleur principal pour ne pas mélanger
+        // Branche un MouseListener dedie aux jetons d'action (actionBalls).
+        // Il est separe du contrôleur principal pour ne pas melanger
         // la logique plateau et la logique jetons.
         cameraComp.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
@@ -949,18 +1085,18 @@ public class VueJeu extends JFrame {
     }
 
     /**
-     * Vérifie si les coordonnées écran (sx, sy) tombent dans le rayon d'une
+     * Verifie si les coordonnees ecran (sx, sy) tombent dans le rayon d'une
      * boule d'action. Si c'est le cas, affiche le nom de la face visible.
      *
      * <p>Les boules sont des Composant2D dont la position est en espace monde.
-     * On convertit d'abord le clic écran en espace monde via la Camera, puis
+     * On convertit d'abord le clic ecran en espace monde via la Camera, puis
      * on compare la distance au centre de chaque boule avec son rayon monde.</p>
      *
-     * @param sx Coordonnée X du clic en pixels écran.
-     * @param sy Coordonnée Y du clic en pixels écran.
+     * @param sx Coordonnee X du clic en pixels ecran.
+     * @param sy Coordonnee Y du clic en pixels ecran.
      */
     private void checkActionBallClick(int sx, int sy) {
-        // Conversion écran → monde (inverse de la projection Camera)
+        // Conversion ecran → monde (inverse de la projection Camera)
         Vector2 screenPos = new Vector2(sx, sy);
         Vector2 worldPos  = screenPos.Div(Camera.zoom).Add(Camera.positionHG);
 
@@ -968,32 +1104,32 @@ public class VueJeu extends JFrame {
             Composant2D ball = actionBalls[i];
             if (ball == null) continue;
 
-            // Rayon en espace monde = moitié de la taille réelle (taille × échelle)
+            // Rayon en espace monde = moitie de la taille reelle (taille × echelle)
             double rayonX = (ball.taille.x * ball.echelle.x) / 2.0;
             double rayonY = (ball.taille.y * ball.echelle.y) / 2.0;
-            double rayon  = Math.min(rayonX, rayonY); // boules supposées circulaires
+            double rayon  = Math.min(rayonX, rayonY); // boules supposees circulaires
 
             double dx = worldPos.x - ball.position.x;
             double dy = worldPos.y - ball.position.y;
 
             if (dx * dx + dy * dy <= rayon * rayon) {
-                // Utilise l'état interne synchronisé plutôt que les tableaux statiques
+                // Utilise l'etat interne synchronise plutôt que les tableaux statiques
                 String nomAction = actionBallCurrentSprite[i];
-                System.out.println("J'ai cliqué sur " + nomAction);
+                System.out.println("J'ai clique sur " + nomAction);
                 String input;
                 int pas;
                 switch (nomAction) {
                     case "action_holmes":
-                        input = JOptionPane.showInputDialog(this, "Déplacer Holmes de combien de pas ? (1 ou 2)");
+                        input = JOptionPane.showInputDialog(this, "Deplacer Holmes de combien de pas ? (1 ou 2)");
                         pas = Integer.parseInt(input);
                         if (pas != 1 && pas != 2) pas = 1;
-                        // Récupérer le détective Holmes (premier de la liste)
+                        // Recuperer le detective Holmes (premier de la liste)
                         Detective holmes = gameplay.partie.detectives.get(0);
                         gameplay.partie.actions.deplacerDetective(holmes, pas);
                         updateDetectivesView();
                         break;
                     case "action_watson":
-                        input = JOptionPane.showInputDialog(this, "Déplacer Watson de combien de pas ? (1 ou 2)");
+                        input = JOptionPane.showInputDialog(this, "Deplacer Watson de combien de pas ? (1 ou 2)");
                         pas = Integer.parseInt(input);
                         if (pas != 1 && pas != 2) pas = 1;
                         Detective watson = gameplay.partie.detectives.get(1);
@@ -1001,7 +1137,7 @@ public class VueJeu extends JFrame {
                         updateDetectivesView();
                         break;
                     case "action_toby":
-                        input = JOptionPane.showInputDialog(this, "Déplacer le chien tout mignon Toby de combien de pas ? (1 ou 2)");
+                        input = JOptionPane.showInputDialog(this, "Deplacer le chien tout mignon Toby de combien de pas ? (1 ou 2)");
                         pas = Integer.parseInt(input);
                         if (pas != 1 && pas != 2) pas = 1;
                         Detective toby = gameplay.partie.detectives.get(2);
@@ -1013,7 +1149,7 @@ public class VueJeu extends JFrame {
                         if (joueur == Partie.Joueur.ENQUETEUR) {
                             String[] options = {"Holmes", "Watson", "Toby"};
                             int choix = JOptionPane.showOptionDialog(this,
-                                    "Quel détective voulez-vous déplacer d’un pas ?",
+                                    "Quel detective voulez-vous deplacer d’un pas ?",
                                     "Action Joker",
                                     JOptionPane.DEFAULT_OPTION,
                                     JOptionPane.QUESTION_MESSAGE,
@@ -1032,9 +1168,9 @@ public class VueJeu extends JFrame {
                                 updateDetectivesView();
                             }
                         } else { // Mr. Jack
-                            String[] options = {"Holmes", "Watson", "Toby", "Ne rien déplacer"};
+                            String[] options = {"Holmes", "Watson", "Toby", "Ne rien deplacer"};
                             int choix = JOptionPane.showOptionDialog(this,
-                                    "Choisissez une action (déplacer un détective d'un pas ou rien)",
+                                    "Choisissez une action (deplacer un detective d'un pas ou rien)",
                                     "Action Joker - Mr. Jack",
                                     JOptionPane.DEFAULT_OPTION,
                                     JOptionPane.QUESTION_MESSAGE,
@@ -1061,7 +1197,7 @@ public class VueJeu extends JFrame {
                     case "action_alibi":
                         gameplay.partie.actions.alibi();
                         updateDistrictView(gameplay.partie.district);
-                        //Ici on pourrait faire quelque chose pour griser le jeton qui a été utilisé
+                        //Ici on pourrait faire quelque chose pour griser le jeton qui a ete utilise
                         break;
                     default:
                         System.out.println("Action inconnue: " + nomAction);
@@ -1083,7 +1219,7 @@ public class VueJeu extends JFrame {
     }
 
     /**
-     * Met à jour l'affichage des 3 détectives à partir des positions du modèle.
+     * Met à jour l'affichage des 3 detectives à partir des positions du modele.
      */
     public void updateDetectivesView() {
         List<Detective> detectives = gameplay.partie.detectives;
@@ -1099,7 +1235,7 @@ public class VueJeu extends JFrame {
     }
 
     /**
-     * Noms de fichiers image disponibles pour le fond d'écran.
+     * Noms de fichiers image disponibles pour le fond d'ecran.
      * Chaque constante correspond à un fichier {@code res/Images/<nom>.png}.
      */
     public static final String BG_WHITE  = "BackgroundWhite";
@@ -1108,7 +1244,7 @@ public class VueJeu extends JFrame {
     public static final String BG_BLUE   = "BackgroundBlue";
 
     /**
-     * Change le sprite du fond plein-écran.
+     * Change le sprite du fond plein-ecran.
      *
      * @param colorName Nom du fichier sans extension (utiliser les constantes
      *                  {@link #BG_WHITE}, {@link #BG_PURPLE}, {@link #BG_RED},
@@ -1127,13 +1263,13 @@ public class VueJeu extends JFrame {
     }
 
     /**
-     * Adapte la couleur du fond au numéro de tour au début de celui-ci :
+     * Adapte la couleur du fond au numero de tour au debut de celui-ci :
      * <ul>
      *   <li>Tour <b>pair</b>  (2, 4, 6, 8) → {@link #BG_RED}</li>
      *   <li>Tour <b>impair</b> (1, 3, 5, 7) → {@link #BG_BLUE}</li>
      * </ul>
      *
-     * @param turn Numéro du tour courant (1-8).
+     * @param turn Numero du tour courant (1-8).
      */
     public void updateBackgroundForTurn(int turn) {
         if (turn +1 % 2 == 0) {
