@@ -274,8 +274,9 @@ public class VueJeu extends JFrame {
     /** Met a jour les 4 jetons d'action selon leur face visible. */
     public void updateJetons(List<JetonAction> jetons) {
         for (int i = 0; i < 4 && i < actionBalls.length; i++) {
-            src.modele.Action a = jetons.get(i).getActionVisible();
-            String spriteName = switch (a) {
+            JetonAction j = jetons.get(i);
+            src.modele.Action a = j.getActionVisible();
+            String earlyName = switch (a) {
                 case HOLMES   -> "action_holmes";
                 case WATSON   -> "action_watson";
                 case TOBY     -> "action_toby";
@@ -284,6 +285,7 @@ public class VueJeu extends JFrame {
                 case ECHANGE  -> "action_echange";
                 case ALIBI    -> "action_alibi";
             };
+            String spriteName = j.isJoue() ? earlyName + "_grisee" : earlyName;
             actionBalls[i].spriteId = Camera.AddSprite(spriteName);
             actionBallCurrentSprite[i] = spriteName;
         }

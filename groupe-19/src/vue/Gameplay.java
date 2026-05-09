@@ -234,6 +234,7 @@ public class Gameplay {
         rotationsAccumulees = 0;
         vue.updateDistrictView(partie.district);
         System.out.println("Mode rotation terminé.");
+        vue.updateJetons(partie.jetonsAction); //Pour faire grisé le jeton rotation
     }
 
     // -------------------------------------------------------------------------
@@ -270,6 +271,7 @@ public class Gameplay {
                 partie.actions.echange(line, column, row, col);
                 waitingForEchange = false;
                 vue.updateDistrictView(partie.district);
+                vue.updateJetons(partie.jetonsAction); //Pour que le jeton echange soit grisé
             }
         } else if (rotationMode) {
             if (rotationRow == -1) {
