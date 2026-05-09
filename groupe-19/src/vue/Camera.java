@@ -26,6 +26,7 @@ public class Camera extends JComponent {
     public static List<String> spriteNames;
     public static List<Image> sprites;
     public static int nbreSprites;
+    private static int backgroundSpriteId = -1;
 
     //Pour les calculs de temps entre chaque redessinement, utilisés dans paintComponent
     //Cela servira à avoir des animations consistantes
@@ -89,6 +90,11 @@ public class Camera extends JComponent {
     // Rendu
     // -------------------------------------------------------------------------
 
+    public static void setBackgroundImage(String imageName) {
+        backgroundSpriteId = AddSprite(imageName);
+        Repaint();
+    }
+
     @Override
     public void paintComponent(Graphics g)
     {
@@ -98,6 +104,11 @@ public class Camera extends JComponent {
         int width  = getSize().width;
         int height = getSize().height;
         drawable.clearRect(0, 0, width, height);
+
+        if (backgroundSpriteId != -1) {
+            Image bg = sprites.get(backgroundSpriteId);
+            drawable.drawImage(bg, 0, 0, getWidth(), getHeight(), null);
+        }
 
         Camera.fin = System.currentTimeMillis();
         Camera.delta = Math.abs((Camera.fin - Camera.debut) / 1e9);

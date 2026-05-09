@@ -25,7 +25,7 @@ public class Gameplay {
     private boolean waitingForEchange = false;
     private int line = -1, column = -1;
 
-    private boolean rotationMode = false;
+    public boolean rotationMode = false;
     private int rotationRow = -1, rotationCol = -1;
     private int rotationsAccumulees = 0;
     private int rotationJetonIndex;
@@ -39,7 +39,11 @@ public class Gameplay {
     }
 
     private void initGame() {
+        // Finalement, les 'updateX' sont gardé dans initGame, sinon les 'placeholders' sont visibles brièvement au début
+        vue.updateBackground(partie.joueurCourant);
         vue.updateDistrictView(partie.district);
+        vue.updateJetons(partie.jetonsAction);
+        vue.updateDetectivesView(partie.detectives);
         startTurn(currentTurn);
     }
 
@@ -48,8 +52,6 @@ public class Gameplay {
         String playerType = "HUMAN";
         controler.setActivePlayerType(playerType);
         vue.updateTurnIndicator(turn);
-        vue.updateBackground(partie.joueurCourant);
-        vue.updateJetons(partie.jetonsAction);
 
         if ("AI".equals(playerType)) {
             SwingUtilities.invokeLater(controler::joueIa);
@@ -60,11 +62,7 @@ public class Gameplay {
         partie.reset();
         currentTurn = 1;
         gameOver = false;
-        vue.updateDistrictView(partie.district);
-        vue.updateJetons(partie.jetonsAction);
-        vue.updateDetectivesView(partie.detectives);      
         vue.updateTurnIndicator(currentTurn);
-        vue.updateBackground(partie.joueurCourant);
         vue.enableValidateButton(true);
         resetAllTurnIndicators();
         startTurn(currentTurn);
@@ -92,8 +90,6 @@ public class Gameplay {
         System.out.println("Gameplay — fin du tour " + currentTurn);
         if (currentTurn >= 1 && currentTurn <= 8) vue.switchTurnFace(currentTurn - 1);
         partie.appelATemoin();
-        vue.updateDistrictView(partie.district);
-        vue.updateJetons(partie.jetonsAction);
 
         if (gameOver) {
             onGameOver();
@@ -135,10 +131,10 @@ public class Gameplay {
             default -> System.out.println("Action inconnue : " + actionName);
         }
 
-        vue.updateDistrictView(partie.district);
-        vue.updateJetons(partie.jetonsAction);
-        vue.updateDetectivesView(partie.detectives);   //correction
-        vue.refreshBoardComponents();
+        //vue.updateDistrictView(partie.district);
+        //vue.updateJetons(partie.jetonsAction);
+        //vue.updateDetectivesView(partie.detectives);   //correction
+        //vue.refreshBoardComponents();
     }
 
     private void demanderDeplacementEtDeplacer(Detective.Type type) {
@@ -232,9 +228,7 @@ public class Gameplay {
         rotationRow = -1;
         rotationCol = -1;
         rotationsAccumulees = 0;
-        vue.updateDistrictView(partie.district);
         System.out.println("Mode rotation terminé.");
-        vue.updateJetons(partie.jetonsAction); //Pour faire grisé le jeton rotation
     }
 
     // -------------------------------------------------------------------------
@@ -270,8 +264,6 @@ public class Gameplay {
                 System.out.println("Deuxième tuile sélectionnée : (" + row + "," + col + ")");
                 partie.actions.echange(line, column, row, col);
                 waitingForEchange = false;
-                vue.updateDistrictView(partie.district);
-                vue.updateJetons(partie.jetonsAction); //Pour que le jeton echange soit grisé
             }
         } else if (rotationMode) {
             if (rotationRow == -1) {

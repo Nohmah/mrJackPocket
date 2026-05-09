@@ -46,7 +46,7 @@ public class VueJeu extends JFrame {
     private static final double TILE_SIZE   = 150;
 
     private static final Vector2 BOARD_ORIGIN = new Vector2(
-            (WINDOW_W - BOARD_SIZE) / 2.0,
+            (WINDOW_W - BOARD_SIZE) / 2.0 - 60,
             (WINDOW_H - BOARD_SIZE) / 2.0
     );
 
@@ -131,7 +131,7 @@ public class VueJeu extends JFrame {
     private final Composant2D[][]  tileComponents = new Composant2D[3][3];
     private final int[][]          tileRotations  = new int[3][3];
     private final String[][]       tileBaseNames  = new String[3][3];
-    private Composant2D            backgroundComponent;
+    //private Composant2D            backgroundComponent;
     private final Composant2D[]    actionBalls     = new Composant2D[4];
     private final Composant2D[]    turnIndicators  = new Composant2D[8];
     private final Composant2D[]    outerBalls      = new Composant2D[12];
@@ -461,10 +461,7 @@ public class VueJeu extends JFrame {
     public static final String BG_BLUE   = "BackgroundBlue";
 
     public void setBackgroundColor(String colorName) {
-        if (backgroundComponent == null) return;
-        int id = Camera.AddSprite(colorName);
-        if (id < 0) return;
-        backgroundComponent.spriteId = id;
+        Camera.setBackgroundImage(colorName);
     }
 
     // =========================================================================
@@ -531,6 +528,12 @@ public class VueJeu extends JFrame {
 
     //Pareil s'il faut refresh des trucs
     public void refreshBoardComponents() {
+        updateBackground(gameplay.partie.joueurCourant);
+        if (!(gameplay.rotationMode)){
+            updateDistrictView(gameplay.partie.district);
+        }
+        updateJetons(gameplay.partie.jetonsAction);
+        updateDetectivesView(gameplay.partie.detectives);
         Camera.Repaint();
         uiOverlay.repaint();
     }
@@ -671,17 +674,10 @@ public class VueJeu extends JFrame {
     // =========================================================================
 
     private void initComponents() {
-        initBackgroundComponent();
         initTileComponents();
         initActionBalls();
         initTurnIndicators();
         initOuterBalls();
-    }
-
-    private void initBackgroundComponent() {
-        backgroundComponent = new Composant2D(
-                new Vector2(WINDOW_W / 2.0, WINDOW_H / 2.0),
-                new Vector2(WINDOW_W, WINDOW_H), "Background", 0);
     }
 
     private void initTileComponents() {
@@ -696,7 +692,7 @@ public class VueJeu extends JFrame {
     }
 
     private void initActionBalls() {
-        double diam = 100, cx = STRIP_W + diam / 2.0 + 10;
+        double diam = 100, cx = STRIP_W + diam / 2.0 - 50;
         double spacing = BOARD_SIZE / BALL_FACE_PILE.length;
         for (int i = 0; i < BALL_FACE_PILE.length; i++) {
             double cy = BOARD_ORIGIN.y + spacing / 2.0 + i * spacing;
@@ -709,7 +705,7 @@ public class VueJeu extends JFrame {
     private void initTurnIndicators() {
         double diam = 60;
         double radius = diam / 2.0;
-        double cx = WINDOW_W - radius - 20 - (1.25 * radius);
+        double cx = WINDOW_W - radius - 20 - (1.25 * radius) - 100;
         double spacing = BOARD_SIZE / 8.0;
         for (int i = 0; i < 8; i++) {
             double cy = BOARD_ORIGIN.y + spacing / 2.0 + i * spacing;
