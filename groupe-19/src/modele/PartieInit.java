@@ -3,13 +3,13 @@ package src.modele;
 import java.util.Arrays;
 import java.util.Collections;
 
+/**
+ * Contient les méthodes pour initialiser une partie
+ **/
+
 public class PartieInit {
 
-    public static void initialiserIdentiteJack(Partie partie){
-        partie.identiteJack = partie.actions.piocherCarteAlibi().getPersonnage();
-        System.out.println("Mr Jack est "+ partie.identiteJack.nom);
-    }
-
+    /** Crée les 4 jetons et les ajoute dans la liste des jetons actions [jetonsAction] **/
     public static void initialiserJetons(Partie partie) {
         partie.jetonsAction.add(JetonAction.creerJetonAction(Action.ALIBI, Action.HOLMES));
         partie.jetonsAction.add(JetonAction.creerJetonAction(Action.TOBY, Action.WATSON));
@@ -17,7 +17,8 @@ public class PartieInit {
         partie.jetonsAction.add(JetonAction.creerJetonAction(Action.ROTATION, Action.JOKER));
     }
 
-    public static void initialiserCartes(Partie partie) {
+    /** Crée les 9 cartes alibis et les ajoute dans la liste des cartes Alibis [cartesAlibiPioche] **/
+    public static void initialiserCartesAlibis(Partie partie) {
         partie.cartesAlibiPioche.add(CarteAlibi.creerCarteAlibi(Personnage.NORA_NOIRE, 2));
         partie.cartesAlibiPioche.add(CarteAlibi.creerCarteAlibi(Personnage.SGT_GOODLEY, 0));
         partie.cartesAlibiPioche.add(CarteAlibi.creerCarteAlibi(Personnage.JEREMY_BERT, 1));
@@ -30,13 +31,21 @@ public class PartieInit {
         Collections.shuffle(partie.cartesAlibiPioche);
     }
 
+    /** Crée les 3 détectives et les ajoute dans la liste des détectives [detectives] **/
     public static void initialiserDetectives(Partie partie) {
         partie.detectives.add(Detective.creerDetective(Detective.Type.HOLMES, 11));
         partie.detectives.add(Detective.creerDetective(Detective.Type.WATSON, 3));
         partie.detectives.add(Detective.creerDetective(Detective.Type.TOBY, 7));
     }
 
+    /** Remplis la liste des suspects [suspects] avec les 9 personnages **/
     public static void initialiserSuspects(Partie partie) {
         partie.suspects.addAll(Arrays.asList(Personnage.values()));
+    }
+
+    /** Définit quel personnage est Mr. Jack et l'affecte à [identiteJack] **/
+    public static void initialiserIdentiteJack(Partie partie){
+        partie.identiteJack = partie.actions.piocherCarteAlibi().getPersonnage();
+        System.out.println("Mr Jack est "+ partie.identiteJack.nom);
     }
 }

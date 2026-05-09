@@ -57,8 +57,7 @@ public class Quartier {
     }
 
     // ---- Mutation ----
-    /** Change l'orientation du mur du nombre de quarts de tour donné (dans le sens horaire).
-     * (1 = 90°, 2 = 180°, 3 = 270°, etc.) **/
+    /** Change l'orientation du mur du nombre de quarts de tour donné **/
     public void pivoter(int quarts){
         this.orientationMur = orientationMur.rotation(quarts);
         this.setAPivote(true);

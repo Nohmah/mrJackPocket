@@ -49,7 +49,7 @@ public class Gameplay {
         controler.setActivePlayerType(playerType);
         vue.updateTurnIndicator(turn);
         vue.updateBackgroundForTurn(turn);
-        vue.updateJetons(partie.actions.getJetonsActions());
+        vue.updateJetons(partie.jetonsAction);
 
         if ("AI".equals(playerType)) {
             SwingUtilities.invokeLater(controler::joueIa);
@@ -61,7 +61,7 @@ public class Gameplay {
         currentTurn = 1;
         gameOver = false;
         vue.updateDistrictView(partie.district);
-        vue.updateJetons(partie.actions.getJetonsActions());
+        vue.updateJetons(partie.jetonsAction);
         vue.updateDetectivesView(partie.detectives);      
         vue.updateTurnIndicator(currentTurn);
         vue.updateBackgroundForTurn(currentTurn);
@@ -93,7 +93,7 @@ public class Gameplay {
         if (currentTurn >= 1 && currentTurn <= 8) vue.switchTurnFace(currentTurn - 1);
         partie.appelATemoin();
         vue.updateDistrictView(partie.district);
-        vue.updateJetons(partie.actions.getJetonsActions());
+        vue.updateJetons(partie.jetonsAction);
 
         if (gameOver) {
             onGameOver();
@@ -136,7 +136,7 @@ public class Gameplay {
         }
 
         vue.updateDistrictView(partie.district);
-        vue.updateJetons(partie.actions.getJetonsActions());
+        vue.updateJetons(partie.jetonsAction);
         vue.updateDetectivesView(partie.detectives);   //correction
         vue.refreshBoardComponents();
     }

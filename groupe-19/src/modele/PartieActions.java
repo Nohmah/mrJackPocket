@@ -3,18 +3,20 @@ package src.modele;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Contient les méthodes en lien avec et pour réaliser les actions des jetons Actions
+ **/
+
 public class PartieActions {
 
     private final Partie partie;
 
+    /** Constructeur **/
     public PartieActions(Partie partie) {
         this.partie = partie;
     }
 
-    public List<JetonAction> getJetonsActions() {
-        return partie.jetonsAction;
-    }
-
+    /** Renvoie la liste des actions possibles. Utilisé par l'IA **/
     public List<Action> getActionsPossibles() {
         List<Action> actionsPossibles = new ArrayList<>();
         for (JetonAction j : partie.jetonsAction) {
@@ -25,11 +27,13 @@ public class PartieActions {
         return actionsPossibles;
     }
 
+    /** Enlève et renvoie (=pioche) une carte alibi de cartesAlibiPioche **/
     public CarteAlibi piocherCarteAlibi() {
         if (partie.cartesAlibiPioche.isEmpty()) return null;
         return partie.cartesAlibiPioche.remove(0);
     }
 
+    /** Action d'un jeton action. Déplace un détective de [pas] dans le sens horaire autour du District **/
     public void deplacerDetective(Detective detective, int pas) {
         Action action;
         switch (detective.getType()) {
@@ -37,7 +41,6 @@ public class PartieActions {
             case WATSON -> action = Action.WATSON;
             case TOBY   -> action = Action.TOBY;
             default -> {
-                System.out.println("Type de détective inconnu");
                 return;
             }
         }
@@ -46,71 +49,74 @@ public class PartieActions {
             return;
         }
         detective.deplacer(pas);
-        System.out.println(detective.getType() + " avance de " + pas);
         jeton.setJoue(true);
         partie.apresAction();
     }
 
+    /** Action d'un jeton action. Déplace un détective de 1 pas dans le sens horaire
+     * ou si Jack, peut aussi ne rien faire **/
     public void joker(Detective detective) {
         JetonAction jeton = getSiJetonDisponible(Action.JOKER);
         if (jeton==null){
             return;
         }
-        if (partie.joueurCourant == Partie.Joueur.ENQUETEUR) {
+        if (detective == null){
+            System.out.println("Mr. Jack choisit de ne déplacer aucun détective.");
+        } else {
             detective.deplacer(1);
             System.out.println(detective.getType() + " avance de 1");
-        } else {
-            if (detective == null) {
-                System.out.println("Mr. Jack choisit de ne déplacer aucun détective.");
-            } else {
-                detective.deplacer(1);
-                System.out.println(detective.getType() + " avance de 1");
-            }
         }
-        partie.verifFinDePartie();
+        //partie.verifFinDePartie();
+        //if (partie.isPartieTerminee()) return;
         jeton.setJoue(true);
-        if (partie.isPartieTerminee()) return;
         partie.apresAction();
     }
 
+    /** Action d'un jeton action. Pivote un quartier de [quarts] quarts de tour **/
     public void rotationQuartier(int JetonIndex, int x, int y, int quarts) {
         JetonAction jeton = partie.jetonsAction.get(JetonIndex);
         if (jeton.isJoue()){
-            System.out.println("JETON ACTION DEJA JOUE");
             return;
         }
-        Quartier q = partie.district.get(x, y);
-        if (q.getAPivote()) {
+        Quartier quartier = partie.district.get(x, y);
+        if (quartier.getAPivote()) {
             System.out.println("Il est interdit de pivoter un quartier déjà pivoté dans le même tour de jeu");
             return;
         }
-        q.pivoter(quarts);
+        quartier.pivoter(quarts);
         System.out.println("Quartier pivoté");
         jeton.setJoue(true);
         partie.apresAction();
     }
 
+    /** Action d'un jeton action. Échange deux quartiers **/
     public void echange(int x1, int y1, int x2, int y2) {
         JetonAction jeton = getSiJetonDisponible(Action.ECHANGE);
         if (jeton==null){
             return;
         }
         partie.district.echanger(x1, y1, x2, y2);
-        System.out.println("Échange");
+        System.out.println("Échange de quartier");
         jeton.setJoue(true);
         partie.apresAction();
     }
 
+    /** Action d'un jeton action. Pioche une carte alibi puis innocente si détective, ajoute les sabliers si Jack **/
     public void alibi() {
         JetonAction jeton = getSiJetonDisponible(Action.ALIBI);
         if (jeton==null){
             return;
         }
         CarteAlibi carte = piocherCarteAlibi();
-        if (carte == null) return;
+        if (carte == null) {
+            System.out.println("Plus de carte alibi dans la pioche !");
+            jeton.setJoue(true);
+            return;
+        }
         System.out.println("Carte alibi piochée : " + carte.getPersonnage());
         if (partie.joueurCourant == Partie.Joueur.JACK) {
             partie.sabliersDeJack += carte.getSabliers();
+            System.out.println("Jack récupère les " + carte.getSabliers() + " sabliers de la carte. Il en est à " + partie.sabliersDeJack + " sabliers");
         } else {
             partie.suspects.remove(carte.getPersonnage());
             partie.district.innocenter(carte.getPersonnage());
@@ -119,10 +125,12 @@ public class PartieActions {
         partie.apresAction();
     }
 
+    /** Renvoie le JetonAction présent dans [jetonsAction] associé à l'action donnée en argument
+     * s'il n'a pas été joué (et s'il est visible, protection) **/
     private JetonAction getSiJetonDisponible(Action action) {
-        for (JetonAction j : partie.jetonsAction) {
-            if (j.getActionVisible() == action && !j.isJoue()) {
-                return j;
+        for (JetonAction jeton : partie.jetonsAction) {
+            if (jeton.getActionVisible() == action && !jeton.isJoue()) {
+                return jeton;
             }
         }
         System.out.println("Le jeton action" + action + " a déjà été utilisé ce tour (ou bien n'est pas sensé être visible...)");

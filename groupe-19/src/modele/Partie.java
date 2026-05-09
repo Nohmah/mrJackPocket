@@ -5,6 +5,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.CompletableFuture;
 import javax.swing.*;
 
+/**
+ * Représente une partie.
+ **/
+
 public class Partie {
 
     public enum Joueur {
@@ -46,23 +50,14 @@ public class Partie {
     private ExecutorService executor = Executors.newSingleThreadExecutor();
     private boolean IaEnCours = false;
 
-
+    /** Constructeur **/
     public Partie(){
-        district = District.creerDistrict();
         actions = new PartieActions(this);
-        // Création des listes
         jetonsAction = new ArrayList<>();
         cartesAlibiPioche = new ArrayList<>();
         detectives = new ArrayList<>();
         suspects = new ArrayList<>();
-
-        // Création et ajout dans les listes des objets
-        PartieInit.initialiserJetons(this);
-        PartieInit.initialiserCartes(this);
-        PartieInit.initialiserDetectives(this);
-        PartieInit.initialiserSuspects(this);
-        PartieInit.initialiserIdentiteJack(this);
-
+        initialiserPartie();
         tourSuivant();
     }
 
@@ -83,38 +78,40 @@ public class Partie {
         this.gagnant = p.gagnant;
     }
 
-    /**Réinitialise la partie.*/
+    /** Initialise les élements de la partie **/
+    private void initialiserPartie() {
+        district = District.creerDistrict();
+        PartieInit.initialiserJetons(this);
+        PartieInit.initialiserCartesAlibis(this);
+        PartieInit.initialiserDetectives(this);
+        PartieInit.initialiserSuspects(this);
+        PartieInit.initialiserIdentiteJack(this);
+    }
+
+    /** Réinitialise la partie **/
     public void reset() {
         // Réinitialiser les variables
+        // IaEnCours = false; ? A voir avec la team IA
         gagnant = null;
         coursePoursuiteActive = false;
         numeroTour = 0;
-        totalActionsJouees = 0;
+        //totalActionsJouees = 0; Commenté car à chaque tourSuivant() on remet à 0 totalActionsJouees (donc redondant)
         jackVisibleCeTour = false;
         sabliersDeJack = 0;
 
-        district = District.creerDistrict();
-
-        // Vider et recréer les listes
         jetonsAction.clear();
         cartesAlibiPioche.clear();
         detectives.clear();
         suspects.clear();
-
-        // Réinitialisation des listes (comme dans le constructeur)
-        PartieInit.initialiserJetons(this);
-        PartieInit.initialiserCartes(this);
-        PartieInit.initialiserDetectives(this);
-        PartieInit.initialiserSuspects(this);
-        PartieInit.initialiserIdentiteJack(this);
+        initialiserPartie();
         tourSuivant();
     }
 
     public void appelATemoin(){
         HashSet<Personnage> personnagesVisibles = new HashSet<>();
-        personnagesVisibles.addAll(district.personnagesVisiblesParDetective(detectives.get(0)));
-        personnagesVisibles.addAll(district.personnagesVisiblesParDetective(detectives.get(1)));
-        personnagesVisibles.addAll(district.personnagesVisiblesParDetective(detectives.get(2)));
+        for (Detective d : detectives) {
+            personnagesVisibles.addAll(district.personnagesVisiblesParDetective(d));
+        }
 
         List<Personnage> avantAppel = new ArrayList<>(suspects);
 
@@ -125,6 +122,7 @@ public class Partie {
         } else {
             jackVisibleCeTour = false;
             sabliersDeJack ++; // Jack gagne le sablier du tour
+            System.out.println("Jack n'est pas visible, il gagne le sablier du tour. Il est a " + sabliersDeJack + " sabliers");
             suspects.removeAll(personnagesVisibles);
         }
         //Apres réduction de suspects, on innocente les suspects supprimés.
@@ -145,6 +143,8 @@ public class Partie {
 
         switch(totalActionsJouees){
             case 1, 3:
+                System.out.println("Le joueur change. Le joueur est maintenant" +
+                        ((joueurCourant == Joueur.JACK) ? Joueur.ENQUETEUR : Joueur.JACK));
                 changerJoueur();
                 //lanceIa();
                 break;
@@ -163,8 +163,8 @@ public class Partie {
     public void tourSuivant(){
         if(isPartieTerminee()) return;
         numeroTour++;
-        district.reinitialiserFlagsRotation();
         totalActionsJouees = 0;
+        district.reinitialiserFlagsRotation();
         if(numeroTour % 2 != 0){
             for(JetonAction j : jetonsAction){
                 j.lancer();
@@ -257,7 +257,7 @@ public class Partie {
         if(coursePoursuiteActive){
             verifFinCoursePoursuite();
         } else {
-            //Si les deux camps atteignent leur but en même temps, on
+            //Si les deux camps atteignent leur but en même temps, la course poursuite est lancée
             if((suspects.size() == 1) && sabliersDeJack >= MAX_SABLIER){
                 coursePoursuiteActive = true;
                 System.out.println("Début de course poursuite !!!");

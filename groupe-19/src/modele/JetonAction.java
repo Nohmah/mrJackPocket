@@ -53,7 +53,7 @@ public class JetonAction {
     }
 
     /** Définit le jeton comme joué ou non joué **/
-    public void setJoue(boolean joue){
-        this.joue = joue;
+    public void setJoue(boolean value){
+        this.joue = value;
     }
 }
