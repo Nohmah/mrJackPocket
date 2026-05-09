@@ -47,8 +47,8 @@ public class IHMControler implements MouseListener, KeyListener {
     // Constantes plateau
     // =========================================================================
 
-    private static final double  TILE_WORLD_SIZE   = 150.0;
-    private static final Vector2 BOARD_WORLD_ORIGIN = new Vector2(375, 175);
+    //private static final double  TILE_WORLD_SIZE   = 150.0;
+    //private static final Vector2 BOARD_WORLD_ORIGIN = new Vector2(375, 175);
 
     // =========================================================================
     // État interne
@@ -140,7 +140,7 @@ public class IHMControler implements MouseListener, KeyListener {
      */
     public void joueIa() {
         if (!"AI".equals(activePlayerType)) return;
-        Vector2 pos = BOARD_WORLD_ORIGIN.Add(new Vector2(TILE_WORLD_SIZE / 2, TILE_WORLD_SIZE / 2));
+        Vector2 pos = VueJeu.BOARD_ORIGIN.Add(new Vector2(VueJeu.TILE_SIZE / 2, VueJeu.TILE_SIZE / 2));
         pendingIntent = new ClickIntent(0, 0, pos, false);
         confirmPendingIntent();
     }
@@ -152,8 +152,10 @@ public class IHMControler implements MouseListener, KeyListener {
     @Override
     public void mouseClicked(MouseEvent e) {
         Vector2 world = screenToWorld(new Vector2(e.getX(), e.getY()));
-        int col = (int) ((world.x - BOARD_WORLD_ORIGIN.x) / TILE_WORLD_SIZE);
-        int row = (int) ((world.y - BOARD_WORLD_ORIGIN.y) / TILE_WORLD_SIZE);
+        int col = (int) ((world.x - VueJeu.BOARD_ORIGIN.x) / VueJeu.TILE_SIZE);
+        int row = (int) ((world.y - VueJeu.BOARD_ORIGIN.y) / VueJeu.TILE_SIZE);
+        //int col = (int) ((world.x - BOARD_WORLD_ORIGIN.x) / TILE_WORLD_SIZE);
+        //int row = (int) ((world.y - BOARD_WORLD_ORIGIN.y) / TILE_WORLD_SIZE);
 
         if (col < 0 || col > 2 || row < 0 || row > 2) {
             // Clic hors plateau — Gameplay décide si c'est significatif

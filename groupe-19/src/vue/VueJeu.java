@@ -43,9 +43,9 @@ public class VueJeu extends JFrame {
     private static final int    STRIP_W_PX  = 100;
     private static final double STRIP_W     = 100;   // conservé pour les Composant2D monde
     private static final double BOARD_SIZE  = 450;
-    private static final double TILE_SIZE   = 150;
+    public static final double TILE_SIZE   = 150;
 
-    private static final Vector2 BOARD_ORIGIN = new Vector2(
+    public static final Vector2 BOARD_ORIGIN = new Vector2(
             (WINDOW_W - BOARD_SIZE) / 2.0 - 60,
             (WINDOW_H - BOARD_SIZE) / 2.0
     );
