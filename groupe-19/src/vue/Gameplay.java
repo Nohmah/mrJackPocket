@@ -48,7 +48,7 @@ public class Gameplay {
         String playerType = "HUMAN";
         controler.setActivePlayerType(playerType);
         vue.updateTurnIndicator(turn);
-        vue.updateBackgroundForTurn(turn);
+        vue.updateBackground(partie.joueurCourant);
         vue.updateJetons(partie.jetonsAction);
 
         if ("AI".equals(playerType)) {
@@ -64,7 +64,7 @@ public class Gameplay {
         vue.updateJetons(partie.jetonsAction);
         vue.updateDetectivesView(partie.detectives);      
         vue.updateTurnIndicator(currentTurn);
-        vue.updateBackgroundForTurn(currentTurn);
+        vue.updateBackground(partie.joueurCourant);
         vue.enableValidateButton(true);
         resetAllTurnIndicators();
         startTurn(currentTurn);
