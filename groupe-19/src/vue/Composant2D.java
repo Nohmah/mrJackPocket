@@ -42,7 +42,7 @@ public class Composant2D
         this.taille = tail;
         this.echelle = new Vector2(1, 1);
         this.spriteId = Camera.AddSprite(spriteName);
-        this.couche = 0;
+        this.couche = 3;
         this.visible = true;
         this.immobile = false;
         Camera.AddComposant(this);

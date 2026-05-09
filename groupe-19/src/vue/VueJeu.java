@@ -1,7 +1,5 @@
 package src.vue;
 
-import src.modele.*;
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -9,6 +7,8 @@ import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.swing.*;
+import src.modele.*;
 
 /**
  * VueJeu — Fenetre principale du jeu (1200×800).
@@ -49,6 +49,8 @@ public class VueJeu extends JFrame {
             (WINDOW_W - BOARD_SIZE) / 2.0,
             (WINDOW_H - BOARD_SIZE) / 2.0
     );
+
+    private static final int    FPS         = 60;
 
     // =========================================================================
     // Sprites
@@ -162,6 +164,8 @@ public class VueJeu extends JFrame {
         replaceOuterBall(12, 1);
         replaceOuterBall(4, 2);
         replaceOuterBall(8, 3);
+        //Ticker à la fin car il "lance" l'affichage
+        new Thread(() -> startTicker()).start();
     }
 
     // =========================================================================
@@ -268,7 +272,6 @@ public class VueJeu extends JFrame {
                 if (delta != 0) rotateTile(i, j, delta);
             }
         }
-        Camera.Repaint();
     }
 
     /** Met a jour les 4 jetons d'action selon leur face visible. */
@@ -289,7 +292,6 @@ public class VueJeu extends JFrame {
             actionBalls[i].spriteId = Camera.AddSprite(spriteName);
             actionBallCurrentSprite[i] = spriteName;
         }
-        Camera.Repaint();
     }
 
     /** Met a jour l'affichage des 3 detectives a partir des positions du modele. */
@@ -312,7 +314,6 @@ public class VueJeu extends JFrame {
             turnIndicators[i].echelle = (i == turn - 1)
                     ? new Vector2(1.3, 1.3) : new Vector2(1.0, 1.0);
         }
-        Camera.Repaint();
     }
 
     /** Adapte la couleur de fond au numero de tour. */
@@ -326,7 +327,6 @@ public class VueJeu extends JFrame {
         turnFaceIsPile[turnIndex] = !turnFaceIsPile[turnIndex];
         String sprite = turnFaceIsPile[turnIndex] ? TURN_FACE_PILE[turnIndex] : TURN_FACE_FACE;
         turnIndicators[turnIndex].spriteId = Camera.AddSprite(sprite);
-        Camera.Repaint();
     }
 
     public boolean isTurnFacePile(int turnIndex) {
@@ -341,7 +341,6 @@ public class VueJeu extends JFrame {
         String sprite = ballFaceIsPile[ballIndex] ? BALL_FACE_PILE[ballIndex] : BALL_FACE_FACE[ballIndex];
         actionBalls[ballIndex].spriteId = Camera.AddSprite(sprite);
         actionBallCurrentSprite[ballIndex] = sprite;
-        Camera.Repaint();
     }
 
     /** Modifie la couleur du rectangle d'indicateur d'un joueur. */
@@ -353,8 +352,6 @@ public class VueJeu extends JFrame {
 
     public void enableValidateButton(boolean enabled) { validateButton.setEnabled(enabled); }
 
-    public void refreshBoardComponents() { Camera.Repaint(); }
-
     public void showGameOverScreen() {
         validateButton.setEnabled(false);
         JLabel lbl = new JLabel("FIN DE PARTIE", SwingConstants.CENTER);
@@ -363,7 +360,6 @@ public class VueJeu extends JFrame {
         lbl.setBounds(300, 350, 600, 100);
         uiOverlay.add(lbl);
         uiOverlay.revalidate();
-        uiOverlay.repaint();
     }
 
     public void hideGameOverScreen() {
@@ -373,7 +369,6 @@ public class VueJeu extends JFrame {
                 break;
             }
         }
-        uiOverlay.repaint();
     }
 
     // =========================================================================
@@ -439,7 +434,6 @@ public class VueJeu extends JFrame {
         }
         if (oldPos != -1) refreshOuterBallScale(oldPos);
         refreshOuterBallScale(idx);
-        Camera.Repaint();
     }
 
     private void refreshOuterBallScale(int posIdx) {
@@ -471,7 +465,6 @@ public class VueJeu extends JFrame {
         int id = Camera.AddSprite(colorName);
         if (id < 0) return;
         backgroundComponent.spriteId = id;
-        Camera.Repaint();
     }
 
     // =========================================================================
@@ -508,6 +501,38 @@ public class VueJeu extends JFrame {
         getContentPane().setLayout(new BorderLayout());
         getContentPane().setBackground(Color.BLACK); // bandes letterbox
         setLocationRelativeTo(null);
+    }
+
+    // =========================================================================
+    // Ticker
+    // =========================================================================
+
+    private void startTicker() {
+        int timeSleep = 1000 / FPS;
+        while (true)
+        {
+            try {
+                //Le compileur a peur du sleep dans une boucle
+                //Mais de toute façon on crée un Thread spécial pour
+                Thread.sleep(timeSleep);
+                Tick();
+            } catch (InterruptedException e) {
+                System.err.println("Ticker interrompu");
+                return;
+            }
+        }
+        
+    }
+
+    //N'hésitez pas à rajouter des trucs qui doivent se passer à toutes les frames là dedans
+    private void Tick() {
+        refreshBoardComponents();
+    }
+
+    //Pareil s'il faut refresh des trucs
+    public void refreshBoardComponents() {
+        Camera.Repaint();
+        uiOverlay.repaint();
     }
 
     // -------------------------------------------------------------------------
@@ -656,7 +681,7 @@ public class VueJeu extends JFrame {
     private void initBackgroundComponent() {
         backgroundComponent = new Composant2D(
                 new Vector2(WINDOW_W / 2.0, WINDOW_H / 2.0),
-                new Vector2(WINDOW_W, WINDOW_H), "Background");
+                new Vector2(WINDOW_W, WINDOW_H), "Background", 0);
     }
 
     private void initTileComponents() {
@@ -770,7 +795,6 @@ public class VueJeu extends JFrame {
             panneauRegles.setBounds(0, 0, camW, camH);
         }
         uiOverlay.revalidate();
-        uiOverlay.repaint();
     }
 
     // =========================================================================
@@ -899,7 +923,6 @@ public class VueJeu extends JFrame {
         // 4. Ajout au premier plan dans l'uiOverlay (devant les playerRects)
         uiOverlay.add(panneauRegles, 0);
         uiOverlay.revalidate();
-        uiOverlay.repaint();
 
         System.out.println("VueJeu — Panneau de regles affiche");
     }
@@ -909,7 +932,6 @@ public class VueJeu extends JFrame {
             uiOverlay.remove(panneauRegles);
             panneauRegles = null;
             uiOverlay.revalidate();
-            uiOverlay.repaint();
             System.out.println("VueJeu — Panneau de regles ferme");
         }
     }
