@@ -61,6 +61,7 @@ public class Partie {
         tourSuivant();
     }
 
+    /** Copie la partie. Utilisé par l'IA **/
     public Partie(Partie p) {
         this.district = p.district;
         this.actions = new PartieActions(this);
@@ -107,6 +108,7 @@ public class Partie {
         tourSuivant();
     }
 
+    /** Réalise l'appel à témoin (deuxième étape du jeu) et vérifie si la partie est terminée **/
     public void appelATemoin(){
         HashSet<Personnage> personnagesVisibles = new HashSet<>();
         for (Detective d : detectives) {
@@ -134,13 +136,14 @@ public class Partie {
         if(!isPartieTerminee()) tourSuivant();
     }
 
+    /** Change [joueurCourant] pour l'autre joueur **/
     public void changerJoueur() {
         joueurCourant = (joueurCourant == Joueur.JACK) ? Joueur.ENQUETEUR : Joueur.JACK;
     }
 
+    /** Réalise le changement de joueur après un certain nombre de jetons Actions utilisés **/
     public void apresAction(){
         totalActionsJouees++;
-
         switch(totalActionsJouees){
             case 1, 3:
                 System.out.println("Le joueur change. Le joueur est maintenant" +
@@ -160,6 +163,8 @@ public class Partie {
         }*/
     }
 
+    /** Prépare le tour suivant : incrémente [numeroTour], flag les tuiles comme n'ayant pas pivoté,
+     * lance ou retourne les jetons Actions et définit le joueur qui va commencer le tour **/
     public void tourSuivant(){
         if(isPartieTerminee()) return;
         numeroTour++;
@@ -171,12 +176,14 @@ public class Partie {
                 System.out.println("Jeton lancé sur : " + j.getActionVisible());
             }
             joueurCourant = Joueur.ENQUETEUR;
+            System.out.println("Le joueur est l'Enquêteur");
         } else {
             for(JetonAction j : jetonsAction){
                 j.retourner();
                 System.out.println("Jeton retourné sur : " + j.getActionVisible());
             }
             joueurCourant = Joueur.JACK;
+            System.out.println("Le joueur est Jack");
         }
     }
 
@@ -251,42 +258,79 @@ public class Partie {
      *
      */
 
+    /** Vérifie si la partie est terminé **/
     public void verifFinDePartie(){
         if(gagnant != null) return;
         //En cas de fin de course poursuite, on vérifie si Jack a été trouvé ou non.
         if(coursePoursuiteActive){
             verifFinCoursePoursuite();
         } else {
-            //Si les deux camps atteignent leur but en même temps, la course poursuite est lancée
+            // "Il arrive parfois que les deux joueurs atteignent leur but en même temps."
             if((suspects.size() == 1) && sabliersDeJack >= MAX_SABLIER){
-                coursePoursuiteActive = true;
-                System.out.println("Début de course poursuite !!!");
-            }else if(suspects.size() == 1){
-                gagnant = Joueur.ENQUETEUR;
-                System.out.println("----- Victoire des Détectives ! -----");
-            }else if(sabliersDeJack >= MAX_SABLIER){
-                gagnant = Joueur.JACK;
-                System.out.println("----- Victoire de Jack ! -----");
+                // "Si cela se produit à la fin du huitième tour : L’Enquêteur gagne la partie si
+                // Mr. Jack est visible. Mr. Jack gagne la partie s’il est invisible."
+                if (numeroTour==MAX_TOUR){
+                    if (jackVisibleCeTour){
+                        declarerGagnant(Joueur.ENQUETEUR);
+                    } else {
+                        declarerGagnant(Joueur.JACK);
+                    }
+                } else {
+                    // "Si cela se produit avant le huitième tour, la partie continue et une course poursuite sans
+                    // merci s’engage entre l’Enquêteur et Mr. Jack !"
+                    coursePoursuiteActive = true;
+                    System.out.println("Début de course poursuite !!!");
+                }
+            }
+            // "Pour l’Enquêteur : Après l’Appel à témoin, il ne doit subsister qu’un seul Suspect.
+            // Ce suspect est forcément le coupable !"
+            else if(suspects.size() == 1){
+                declarerGagnant(Joueur.ENQUETEUR);
+            }
+            // "Pour Mr. Jack : Après l’appel à témoin, il doit totaliser au moins six sabliers"
+            else if(sabliersDeJack >= MAX_SABLIER){
+                declarerGagnant(Joueur.JACK);
+            }
+            // "Si aucun des deux joueurs n’a atteint son objectif à la fin du tour 8, Jack est vainqueur"
+            else if (numeroTour==MAX_TOUR) {
+                declarerGagnant(Joueur.JACK);
             }
         }
     }
 
-    public void verifFinCoursePoursuite(){
-        if(jackVisibleCeTour){
-            gagnant = Joueur.ENQUETEUR;
-            System.out.println("Jack à été trouvé.\n ----- Victoire des Détectives -----\n");
-            return;
-        }
-        if(numeroTour >= MAX_TOUR){
-                gagnant = Joueur.JACK;
-                System.out.println("Jack à pris la fuite.\n ----- Victoire de Jack -----\n");
+    /** Affecte à [gagnant] le joueur - Jack ou Enquêteur - qui a gagné, et print cette information **/
+    private void declarerGagnant(Joueur vainqueur) {
+        this.gagnant = vainqueur;
+        if (this.gagnant==Joueur.ENQUETEUR){
+            System.out.println("----- Victoire de l'Enquêteur ! -----");
+        } else {
+            System.out.println("----- Victoire de Jack ! -----");
         }
     }
 
+    /** Vérifie si la course poursuite est terminé **/
+    public void verifFinCoursePoursuite(){
+        // "L’Enquêteur gagne dès qu’il termine un tour avec Mr. Jack visible."
+        if(jackVisibleCeTour){
+            System.out.println("Fin de la course poursuite.");
+            declarerGagnant(Joueur.ENQUETEUR);
+            coursePoursuiteActive = false;
+            return;
+        }
+        // "Mr. Jack gagne s'il est resté invisible jusqu’à la fin du huitième tour."
+        if(numeroTour == MAX_TOUR){
+            System.out.println("Fin de la course poursuite.");
+            declarerGagnant(Joueur.JACK);
+            coursePoursuiteActive = false;
+        }
+    }
+
+    /** Vérifie si il y a un gagnant **/
     public boolean isPartieTerminee(){
         return gagnant != null;
     }
 
+    /** Renvoie le joueur qui a gagné **/
     public Joueur getGagnant(){
         return gagnant;
     }

@@ -66,8 +66,6 @@ public class PartieActions {
             detective.deplacer(1);
             System.out.println(detective.getType() + " avance de 1");
         }
-        //partie.verifFinDePartie();
-        //if (partie.isPartieTerminee()) return;
         jeton.setJoue(true);
         partie.apresAction();
     }
