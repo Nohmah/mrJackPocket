@@ -7,7 +7,7 @@ import src.vue.VueJeu;
 import javax.swing.SwingUtilities;
 
 public class MrJackPocket {
-    public static boolean menu = true;
+    public static boolean menu = false;
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             if (menu){
