@@ -1,17 +1,22 @@
 package src;
+
 import src.modele.Partie;
+import src.vue.VueMenuPrincipal;
 import src.vue.VueJeu;
 import javax.swing.SwingUtilities;
 
-/**
- * Fichier pour lancer Mr. Jack Pocket.
- */
 public class MrJackPocket {
+    public static boolean menu = false;
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            Partie partie = new Partie();
-            VueJeu vue = new VueJeu(partie);
-            vue.setVisible(true);
+            if (menu){
+                VueMenuPrincipal menu = new VueMenuPrincipal();
+                menu.setVisible(true);
+            } else {
+                Partie partie = new Partie();
+                VueJeu jeu = new VueJeu(partie);
+                jeu.setVisible(true);
+            }
         });
     }
 }
