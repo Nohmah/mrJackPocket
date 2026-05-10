@@ -12,7 +12,7 @@ import javax.swing.*;
 public class Partie {
 
     public enum Joueur {
-        ENQUETEUR("l'Enquêteur"),
+        ENQUETEUR("L'Enquêteur"),
         JACK("Mr. Jack");
 
         private final String nom;

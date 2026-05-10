@@ -62,6 +62,7 @@ public class Gameplay {
         partie.reset();
         currentTurn = 1;
         gameOver = false;
+        vue.hideGameOverScreen();
         vue.updateTurnIndicator(currentTurn);
         vue.enableValidateButton(true);
         resetAllTurnIndicators();
@@ -90,8 +91,7 @@ public class Gameplay {
         System.out.println("Gameplay — fin du tour " + currentTurn);
         if (currentTurn >= 1 && currentTurn <= 8) vue.switchTurnFace(currentTurn - 1);
         partie.appelATemoin();
-
-        if (gameOver) {
+        if (partie.getGagnant()!=null){
             onGameOver();
             return;
         }
@@ -107,7 +107,7 @@ public class Gameplay {
     private void onGameOver() {
         gameOver = true;
         System.out.println("Gameplay — fin de partie");
-        vue.showGameOverScreen();
+        vue.showGameOverScreen(partie.getGagnant().getNom());
     }
 
     // -------------------------------------------------------------------------
