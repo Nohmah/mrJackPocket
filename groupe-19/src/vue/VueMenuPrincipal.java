@@ -31,19 +31,40 @@ public class VueMenuPrincipal extends JFrame {
 
         JButton partieSolo = new JButton("Partie Solo");
         partieSolo.addActionListener(e -> {
-            Partie partie = new Partie();
-            VueJeu jeu = new VueJeu(partie);
-            dispose();
+            VueMenuPrePartie prePartie = new VueMenuPrePartie("solo");
+            getContentPane().removeAll();
+            getContentPane().add(prePartie);
+            revalidate();
+            repaint();
+            //Partie partie = new Partie();
+            //VueJeu jeu = new VueJeu(partie);
+            //dispose();
         });
         partieSolo.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         JButton partieMulti = new JButton("Partie Multijoueur");
         partieMulti.addActionListener(e -> {
-            System.out.println("blabla");
+            System.out.println("Partie Multijoueur");
         });
         partieMulti.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JButton regles = new JButton("Règles");
+        regles.addActionListener(e->{
+            System.out.println("Les règles");
+        });
+        regles.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JButton quitter = new JButton("Quitter");
+        quitter.addActionListener(e -> {
+            System.exit(0);
+        });
+        quitter.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         panneauBoutons.add(Box.createVerticalGlue());
         panneauBoutons.add(partieSolo);
         panneauBoutons.add(partieMulti);
+        panneauBoutons.add(regles);
+        panneauBoutons.add(quitter);
         panneauBoutons.add(Box.createVerticalGlue());
     }
 }

@@ -112,7 +112,7 @@ public class PartieActions {
             return;
         }
         System.out.println("Carte alibi piochée : " + carte.getPersonnage());
-        if (partie.joueurCourant == Partie.Joueur.JACK) {
+        if (partie.joueurCourant == Joueur.JACK) {
             partie.sabliersDeJack += carte.getSabliers();
             System.out.println("Jack récupère les " + carte.getSabliers() + " sabliers de la carte. Il en est à " + partie.sabliersDeJack + " sabliers");
         } else {

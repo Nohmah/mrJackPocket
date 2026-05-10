@@ -157,8 +157,8 @@ public class Gameplay {
     }
 
     private void gererJoker() {
-        Partie.Joueur joueur = partie.joueurCourant;
-        if (joueur == Partie.Joueur.ENQUETEUR) {
+        Joueur joueur = partie.joueurCourant;
+        if (joueur == Joueur.ENQUETEUR) {
             String[] options = {"Holmes", "Watson", "Toby"};
             int choix = JOptionPane.showOptionDialog(vue,
                     "Quel détective voulez-vous déplacer d’un pas ?",

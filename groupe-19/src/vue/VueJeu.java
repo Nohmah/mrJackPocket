@@ -317,8 +317,8 @@ public class VueJeu extends JFrame {
     }
 
     /** Adapte la couleur de fond au numero de tour. */
-    public void updateBackground(Partie.Joueur joueurCourant) {
-        setBackgroundColor((joueurCourant == Partie.Joueur.JACK) ? BG_RED : BG_BLUE);
+    public void updateBackground(Joueur joueurCourant) {
+        setBackgroundColor((joueurCourant == Joueur.JACK) ? BG_RED : BG_BLUE);
     }
 
     /** Bascule la face d'un indicateur de tour (Pile ↔ Face). */

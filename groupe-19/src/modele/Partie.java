@@ -11,21 +11,6 @@ import javax.swing.*;
 
 public class Partie {
 
-    public enum Joueur {
-        ENQUETEUR("L'Enquêteur"),
-        JACK("Mr. Jack");
-
-        private final String nom;
-
-        Joueur(String nom) {
-            this.nom = nom;
-        }
-
-        public String getNom() {
-            return nom;
-        }
-    }
-
     public District district;
     public final PartieActions actions;
     public List<JetonAction> jetonsAction;
@@ -33,6 +18,9 @@ public class Partie {
     public List<Detective> detectives;
     public List<Personnage> suspects;
     public Joueur joueurCourant;
+    public Joueur joueurChoisi;
+    public boolean IAChoisi;
+    public String difficulteIAChoisi;
     public Personnage identiteJack;
     public int sabliersDeJack;
     private final int MAX_SABLIER = 6;
@@ -52,7 +40,10 @@ public class Partie {
     public boolean estSimulation = false;
 
     /** Constructeur **/
-    public Partie(){
+    public Partie(Joueur joueurChoisi, boolean IAChoisi, String difficulteIAChoisi){
+        this.joueurChoisi = joueurChoisi;
+        this.IAChoisi = IAChoisi;
+        this.difficulteIAChoisi = difficulteIAChoisi;
         actions = new PartieActions(this);
         jetonsAction = new ArrayList<>();
         cartesAlibiPioche = new ArrayList<>();
