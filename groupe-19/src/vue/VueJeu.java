@@ -113,7 +113,7 @@ public class VueJeu extends JFrame {
     private JPanel  uiOverlay;
     private JButton validateButton;
     private final JPanel[] playerRects = new JPanel[2];
-
+    private JLabel gameOverLabel = null;
     /** Panneau de regles actuellement affiche (null = ferme). */
     private JPanel panneauRegles = null;
 
@@ -352,23 +352,19 @@ public class VueJeu extends JFrame {
 
     public void enableValidateButton(boolean enabled) { validateButton.setEnabled(enabled); }
 
-    public void showGameOverScreen() {
+    public void showGameOverScreen(String vainqueur) {
         validateButton.setEnabled(false);
-        JLabel lbl = new JLabel("FIN DE PARTIE", SwingConstants.CENTER);
-        lbl.setFont(new Font("SansSerif", Font.BOLD, 64));
-        lbl.setForeground(Color.RED);
-        lbl.setBounds(300, 350, 600, 100);
-        uiOverlay.add(lbl);
+        gameOverLabel = new JLabel(vainqueur + " a gagné !", SwingConstants.CENTER);
+        gameOverLabel.setFont(new Font("SansSerif", Font.BOLD, 64));
+        gameOverLabel.setForeground(Color.RED);
+        gameOverLabel.setBounds(300, 350, 600, 100);
+        uiOverlay.add(gameOverLabel);
         uiOverlay.revalidate();
     }
 
     public void hideGameOverScreen() {
-        for (Component c : uiOverlay.getComponents()) {
-            if (c instanceof JLabel lbl && "FIN DE PARTIE".equals(lbl.getText())) {
-                uiOverlay.remove(c);
-                break;
-            }
-        }
+        uiOverlay.remove(gameOverLabel);
+        gameOverLabel = null;
     }
 
     // =========================================================================
