@@ -121,4 +121,13 @@ public class District {
         System.out.println(detective.getType() + " voit : " + personnagesVisibles);
         return personnagesVisibles;
     }
+
+    /** Constructeur de copie pour l'IA **/
+    public District(District d) {
+        for (int x = 0; x < 3; x++) {
+            for (int y = 0; y < 3; y++) {
+                this.grille[x][y] = new Quartier(d.get(x, y));
+            }
+        }
+    }
 }

@@ -562,7 +562,7 @@ public class VueJeu extends JFrame {
         newGame.addActionListener(e -> { if (gameplay != null) gameplay.resetGame(); });
 
         JButton ia      = makeStripButton("IA");
-        ia.addActionListener(e -> { if (gameplay != null) gameplay.getControler().joueIa(); });
+        ia.addActionListener(e -> { if (gameplay != null) gameplay.partie.lanceIa(); });
 
         JButton regles  = makeStripButton("Regles");
         regles.addActionListener(e -> onReglesPressed());

@@ -68,4 +68,12 @@ public class Quartier {
     public void retourner(){
         this.face = Face.VIDE;
     }
+
+    // Constructeur de copie pour l'IA
+    public Quartier(Quartier q) {
+        this.personnage = q.getPersonnage();
+        this.orientationMur = q.getOrientationMur();
+        this.face = q.estFaceSuspect() ? Face.SUSPECT : Face.VIDE;
+        this.aPivote = q.getAPivote();
+    }
 }

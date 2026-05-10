@@ -49,6 +49,7 @@ public class Partie {
     private Ia ia = new Ia();
     private ExecutorService executor = Executors.newSingleThreadExecutor();
     private boolean IaEnCours = false;
+    public boolean estSimulation = false;
 
     /** Constructeur **/
     public Partie(){
@@ -59,25 +60,8 @@ public class Partie {
         suspects = new ArrayList<>();
         initialiserPartie();
         tourSuivant();
-    }
-
-    /** Copie la partie. Utilisé par l'IA **/
-    public Partie(Partie p) {
-        this.district = p.district;
-        this.actions = new PartieActions(this);
-        this.jetonsAction = new ArrayList<>(p.jetonsAction);
-        this.cartesAlibiPioche = new ArrayList<>(p.cartesAlibiPioche);
-        this.detectives = new ArrayList<>(p.detectives);
-        this.suspects = new ArrayList<>(p.suspects);
-        this.joueurCourant = p.joueurCourant;
-        this.identiteJack = p.identiteJack;
-        this.sabliersDeJack = p.sabliersDeJack;
-        this.numeroTour = p.numeroTour;
-        this.totalActionsJouees = p.totalActionsJouees;
-        this.jackVisibleCeTour = p.jackVisibleCeTour;
-        this.coursePoursuiteActive = p.coursePoursuiteActive;
-        this.gagnant = p.gagnant;
-    }
+        //lanceIa();
+        }
 
     /** Initialise les élements de la partie **/
     private void initialiserPartie() {
@@ -124,7 +108,7 @@ public class Partie {
         } else {
             jackVisibleCeTour = false;
             sabliersDeJack ++; // Jack gagne le sablier du tour
-            System.out.println("Jack n'est pas visible, il gagne le sablier du tour. Il est a " + sabliersDeJack + " sabliers");
+            if (!this.estSimulation) System.out.println("Jack n'est pas visible, il gagne le sablier du tour. Il est a " + sabliersDeJack + " sabliers");
             suspects.removeAll(personnagesVisibles);
         }
         //Apres réduction de suspects, on innocente les suspects supprimés.
@@ -152,15 +136,14 @@ public class Partie {
                 //lanceIa();
                 break;
             case 4:
-                //appelATemoin(); Ne pas faire, en tout cas pour l'instant, car ça court circuite la vue et plus rien ne va...
+                appelATemoin(); // Ne pas faire, en tout cas pour l'instant, car ça court circuite la vue et plus rien ne va...
                 //lanceIa();
                 break;
             default:
+                if (!isPartieTerminee()) lanceIa();
                 break;
         }
-        /*if (!isPartieTerminee()) {
-            lanceIa();
-        }*/
+
     }
 
     /** Prépare le tour suivant : incrémente [numeroTour], flag les tuiles comme n'ayant pas pivoté,
@@ -173,36 +156,62 @@ public class Partie {
         if(numeroTour % 2 != 0){
             for(JetonAction j : jetonsAction){
                 j.lancer();
-                System.out.println("Jeton lancé sur : " + j.getActionVisible());
+                if (!this.estSimulation) System.out.println("Jeton lancé sur : " + j.getActionVisible());
             }
             joueurCourant = Joueur.ENQUETEUR;
-            System.out.println("Le joueur est l'Enquêteur");
+            if (!this.estSimulation) System.out.println("Le joueur est l'Enquêteur");
         } else {
             for(JetonAction j : jetonsAction){
                 j.retourner();
-                System.out.println("Jeton retourné sur : " + j.getActionVisible());
+                if (!this.estSimulation) System.out.println("Jeton retourné sur : " + j.getActionVisible());
             }
             joueurCourant = Joueur.JACK;
-            System.out.println("Le joueur est Jack");
+            if (!this.estSimulation) System.out.println("Le joueur est Jack");
         }
+        //lanceIa();
     }
 
-    private void lanceIa() {
-        //System.out.println("entre dans Ia");
-        if(IaEnCours) return; // Empêche de lancer plusieurs tours d'IA en même temps
-        IaEnCours = true;
-        //System.out.println("Ia va calculer son coup...");
+    public void lanceIa() {
+        // Empêche de lancer plusieurs tours d'IA en même temps, si la partie est finie, ou s'il n'y a plus d'actions
+        if(IaEnCours || isPartieTerminee() || actions.getActionsPossibles().isEmpty()) return;
+        if (estSimulation) return;
+
+        // --- NOUVEAU BLOC DE SÉCURITÉ ---
+        // Vérifie si le joueur courant doit bien être contrôlé par l'IA selon la difficulté choisie
         boolean estJack = (joueurCourant == Joueur.JACK);
 
+        // Exemple de logique : Si on est en difficulté "Manuel" (par ex: difficulte = 5), on ne lance pas l'IA
+        if (ia.difficulte == -1) { // Remplace -1 par la valeur de ton mode "Manuel" si tu en as créé un
+            return;
+        }
+        // --------------------------------
+
+        IaEnCours = true;
+
         CompletableFuture
-            .supplyAsync(() -> ia.choisirAction(this, estJack), executor)
-            .thenAccept(iaCoup -> {
-                System.out.println("Ia a choisi son coup.");
-                SwingUtilities.invokeLater(() -> {
-                    IaEnCours = false;
-                    jouerCoup(iaCoup); 
+                .supplyAsync(() -> {
+                    try { Thread.sleep(1000); } catch (Exception e) {}
+                    return ia.choisirAction(this, estJack);
+                }, executor)
+                .thenAccept(iaCoup -> {
+                    SwingUtilities.invokeLater(() -> {
+                        IaEnCours = false;
+                        if (iaCoup != null && iaCoup.action != null) {
+                            jouerCoup(iaCoup);
+                        }
+                    });
                 });
-            }); 
+    }
+
+    public double simulerEtNoter(CoupIa coup, boolean estJack) {
+        // Simule un coup sur une copie de la partie et renvoie la note de l'évaluateur
+        Partie copie = new Partie(this);
+        copie.jouerCoup(coup);
+        if(estJack){
+            return EvaluateurIa.jeSuisJack(copie);
+        } else {
+            return EvaluateurIa.jeSuisEnqueteur(copie);
+        }
     }
 
     private void jouerCoup(CoupIa coupIa) {
@@ -301,10 +310,12 @@ public class Partie {
     /** Affecte à [gagnant] le joueur - Jack ou Enquêteur - qui a gagné, et print cette information **/
     private void declarerGagnant(Joueur vainqueur) {
         this.gagnant = vainqueur;
-        if (this.gagnant==Joueur.ENQUETEUR){
-            System.out.println("----- Victoire de l'Enquêteur ! -----");
-        } else {
-            System.out.println("----- Victoire de Jack ! -----");
+        if (!this.estSimulation) {
+            if (this.gagnant==Joueur.ENQUETEUR){
+                System.out.println("----- Victoire de l'Enquêteur ! -----");
+            } else {
+                System.out.println("----- Victoire de Jack ! -----");
+            }
         }
     }
 
@@ -335,4 +346,36 @@ public class Partie {
         return gagnant;
     }
 
+    // Constructeur de copie pour l'IA
+    public Partie(Partie p) {
+        this.estSimulation = true;
+        this.district = new District(p.district);
+        this.actions = new PartieActions(this);
+
+        // --- COPIE PROFONDE DES JETONS ---
+        this.jetonsAction = new ArrayList<>();
+        for (JetonAction j : p.jetonsAction) {
+            this.jetonsAction.add(new JetonAction(j));
+        }
+
+        // --- COPIE PROFONDE DES DÉTECTIVES ---
+        this.detectives = new ArrayList<>();
+        for (Detective d : p.detectives) {
+            this.detectives.add(new Detective(d));
+        }
+
+        // Les listes suivantes peuvent rester en copie superficielle car
+        // on ne modifie pas l'état interne des cartes ou des suspects.
+        this.cartesAlibiPioche = new ArrayList<>(p.cartesAlibiPioche);
+        this.suspects = new ArrayList<>(p.suspects);
+
+        this.joueurCourant = p.joueurCourant;
+        this.identiteJack = p.identiteJack;
+        this.sabliersDeJack = p.sabliersDeJack;
+        this.numeroTour = p.numeroTour;
+        this.totalActionsJouees = p.totalActionsJouees;
+        this.jackVisibleCeTour = p.jackVisibleCeTour;
+        this.coursePoursuiteActive = p.coursePoursuiteActive;
+        this.gagnant = p.gagnant;
+    }
 }

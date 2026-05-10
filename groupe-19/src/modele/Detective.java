@@ -103,4 +103,10 @@ public class Detective {
     public Orientation getOrientation(){
         return Orientation.CARDINAUX[CIRCUIT[position][2]];
     }
+
+    /** Constructeur de copie pour l'IA **/
+    public Detective(Detective d) {
+        this.type = d.getType();
+        this.position = d.getPosition();
+    }
 }

@@ -56,4 +56,12 @@ public class JetonAction {
     public void setJoue(boolean value){
         this.joue = value;
     }
+
+    // Constructeur de copie pour l'IA
+    public JetonAction(JetonAction j) {
+        this.faceRecto = j.faceRecto;
+        this.faceVerso = j.faceVerso;
+        this.faceRectoVisible = j.faceRectoVisible;
+        this.joue = j.joue;
+    }
 }
