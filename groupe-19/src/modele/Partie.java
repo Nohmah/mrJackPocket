@@ -38,8 +38,8 @@ public class Partie {
     private ExecutorService executor = Executors.newSingleThreadExecutor();
     private boolean IaEnCours = false;
     public boolean estSimulation = false;
-    public int niveauJack ;// niveau de son IA (-1 = manuel, 0 = random, 1 = facile, 2 = moyen)
-    public int niveauEnqueteur ;// niveau de l'IA de l'enquêteur (-1 = manuel, 0 = random, 1 = facile, 2 = moyen)
+    public int niveauJack;  // niveau de son IA (-1 = manuel, 0 = random, 1 = facile, 2 = moyen)
+    public int niveauEnqueteur; // niveau de l'IA de l'enquêteur (-1 = manuel, 0 = random, 1 = facile, 2 = moyen)
 
     /** Constructeur **/
     public Partie(int niveauJack, int niveauEnqueteur){
@@ -53,7 +53,7 @@ public class Partie {
         initialiserPartie();
         tourSuivant();
         verifTourIa();
-        }
+    }
 
     /** Initialise les élements de la partie **/
     private void initialiserPartie() {
@@ -67,12 +67,9 @@ public class Partie {
 
     /** Réinitialise la partie **/
     public void reset() {
-        // Réinitialiser les variables
-        // IaEnCours = false; ? A voir avec la team IA
         gagnant = null;
         coursePoursuiteActive = false;
         numeroTour = 0;
-        //totalActionsJouees = 0; Commenté car à chaque tourSuivant() on remet à 0 totalActionsJouees (donc redondant)
         jackVisibleCeTour = false;
         sabliersDeJack = 0;
 
@@ -83,6 +80,17 @@ public class Partie {
         initialiserPartie();
         tourSuivant();
         verifTourIa();
+    }
+
+    /**
+     * Termine le tour courant : appel à témoin, vérification de fin de partie,
+     * et préparation du tour suivant si la partie continue.
+     * Point d'entrée unique depuis Gameplay — remplace la logique dispersée dans endTurn().
+     */
+    public void terminerTour() {
+        appelATemoin();
+        // appelATemoin() appelle déjà verifFinDePartie() puis tourSuivant() si la partie continue.
+        // Gameplay lit ensuite isPartieTerminee() et numeroTour pour décider de la suite.
     }
 
     /** Réalise l'appel à témoin (deuxième étape du jeu) et vérifie si la partie est terminée **/
@@ -97,14 +105,13 @@ public class Partie {
         if(personnagesVisibles.contains(identiteJack)){
             suspects.retainAll(personnagesVisibles);
             jackVisibleCeTour = true;
-            // L'enquêteur prive Jack du sablier du tour
         } else {
             jackVisibleCeTour = false;
-            sabliersDeJack ++; // Jack gagne le sablier du tour
+            sabliersDeJack++;
             if (!this.estSimulation) System.out.println("Jack n'est pas visible, il gagne le sablier du tour. Il est a " + sabliersDeJack + " sabliers");
             suspects.removeAll(personnagesVisibles);
         }
-        //Apres réduction de suspects, on innocente les suspects supprimés.
+        // Après réduction de suspects, on innocente les suspects supprimés.
         avantAppel.removeAll(suspects); // Obtention des gens plus suspects
         for(Personnage p : avantAppel){
             district.innocenter(p);
@@ -121,23 +128,19 @@ public class Partie {
     /** Réalise le changement de joueur après un certain nombre de jetons Actions utilisés **/
     public void apresAction(){
         totalActionsJouees++;
-        //System.out.println("Action jouée : " + totalActionsJouees + " sur 4" + " (Tour " + numeroTour + ")");
         switch(totalActionsJouees){
             case 1, 3:
                 System.out.println("Le joueur change. Le joueur est maintenant" +
                         ((joueurCourant == Joueur.JACK) ? Joueur.ENQUETEUR : Joueur.JACK));
                 changerJoueur();
-                //lanceIa();
                 break;
             case 4:
-                appelATemoin(); // Ne pas faire, en tout cas pour l'instant, car ça court circuite la vue et plus rien ne va...
-                //lanceIa();
+                appelATemoin();
                 break;
             default:
                 break;
         }
         if (!isPartieTerminee()) verifTourIa();
-
     }
 
     /** Prépare le tour suivant : incrémente [numeroTour], flag les tuiles comme n'ayant pas pivoté,
@@ -165,7 +168,6 @@ public class Partie {
     }
 
     public void verifTourIa(){
-        //System.out.println("entre dans verifTourIa, joueur courant : " + joueurCourant);
         if(isPartieTerminee()) return;
 
         if(joueurCourant == Joueur.JACK){
@@ -175,32 +177,24 @@ public class Partie {
         }
 
         if((joueurCourant == Joueur.JACK && niveauJack != -1) || (joueurCourant == Joueur.ENQUETEUR && niveauEnqueteur != -1)){
-            //System.out.println("Lancement de l'IA pour " + joueurCourant + " avec difficulté " + ((joueurCourant == Joueur.JACK) ? niveauJack : niveauEnqueteur));
             lanceIa();
         }
     }
 
     public void lanceIa() {
-        // Empêche de lancer plusieurs tours d'IA en même temps, si la partie est finie, ou s'il n'y a plus d'actions
         if(IaEnCours || isPartieTerminee() || actions.getActionsPossibles().isEmpty()) return;
         if (estSimulation) return;
 
-        // --- NOUVEAU BLOC DE SÉCURITÉ ---
-        // Vérifie si le joueur courant doit bien être contrôlé par l'IA selon la difficulté choisie
         boolean estJack = (joueurCourant == Joueur.JACK);
 
-        // Exemple de logique : Si on est en difficulté "Manuel" (par ex: difficulte = 5), on ne lance pas l'IA
-        if (ia.difficulte == -1) { // Remplace -1 par la valeur de ton mode "Manuel" si tu en as créé un
+        if (ia.difficulte == -1) {
             return;
         }
-        // --------------------------------
 
         IaEnCours = true;
-
         CompletableFuture
                 .supplyAsync(() -> {
                     try { Thread.sleep(2000); } catch (Exception e) {}
-                    //System.out.println("L'IA choisit une action pour " + joueurCourant);
                     CoupIa coupChoisi = ia.choisirAction(this, estJack);
                     return coupChoisi;
                 }, executor)
@@ -218,7 +212,6 @@ public class Partie {
     }
 
     public double simulerEtNoter(CoupIa coup, boolean estJack) {
-        // Simule un coup sur une copie de la partie et renvoie la note de l'évaluateur
         Partie copie = new Partie(this);
         copie.jouerCoup(coup);
         if(estJack){
@@ -229,102 +222,80 @@ public class Partie {
     }
 
     private void jouerCoup(CoupIa coupIa) {
-
-        //coupIa.afficher(); // Affiche le coup choisi par l'IA dans la console pour le debug
-        // Logique pour jouer l'action choisie par l'IA
         switch (coupIa.action) {
             case HOLMES:
-                actions.deplacerDetective(detectives.get(0), coupIa.para1 + 1); // +1 car les déplacements commencent à 1
-                // Logique pour l'action HOLMES
+                actions.deplacerDetective(detectives.get(0), coupIa.para1 + 1);
                 break;
             case WATSON:
-                // Logique pour l'action WATSON
                 actions.deplacerDetective(detectives.get(1), coupIa.para1 + 1);
                 break;
             case TOBY:
-                // Logique pour l'action TOBY
                 actions.deplacerDetective(detectives.get(2), coupIa.para1 + 1);
                 break;
             case JOKER:
                 if(coupIa.para2 == 0){
-                    actions.joker(null); // Jack choisit de ne déplacer aucun détective
+                    actions.joker(null);
                 } else {
                     actions.joker(detectives.get(coupIa.para1));
                 }
-                // Logique pour l'action JOKER
                 break;
             case ROTATION:
-                // (car il peut y avoir 2 jetons face rotation en même temps au cours d'un tour).
                 for(int i = 0; i < jetonsAction.size(); i++){
                     if(jetonsAction.get(i).getActionVisible() == Action.ROTATION && !jetonsAction.get(i).isJoue()){
                         actions.rotationQuartier(i, coupIa.para1 / 3, coupIa.para1 % 3, coupIa.para2);
                         break;
                     }
                 }
-                // Logique pour l'action ROTATION
                 break;
             case ECHANGE:
                 actions.echange(coupIa.para1 / 3, coupIa.para1 % 3, coupIa.para2 / 3, coupIa.para2 % 3);
-                // Logique pour l'action ECHANGE
                 break;
             case ALIBI:
-                //actions.piocherCarteAlibi();
                 actions.alibi();
-                // Logique pour l'action ALIBI
                 break;
         }
     }
 
     /**
      *
-     * Logique de fin de partie.*
+     * Logique de fin de partie.
      *
      */
 
-    /** Vérifie si la partie est terminé **/
+    /** Vérifie si la partie est terminée **/
     public void verifFinDePartie(){
         if(gagnant != null) return;
-        //En cas de fin de course poursuite, on vérifie si Jack a été trouvé ou non.
         if(coursePoursuiteActive){
             verifFinCoursePoursuite();
         } else {
-            // "Il arrive parfois que les deux joueurs atteignent leur but en même temps."
             if((suspects.size() == 1) && sabliersDeJack >= MAX_SABLIER){
-                // "Si cela se produit à la fin du huitième tour : L’Enquêteur gagne la partie si
-                // Mr. Jack est visible. Mr. Jack gagne la partie s’il est invisible."
                 if (jackVisibleCeTour){
                     declarerGagnant(Joueur.ENQUETEUR);
                 }
-                else if (numeroTour==MAX_TOUR){
+                else if (numeroTour == MAX_TOUR){
                     declarerGagnant(Joueur.JACK);
                 } else {
-                    // "Si cela se produit avant le huitième tour, la partie continue et une course poursuite sans
-                    // merci s’engage entre l’Enquêteur et Mr. Jack !"
                     coursePoursuiteActive = true;
                     System.out.println("Début de course poursuite !!!");
                 }
             }
-            // "Pour l’Enquêteur : Après l’Appel à témoin, il ne doit subsister qu’un seul Suspect.
-            // Ce suspect est forcément le coupable !"
             else if(suspects.size() == 1){
                 declarerGagnant(Joueur.ENQUETEUR);
             }
-            // "Pour Mr. Jack : Après l’appel à témoin, il doit totaliser au moins six sabliers"
             else if(sabliersDeJack >= MAX_SABLIER){
                 declarerGagnant(Joueur.JACK);
             }
-            // "Si aucun des deux joueurs n’a atteint son objectif à la fin du tour 8, Jack est vainqueur"
-            else if (numeroTour==MAX_TOUR) {
+            else if (numeroTour == MAX_TOUR) {
                 declarerGagnant(Joueur.JACK);
             }
         }
     }
 
-    /** Affecte à [gagnant] le joueur - Jack ou Enquêteur - qui a gagné, et print cette information **/
+    /** Affecte à [gagnant] le joueur - Jack ou Enquêteur - qui a gagné **/
     private void declarerGagnant(Joueur vainqueur) {
         this.gagnant = vainqueur;
         if (!this.estSimulation) {
-            if (this.gagnant==Joueur.ENQUETEUR){
+            if (this.gagnant == Joueur.ENQUETEUR){
                 System.out.println("----- Victoire de l'Enquêteur ! -----");
             } else {
                 System.out.println("----- Victoire de Jack ! -----");
@@ -332,16 +303,14 @@ public class Partie {
         }
     }
 
-    /** Vérifie si la course poursuite est terminé **/
+    /** Vérifie si la course poursuite est terminée **/
     public void verifFinCoursePoursuite(){
-        // "L’Enquêteur gagne dès qu’il termine un tour avec Mr. Jack visible."
         if(jackVisibleCeTour){
             System.out.println("Fin de la course poursuite.");
             declarerGagnant(Joueur.ENQUETEUR);
             coursePoursuiteActive = false;
             return;
         }
-        // "Mr. Jack gagne s'il est resté invisible jusqu’à la fin du huitième tour."
         if(numeroTour == MAX_TOUR){
             System.out.println("Fin de la course poursuite.");
             declarerGagnant(Joueur.JACK);
@@ -349,7 +318,7 @@ public class Partie {
         }
     }
 
-    /** Vérifie si il y a un gagnant **/
+    /** Vérifie s'il y a un gagnant **/
     public boolean isPartieTerminee(){
         return gagnant != null;
     }
@@ -365,20 +334,16 @@ public class Partie {
         this.district = new District(p.district);
         this.actions = new PartieActions(this);
 
-        // --- COPIE PROFONDE DES JETONS ---
         this.jetonsAction = new ArrayList<>();
         for (JetonAction j : p.jetonsAction) {
             this.jetonsAction.add(new JetonAction(j));
         }
 
-        // --- COPIE PROFONDE DES DÉTECTIVES ---
         this.detectives = new ArrayList<>();
         for (Detective d : p.detectives) {
             this.detectives.add(new Detective(d));
         }
 
-        // Les listes suivantes peuvent rester en copie superficielle car
-        // on ne modifie pas l'état interne des cartes ou des suspects.
         this.cartesAlibiPioche = new ArrayList<>(p.cartesAlibiPioche);
         this.suspects = new ArrayList<>(p.suspects);
 

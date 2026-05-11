@@ -4,14 +4,12 @@ import src.modele.*;
 import javax.swing.*;
 
 /**
- * Gameplay — Pont logique (Mediator).
+ * Gameplay — Médiateur (Mediator).
  *
  * Responsabilités :
  *   - Orchestrer le cycle de jeu : initialisation → tours → fin de partie.
- *   - Servir d'unique point de communication entre VueJeu, IHMControler,
- *     IntermediaryGameState et GameEngine.
- *   - Décider quand un tour est terminé et déclencher la validation officielle.
- *   - Traiter les actions sur les boules (Holmes, Watson, Toby, Joker, Rotation, Échange, Alibi).
+ *   - Servir d'unique point de communication entre VueJeu et le modèle (Partie).
+ *   - NE PAS dupliquer l'état du modèle : toujours lire depuis partie.*.
  */
 public class Gameplay {
 
@@ -19,16 +17,22 @@ public class Gameplay {
     private final IHMControler controler;
     public Partie partie;
 
-    private int currentTurn = 1;
-    private boolean gameOver = false;
+    // -------------------------------------------------------------------------
+    // États temporaires d'interaction — encapsulés dans des classes dédiées
+    // -------------------------------------------------------------------------
 
-    private boolean waitingForEchange = false;
-    private int line = -1, column = -1;
+    /** État d'une opération d'échange en attente de deux clics. */
+    private EchangeState echangeState = null;
 
+    /** État d'une opération de rotation en attente de clics. */
+    private RotationState rotationState = null;
+
+    /** Vrai si le mode rotation est actif (utilisé par IHMControler pour le curseur). */
     public boolean rotationMode = false;
-    private int rotationRow = -1, rotationCol = -1;
-    private int rotationsAccumulees = 0;
-    private int rotationJetonIndex;
+
+    // -------------------------------------------------------------------------
+    // Constructeur
+    // -------------------------------------------------------------------------
 
     public Gameplay(VueJeu vue, Partie partie) {
         this.vue = vue;
@@ -39,79 +43,91 @@ public class Gameplay {
     }
 
     private void initGame() {
-        // Finalement, les 'updateX' sont gardé dans initGame, sinon les 'placeholders' sont visibles brièvement au début
-        vue.updateBackground(partie.joueurCourant);
-        vue.updateDistrictView(partie.district);
-        vue.updateJetons(partie.jetonsAction);
-        vue.updateDetectivesView(partie.detectives);
-        startTurn(currentTurn);
+        refreshView();
+        vue.updateTurnIndicator(partie.numeroTour);
+        startTurn();
     }
 
-    private void startTurn(int turn) {
-        System.out.println("Gameplay — début du tour " + turn);
-        String playerType = "HUMAN";
-        controler.setActivePlayerType(playerType);
-        vue.updateTurnIndicator(turn);
+    private void startTurn() {
+        System.out.println("Gameplay — début du tour " + partie.numeroTour);
+        // Le type de joueur (humain/IA) est déterminé par le modèle
+        boolean isIa = (partie.joueurCourant == Joueur.JACK && partie.niveauJack != -1)
+                    || (partie.joueurCourant == Joueur.ENQUETEUR && partie.niveauEnqueteur != -1);
+        controler.setActivePlayerType(isIa ? "AI" : "HUMAN");
+        vue.updateTurnIndicator(partie.numeroTour);
 
-        if ("AI".equals(playerType)) {
+        if (isIa) {
             SwingUtilities.invokeLater(controler::joueIa);
         }
     }
 
+    // -------------------------------------------------------------------------
+    // Mise à jour de la vue — point unique
+    // -------------------------------------------------------------------------
+
+    /** Rafraîchit tous les composants visuels depuis l'état courant du modèle. */
+    private void refreshView() {
+        vue.updateBackground(partie.joueurCourant);
+        vue.updateDistrictView(partie.district);
+        vue.updateJetons(partie.jetonsAction);
+        vue.updateDetectivesView(partie.detectives);
+    }
+
+    // -------------------------------------------------------------------------
+    // Cycle de jeu
+    // -------------------------------------------------------------------------
+
     public void resetGame() {
         partie.reset();
-        currentTurn = 1;
-        gameOver = false;
         vue.hideGameOverScreen();
-        vue.updateTurnIndicator(currentTurn);
         vue.enableValidateButton(true);
         resetAllTurnIndicators();
-        startTurn(currentTurn);
+        refreshView();
+        startTurn();
     }
 
     public void resetAllTurnIndicators() {
         for (int i = 0; i < 8; i++) {
-            if (!vue.isTurnFacePile(i)) {
-                vue.switchTurnFace(i);
-            }
+            if (!vue.isTurnFacePile(i)) vue.switchTurnFace(i);
         }
     }
 
-    public IHMControler getControler() {
-        return controler;
-    }
+    public IHMControler getControler() { return controler; }
 
     public void onValidatePressed() {
-        if (gameOver) return;
+        if (partie.isPartieTerminee()) return;
         controler.confirmPendingIntent();
         endTurn();
     }
 
     private void endTurn() {
-        System.out.println("Gameplay — fin du tour " + currentTurn);
-        if (currentTurn >= 1 && currentTurn <= 8) vue.switchTurnFace(currentTurn - 1);
-        partie.appelATemoin();
-        if (partie.getGagnant()!=null){
-            onGameOver();
-            return;
+        System.out.println("Gameplay — fin du tour " + partie.numeroTour);
+
+        // Mise à jour visuelle de l'indicateur de tour (index 0-based)
+        if (partie.numeroTour >= 1 && partie.numeroTour <= 8) {
+            vue.switchTurnFace(partie.numeroTour - 1);
         }
 
-        currentTurn++;
-        if (currentTurn > 8) {
+        // Délégation complète au modèle : appelATemoin + tourSuivant + verifFinDePartie
+        partie.terminerTour();
+
+        // Lecture de l'état post-tour
+        refreshView();
+
+        if (partie.isPartieTerminee()) {
             onGameOver();
         } else {
-            startTurn(currentTurn);
+            startTurn();
         }
     }
 
     private void onGameOver() {
-        gameOver = true;
         System.out.println("Gameplay — fin de partie");
         vue.showGameOverScreen(partie.getGagnant().getNom());
     }
 
     // -------------------------------------------------------------------------
-    // Actions des boules (jetons) – appelée par IHMControler
+    // Actions des boules (jetons) — appelées par IHMControler
     // -------------------------------------------------------------------------
 
     public void onActionBallClicked(IHMControler.ActionIntent intent) {
@@ -121,20 +137,18 @@ public class Gameplay {
         System.out.println("Gameplay — action sur boule " + ballIndex + " : " + actionName);
 
         switch (actionName) {
-            case "action_holmes" -> demanderDeplacementEtDeplacer(Detective.Type.HOLMES);
-            case "action_watson" -> demanderDeplacementEtDeplacer(Detective.Type.WATSON);
-            case "action_toby"   -> demanderDeplacementEtDeplacer(Detective.Type.TOBY);
-            case "action_joker"  -> gererJoker();
+            case "action_holmes"   -> demanderDeplacementEtDeplacer(Detective.Type.HOLMES);
+            case "action_watson"   -> demanderDeplacementEtDeplacer(Detective.Type.WATSON);
+            case "action_toby"     -> demanderDeplacementEtDeplacer(Detective.Type.TOBY);
+            case "action_joker"    -> gererJoker();
             case "action_rotation" -> startRotationMode(ballIndex);
             case "action_echange"  -> startEchange();
-            case "action_alibi"    -> partie.actions.alibi();
+            case "action_alibi"    -> {
+                partie.actions.alibi();
+                refreshView();
+            }
             default -> System.out.println("Action inconnue : " + actionName);
         }
-
-        //vue.updateDistrictView(partie.district);
-        //vue.updateJetons(partie.jetonsAction);
-        //vue.updateDetectivesView(partie.detectives);   //correction
-        //vue.refreshBoardComponents();
     }
 
     private void demanderDeplacementEtDeplacer(Detective.Type type) {
@@ -143,14 +157,14 @@ public class Gameplay {
 
         String input = JOptionPane.showInputDialog(vue,
                 "Déplacer " + type + " de combien de pas ? (1 ou 2)",
-                "Déplacement",
-                JOptionPane.QUESTION_MESSAGE);
+                "Déplacement", JOptionPane.QUESTION_MESSAGE);
         if (input == null) return;
 
         try {
             int pas = Integer.parseInt(input);
             if (pas != 1 && pas != 2) pas = 1;
             partie.actions.deplacerDetective(detective, pas);
+            refreshView();
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(vue, "Veuillez entrer 1 ou 2.", "Erreur", JOptionPane.ERROR_MESSAGE);
         }
@@ -161,39 +175,36 @@ public class Gameplay {
         if (joueur == Joueur.ENQUETEUR) {
             String[] options = {"Holmes", "Watson", "Toby"};
             int choix = JOptionPane.showOptionDialog(vue,
-                    "Quel détective voulez-vous déplacer d’un pas ?",
-                    "Action Joker",
-                    JOptionPane.DEFAULT_OPTION,
-                    JOptionPane.QUESTION_MESSAGE,
-                    null,
-                    options,
-                    options[0]);
+                    "Quel détective voulez-vous déplacer d'un pas ?", "Action Joker",
+                    JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+                    null, options, options[0]);
             if (choix < 0) return;
-            Detective detective = switch (choix) {
+            Detective det = switch (choix) {
                 case 0 -> trouverDetective(Detective.Type.HOLMES);
                 case 1 -> trouverDetective(Detective.Type.WATSON);
                 case 2 -> trouverDetective(Detective.Type.TOBY);
                 default -> null;
             };
-            if (detective != null) partie.actions.joker(detective);
+            if (det != null) {
+                partie.actions.joker(det);
+                refreshView();
+            }
         } else {
             String[] options = {"Holmes", "Watson", "Toby", "Ne rien déplacer"};
             int choix = JOptionPane.showOptionDialog(vue,
                     "Choisissez une action (déplacer un détective d'un pas ou rien)",
                     "Action Joker - Mr. Jack",
-                    JOptionPane.DEFAULT_OPTION,
-                    JOptionPane.QUESTION_MESSAGE,
-                    null,
-                    options,
-                    options[0]);
+                    JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+                    null, options, options[0]);
             if (choix < 0) return;
-            Detective detective = switch (choix) {
+            Detective det = switch (choix) {
                 case 0 -> trouverDetective(Detective.Type.HOLMES);
                 case 1 -> trouverDetective(Detective.Type.WATSON);
                 case 2 -> trouverDetective(Detective.Type.TOBY);
                 default -> null;
             };
-            partie.actions.joker(detective);
+            partie.actions.joker(det); // null = ne rien faire, géré dans PartieActions
+            refreshView();
         }
     }
 
@@ -205,30 +216,37 @@ public class Gameplay {
     }
 
     // -------------------------------------------------------------------------
-    // Actions Échange et Rotation
+    // Échange et Rotation — gestion propre via des objets d'état dédiés
     // -------------------------------------------------------------------------
 
     public void startEchange() {
-        waitingForEchange = true;
-        line = column = -1;
-        System.out.println("Action échange de tuiles : cliquez sur la première tuile");
+        echangeState = new EchangeState();
+        System.out.println("Action échange : cliquez sur la première tuile");
     }
 
     public void startRotationMode(int jetonIndex) {
+        rotationState = new RotationState(jetonIndex);
         rotationMode = true;
-        rotationJetonIndex = jetonIndex;
-        System.out.println("Mode rotation, cliquez sur une tuile pour la faire pivoter. Cliquez hors plateau pour sortir.");
+        System.out.println("Mode rotation actif. Cliquez sur une tuile, recliquez pour accumuler, cliquez ailleurs pour confirmer.");
     }
 
     public void exitRotationMode() {
-        if (rotationRow != -1 && rotationCol != -1) {
-            partie.actions.rotationQuartier(rotationJetonIndex, rotationRow, rotationCol, rotationsAccumulees);
+        if (rotationState != null && rotationState.hasTarget()) {
+            partie.actions.rotationQuartier(
+                rotationState.jetonIndex,
+                rotationState.row,
+                rotationState.col,
+                rotationState.quarts
+            );
+            refreshView();
         }
+        rotationState = null;
         rotationMode = false;
-        rotationRow = -1;
-        rotationCol = -1;
-        rotationsAccumulees = 0;
         System.out.println("Mode rotation terminé.");
+    }
+
+    public void clicHorsDistrict() {
+        if (rotationMode) exitRotationMode();
     }
 
     // -------------------------------------------------------------------------
@@ -250,35 +268,61 @@ public class Gameplay {
         Camera.RecalculateZoom();
     }
 
-    public void clicHorsDistrict() {
-        if (rotationMode) exitRotationMode();
-    }
-
     public void onCellHovered(int row, int col) {
-        if (waitingForEchange) {
-            if (line == -1) {
-                line = row;
-                column = col;
-                System.out.println("Première tuile sélectionnée : (" + line + "," + column + ")");
-            } else if (line != row || column != col) {
-                System.out.println("Deuxième tuile sélectionnée : (" + row + "," + col + ")");
-                partie.actions.echange(line, column, row, col);
-                waitingForEchange = false;
+        if (echangeState != null) {
+            if (!echangeState.hasFirstTile()) {
+                echangeState.setFirstTile(row, col);
+                System.out.println("Échange — première tuile : (" + row + "," + col + ")");
+            } else if (!echangeState.isSameTile(row, col)) {
+                System.out.println("Échange — deuxième tuile : (" + row + "," + col + ")");
+                partie.actions.echange(echangeState.row, echangeState.col, row, col);
+                echangeState = null;
+                refreshView();
             }
-        } else if (rotationMode) {
-            if (rotationRow == -1) {
-                rotationsAccumulees = 1;
-                rotationRow = row;
-                rotationCol = col;
+        } else if (rotationState != null) {
+            if (!rotationState.hasTarget()) {
+                rotationState.setTarget(row, col);
                 vue.rotateTile(row, col, 90);
-                System.out.println("Tuile sélectionnée pour rotation visuelle");
-            } else if (row == rotationRow && col == rotationCol) {
-                rotationsAccumulees = (rotationsAccumulees + 1) % 4;
+                System.out.println("Rotation — tuile sélectionnée : (" + row + "," + col + ")");
+            } else if (rotationState.isSameTile(row, col)) {
+                rotationState.addQuart();
                 vue.rotateTile(row, col, 90);
-                System.out.println("Rotation visuelle supplémentaire");
+                System.out.println("Rotation — quart supplémentaire (" + rotationState.quarts + " total)");
             } else {
                 exitRotationMode();
             }
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Classes d'état temporaire — encapsulées, cycle de vie limité à l'interaction
+    // -------------------------------------------------------------------------
+
+    /** Encapsule l'état d'une opération d'échange en cours (attente de 2 clics). */
+    private static class EchangeState {
+        int row = -1, col = -1;
+
+        boolean hasFirstTile() { return row != -1; }
+
+        void setFirstTile(int r, int c) { row = r; col = c; }
+
+        boolean isSameTile(int r, int c) { return row == r && col == c; }
+    }
+
+    /** Encapsule l'état d'une opération de rotation en cours. */
+    private static class RotationState {
+        final int jetonIndex;
+        int row = -1, col = -1;
+        int quarts = 0;
+
+        RotationState(int jetonIndex) { this.jetonIndex = jetonIndex; }
+
+        boolean hasTarget() { return row != -1; }
+
+        void setTarget(int r, int c) { row = r; col = c; quarts = 1; }
+
+        boolean isSameTile(int r, int c) { return row == r && col == c; }
+
+        void addQuart() { quarts = (quarts + 1) % 4; }
     }
 }
