@@ -277,6 +277,7 @@ public class Partie {
                 } else {
                     coursePoursuiteActive = true;
                     System.out.println("Début de course poursuite !!!");
+                    verifFinCoursePoursuite();
                 }
             }
             else if(suspects.size() == 1){
