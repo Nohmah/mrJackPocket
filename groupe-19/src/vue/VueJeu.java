@@ -363,8 +363,10 @@ public class VueJeu extends JFrame {
     }
 
     public void hideGameOverScreen() {
-        uiOverlay.remove(gameOverLabel);
-        gameOverLabel = null;
+        if (gameOverLabel!=null){
+            uiOverlay.remove(gameOverLabel);
+            gameOverLabel = null;
+        }
     }
 
     // =========================================================================
