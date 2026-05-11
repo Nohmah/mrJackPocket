@@ -12,7 +12,7 @@ public class EvaluateurIa {
         public boolean JackVisible;
         public int nbSabliers;
         public int distanceEnqueteurs;// somme des distances entre les enquêteurs
-        public int visibilitéJack; //a quelle point Jack est visible (nb de couloir ou il peut être vu)
+        public int visibiliteJack; //a quelle point Jack est visible (nb de couloir ou il peut être vu)
 
         public dataPartie(Partie partie) {
             this.nbTours = partie.numeroTour;
@@ -90,11 +90,11 @@ public class EvaluateurIa {
             }
             System.out.println("Position de Jack : " + xjack + "," + yjack);
 
-            this.visibilitéJack = 0; // Initialisation de la visibilité de Jack
+            this.visibiliteJack = 0; // Initialisation de la visibilité de Jack
             for (int i = 0; i < 4; i++) {
-                this.visibilitéJack += visibiliteCalcul(i, xjack, yjack, partie);
+                this.visibiliteJack += visibiliteCalcul(i, xjack, yjack, partie);
             }
-            System.out.println("Visibilité de Jack : " + this.visibilitéJack);
+            System.out.println("Visibilité de Jack : " + this.visibiliteJack);
         }
     }
 
@@ -184,7 +184,7 @@ public class EvaluateurIa {
 
     private static double calcExpositionGeometrique(dataPartie d) {
         // Utilise ta méthode visibilitéJack qui calcule sur 4 directions
-        return 1.0 - (d.visibilitéJack / 4.0);
+        return 1.0 - (d.visibiliteJack / 4.0);
     }
 
     private static double calcVictoireVirtuelle(dataPartie d, Partie p) {
