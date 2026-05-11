@@ -46,6 +46,6 @@ public class PartieInit {
     /** Définit quel personnage est Mr. Jack et l'affecte à [identiteJack] **/
     public static void initialiserIdentiteJack(Partie partie){
         partie.identiteJack = partie.actions.piocherCarteAlibi().getPersonnage();
-        System.out.println("Mr Jack est "+ partie.identiteJack.nom);
+        System.out.println("Mr Jack est "+ partie.identiteJack.nom + " couleur : " + partie.identiteJack.couleur);
     }
 }

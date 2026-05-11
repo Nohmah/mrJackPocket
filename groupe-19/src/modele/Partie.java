@@ -24,7 +24,7 @@ public class Partie {
     public Personnage identiteJack;
     public int sabliersDeJack;
     private final int MAX_SABLIER = 6;
-    private Joueur gagnant = null;
+    public volatile Joueur gagnant = null;
     private boolean coursePoursuiteActive = false;
 
     //Suivi de tour
@@ -38,12 +38,13 @@ public class Partie {
     private ExecutorService executor = Executors.newSingleThreadExecutor();
     private boolean IaEnCours = false;
     public boolean estSimulation = false;
+    public int niveauJack ;// niveau de son IA (-1 = manuel, 0 = random, 1 = facile, 2 = moyen)
+    public int niveauEnqueteur ;// niveau de l'IA de l'enquêteur (-1 = manuel, 0 = random, 1 = facile, 2 = moyen)
 
     /** Constructeur **/
-    public Partie(Joueur joueurChoisi, boolean IAChoisi, String difficulteIAChoisi){
-        this.joueurChoisi = joueurChoisi;
-        this.IAChoisi = IAChoisi;
-        this.difficulteIAChoisi = difficulteIAChoisi;
+    public Partie(int niveauJack, int niveauEnqueteur){
+        this.niveauJack = niveauJack;
+        this.niveauEnqueteur = niveauEnqueteur;
         actions = new PartieActions(this);
         jetonsAction = new ArrayList<>();
         cartesAlibiPioche = new ArrayList<>();
@@ -51,7 +52,7 @@ public class Partie {
         suspects = new ArrayList<>();
         initialiserPartie();
         tourSuivant();
-        //lanceIa();
+        verifTourIa();
         }
 
     /** Initialise les élements de la partie **/
@@ -81,6 +82,7 @@ public class Partie {
         suspects.clear();
         initialiserPartie();
         tourSuivant();
+        verifTourIa();
     }
 
     /** Réalise l'appel à témoin (deuxième étape du jeu) et vérifie si la partie est terminée **/
@@ -119,6 +121,7 @@ public class Partie {
     /** Réalise le changement de joueur après un certain nombre de jetons Actions utilisés **/
     public void apresAction(){
         totalActionsJouees++;
+        //System.out.println("Action jouée : " + totalActionsJouees + " sur 4" + " (Tour " + numeroTour + ")");
         switch(totalActionsJouees){
             case 1, 3:
                 System.out.println("Le joueur change. Le joueur est maintenant" +
@@ -131,9 +134,9 @@ public class Partie {
                 //lanceIa();
                 break;
             default:
-                if (!isPartieTerminee()) lanceIa();
                 break;
         }
+        if (!isPartieTerminee()) verifTourIa();
 
     }
 
@@ -159,7 +162,22 @@ public class Partie {
             joueurCourant = Joueur.JACK;
             if (!this.estSimulation) System.out.println("Le joueur est Jack");
         }
-        //lanceIa();
+    }
+
+    public void verifTourIa(){
+        //System.out.println("entre dans verifTourIa, joueur courant : " + joueurCourant);
+        if(isPartieTerminee()) return;
+
+        if(joueurCourant == Joueur.JACK){
+            ia.setDifficulte(niveauJack);
+        } else {
+            ia.setDifficulte(niveauEnqueteur);
+        }
+
+        if((joueurCourant == Joueur.JACK && niveauJack != -1) || (joueurCourant == Joueur.ENQUETEUR && niveauEnqueteur != -1)){
+            //System.out.println("Lancement de l'IA pour " + joueurCourant + " avec difficulté " + ((joueurCourant == Joueur.JACK) ? niveauJack : niveauEnqueteur));
+            lanceIa();
+        }
     }
 
     public void lanceIa() {
@@ -181,14 +199,19 @@ public class Partie {
 
         CompletableFuture
                 .supplyAsync(() -> {
-                    try { Thread.sleep(1000); } catch (Exception e) {}
-                    return ia.choisirAction(this, estJack);
+                    try { Thread.sleep(2000); } catch (Exception e) {}
+                    //System.out.println("L'IA choisit une action pour " + joueurCourant);
+                    CoupIa coupChoisi = ia.choisirAction(this, estJack);
+                    return coupChoisi;
                 }, executor)
                 .thenAccept(iaCoup -> {
                     SwingUtilities.invokeLater(() -> {
                         IaEnCours = false;
                         if (iaCoup != null && iaCoup.action != null) {
                             jouerCoup(iaCoup);
+                        }
+                        else {
+                            System.err.println("\t L'IA n'a pas choisi d'action valide !");
                         }
                     });
                 });
@@ -206,6 +229,7 @@ public class Partie {
     }
 
     private void jouerCoup(CoupIa coupIa) {
+
         //coupIa.afficher(); // Affiche le coup choisi par l'IA dans la console pour le debug
         // Logique pour jouer l'action choisie par l'IA
         switch (coupIa.action) {
@@ -249,7 +273,6 @@ public class Partie {
                 // Logique pour l'action ALIBI
                 break;
         }
-        //lanceIa();
     }
 
     /**
@@ -269,12 +292,11 @@ public class Partie {
             if((suspects.size() == 1) && sabliersDeJack >= MAX_SABLIER){
                 // "Si cela se produit à la fin du huitième tour : L’Enquêteur gagne la partie si
                 // Mr. Jack est visible. Mr. Jack gagne la partie s’il est invisible."
-                if (numeroTour==MAX_TOUR){
-                    if (jackVisibleCeTour){
-                        declarerGagnant(Joueur.ENQUETEUR);
-                    } else {
-                        declarerGagnant(Joueur.JACK);
-                    }
+                if (jackVisibleCeTour){
+                    declarerGagnant(Joueur.ENQUETEUR);
+                }
+                else if (numeroTour==MAX_TOUR){
+                    declarerGagnant(Joueur.JACK);
                 } else {
                     // "Si cela se produit avant le huitième tour, la partie continue et une course poursuite sans
                     // merci s’engage entre l’Enquêteur et Mr. Jack !"

@@ -7,17 +7,47 @@ import src.vue.VueJeu;
 import javax.swing.SwingUtilities;
 
 public class MrJackPocket {
-    public static boolean menu = false;
+    public static boolean menu = true;
+    public static boolean simulePartieIa = false;
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            if (menu){
-                VueMenuPrincipal menu = new VueMenuPrincipal();
-                menu.setVisible(true);
-            } else {
-                Partie partie = new Partie(Joueur.ENQUETEUR, false, null);
-                VueJeu jeu = new VueJeu(partie);
-                jeu.setVisible(true);
+        // Simulation de parties entre IA
+        if(simulePartieIa){
+            Partie partie ;
+            int nbVictoiresJack = 0;
+            int nbVictoiresEnqueteur = 0;
+            for(int i = 0; i < 1000; i++){
+                partie = new Partie(2, 2);
+                System.out.println("\nDébut de la partie " + (i+1));
+                while (!partie.isPartieTerminee()){
+                    try {
+                        Thread.sleep(20);
+                    } catch (InterruptedException e) {
+                        System.err.println("Erreur lors de la pause dans Main simulePartieIa : ");
+                    }
+                } // tant que la partie n'est pas terminée, on continue
+                if (partie.gagnant == Joueur.JACK) {
+                    System.out.println("Mr Jack gagne la partie " + (i+1));
+                    nbVictoiresJack++;
+                } else {
+                    System.out.println("L'Enquêteur gagne la partie " + (i+1));
+                    nbVictoiresEnqueteur++;
+                }
             }
-        });
+            System.out.println("Victoires de Mr Jack : " + nbVictoiresJack);
+            System.out.println("Victoires de l'Enquêteur : " + nbVictoiresEnqueteur);
+        }
+        // Lancement du menu principal classique
+        else {
+            SwingUtilities.invokeLater(() -> {
+                if (menu){
+                    VueMenuPrincipal menu = new VueMenuPrincipal();
+                    menu.setVisible(true);
+                } else {
+                    Partie partie = new Partie(-1, -1);//lance par defaut une partie humain contre humain
+                    VueJeu jeu = new VueJeu(partie);
+                    jeu.setVisible(true);
+                }
+            });
+        }
     }
 }

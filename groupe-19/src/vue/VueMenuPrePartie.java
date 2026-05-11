@@ -9,7 +9,7 @@ import java.awt.*;
 public class VueMenuPrePartie extends JPanel {
     private Joueur joueurChoisi = null;
     private boolean IAChoisi = false;
-    private String difficulteIAChoisi = null;
+    private int difficulteIAChoisi = -1;// 0 pour facile, 1 pour intermédiaire, 2 pour difficile
     private String message;
 
     public VueMenuPrePartie(String mode) {
@@ -78,11 +78,11 @@ public class VueMenuPrePartie extends JPanel {
         radioPanelDifficulteIA.setLayout(new BoxLayout(radioPanelDifficulteIA, BoxLayout.X_AXIS));
         radioPanelDifficulteIA.setBackground(Color.GRAY);
         JRadioButton facile = new JRadioButton("Facile");
-        facile.addActionListener(e->{difficulteIAChoisi = "facile";});
+        facile.addActionListener(e->{difficulteIAChoisi = 0;});
         JRadioButton intermediaire = new JRadioButton("Intermédiaire");
-        intermediaire.addActionListener(e->{difficulteIAChoisi = "intermedaire";});
+        intermediaire.addActionListener(e->{difficulteIAChoisi = 1;});
         JRadioButton difficile = new JRadioButton("Difficile");
-        facile.addActionListener(e->{difficulteIAChoisi = "difficile";});
+        difficile.addActionListener(e->{difficulteIAChoisi = 2;});
         ButtonGroup groupDifficulteIA = new ButtonGroup();
         groupDifficulteIA.add(facile);
         groupDifficulteIA.add(intermediaire);
@@ -112,7 +112,20 @@ public class VueMenuPrePartie extends JPanel {
         lancerBouton.setEnabled(false);
         lancerBouton.setVisible(false);
         lancerBouton.addActionListener(e->{
-            Partie partie = new Partie(joueurChoisi, IAChoisi, difficulteIAChoisi);
+            Partie partie;
+            if(!IAChoisi){//partie joueur contre joueur
+                partie = new Partie(-1, -1);
+            }
+            else if(joueurChoisi == Joueur.JACK){//si l'ia est Jack
+                partie = new Partie(-1 ,difficulteIAChoisi);
+            }
+            else if(joueurChoisi == Joueur.ENQUETEUR){//si l'ia est l'enqueteur
+                partie = new Partie(difficulteIAChoisi, -1);
+            }
+            else{//normalement ne devrait jamais arriver mais on sais jamais
+                partie = new Partie(-1, -1);
+            }
+            //Partie partie = new Partie(niveauJack, niveauEnqueteur);
             VueJeu jeu = new VueJeu(partie);
             jeu.setVisible(true);
             SwingUtilities.getWindowAncestor(this).dispose();

@@ -118,7 +118,7 @@ public class District {
             x = coordonneesQuartierSuivant[0];
             y = coordonneesQuartierSuivant[1];
         }
-        System.out.println(detective.getType() + " voit : " + personnagesVisibles);
+        //System.out.println(detective.getType() + " voit : " + personnagesVisibles);
         return personnagesVisibles;
     }
 

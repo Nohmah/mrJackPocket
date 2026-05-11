@@ -60,9 +60,10 @@ public class Ia {
     }
 
     public CoupIa choisirActionRandom(Partie partie, boolean estJack){
+        System.out.println("entre dans IA Random");
         try {
             // J'ai mis 1 seconde (1000ms) pour que ce soit fluide mais que tu aies le temps de voir !
-            Thread.sleep(1000);
+            Thread.sleep(0);
         } catch (InterruptedException e) {
             System.err.println("Erreur lors de la pause dans IA Random : ");
         }
@@ -73,6 +74,13 @@ public class Ia {
 
         if(!estJack && (coup.action == Action.JOKER)){
             return new CoupIa(actionsChoisis, r.nextInt(3), 1);
+        }
+        if(coup.action == Action.ROTATION){//verifie que la rotation est possible
+            coup = new CoupIa(actionsChoisis, r.nextInt(9), r.nextInt(4));
+            while(partie.district.get(coup.para1/3, coup.para1%3).getAPivote()){
+                coup = new CoupIa(actionsChoisis, r.nextInt(9), r.nextInt(4));
+            }
+            return coup;
         }
 
         return new CoupIa(actionsChoisis, r.nextInt(coup.para1Max(actionsChoisis)+1), r.nextInt(coup.para2Max(actionsChoisis)+1));
