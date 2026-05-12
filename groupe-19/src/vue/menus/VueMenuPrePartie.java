@@ -1,7 +1,8 @@
-package src.vue;
+package src.vue.menus;
 
 import src.modele.Joueur;
 import src.modele.Partie;
+import src.vue.VueJeu;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,18 +19,18 @@ public class VueMenuPrePartie extends JPanel {
 
         add(Box.createVerticalGlue());
 
-//        JLabel label = new JLabel("Entrer votre pseudo :");
-//        label.setFont(new Font("Arial", Font.PLAIN, 20));
-//        label.setForeground(Color.WHITE);
-//        label.setAlignmentX(Component.CENTER_ALIGNMENT);
-//        add(label);
-//
-//        JTextField pseudoField = new JTextField(15);
-//        pseudoField.setFont(new Font("Arial", Font.PLAIN, 20));
-//        pseudoField.setAlignmentX(Component.CENTER_ALIGNMENT);
-//        //Pour limiter la taille de cette barre de saisie du pseudo
-//        pseudoField.setMaximumSize(new Dimension(200, pseudoField.getPreferredSize().height));
-//        add(pseudoField);
+        JLabel label = new JLabel("Entrer votre pseudo :");
+        label.setFont(new Font("Arial", Font.PLAIN, 20));
+        label.setForeground(Color.WHITE);
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
+        add(label);
+
+        JTextField pseudoField = new JTextField(15);
+        pseudoField.setFont(new Font("Arial", Font.PLAIN, 20));
+        pseudoField.setAlignmentX(Component.CENTER_ALIGNMENT);
+        //Pour limiter la taille de cette barre de saisie du pseudo
+        pseudoField.setMaximumSize(new Dimension(200, pseudoField.getPreferredSize().height));
+        add(pseudoField);
 
         JLabel choixUnLabel = new JLabel("Qui voulez-vous incarnez ?");
         choixUnLabel.setFont(new Font("Arial", Font.PLAIN, 20));
