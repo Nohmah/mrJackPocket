@@ -137,12 +137,12 @@ public class Partie {
         totalActionsJouees++;
         switch(totalActionsJouees){
             case 1, 3:
-                System.out.println("Le joueur change. Le joueur est maintenant" +
+                if(!estSimulation) System.out.println("Le joueur change. Le joueur est maintenant" +
                         ((joueurCourant == Joueur.JACK) ? Joueur.ENQUETEUR : Joueur.JACK));
                 changerJoueur();
                 break;
             case 4:
-                appelATemoin();
+                if(!estSimulation) appelATemoin();
                 break;
             default:
                 break;
@@ -201,7 +201,6 @@ public class Partie {
         IaEnCours = true;
         CompletableFuture
                 .supplyAsync(() -> {
-                    try { Thread.sleep(2000); } catch (Exception e) {}
                     CoupIa coupChoisi = ia.choisirAction(this, estJack);
                     return coupChoisi;
                 }, executor)
@@ -228,7 +227,7 @@ public class Partie {
         }
     }
 
-    private void jouerCoup(CoupIa coupIa) {
+    public void jouerCoup(CoupIa coupIa) {
         switch (coupIa.action) {
             case HOLMES:
                 actions.deplacerDetective(detectives.get(0), coupIa.para1 + 1);
@@ -283,7 +282,7 @@ public class Partie {
                     declarerGagnant(Joueur.JACK);
                 } else {
                     coursePoursuiteActive = true;
-                    System.out.println("Début de course poursuite !!!");
+                    if(!estSimulation) System.out.println("Début de course poursuite !!!");
                     verifFinCoursePoursuite();
                 }
             }
@@ -304,9 +303,9 @@ public class Partie {
         this.gagnant = vainqueur;
         if (!this.estSimulation) {
             if (this.gagnant == Joueur.ENQUETEUR){
-                System.out.println("----- Victoire de l'Enquêteur ! -----");
+                if(!estSimulation) System.out.println("----- Victoire de l'Enquêteur ! -----");
             } else {
-                System.out.println("----- Victoire de Jack ! -----");
+                if(!estSimulation) System.out.println("----- Victoire de Jack ! -----");
             }
         }
     }
@@ -314,13 +313,13 @@ public class Partie {
     /** Vérifie si la course poursuite est terminée **/
     public void verifFinCoursePoursuite(){
         if(jackVisibleCeTour){
-            System.out.println("Fin de la course poursuite.");
+            if(!estSimulation) System.out.println("Fin de la course poursuite.");
             declarerGagnant(Joueur.ENQUETEUR);
             coursePoursuiteActive = false;
             return;
         }
         if(numeroTour == MAX_TOUR){
-            System.out.println("Fin de la course poursuite.");
+            if(!estSimulation) System.out.println("Fin de la course poursuite.");
             declarerGagnant(Joueur.JACK);
             coursePoursuiteActive = false;
         }

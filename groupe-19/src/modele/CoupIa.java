@@ -9,7 +9,7 @@ public class CoupIa {
     //si action = joker : para1 = choix du detective (0,1,2), para2 = 0(seulement pour jack) ou 1 nb deplacement
     //si action = rotation : para1 = quartier (0-8), para2 = nombre de quart de tour (0-3)
     //si action = echange : para1 = quartier 1 (0-8), para2 = quartier 2 (0-8)
-    //si action = les para veulent rien dire
+    //si action = alibi : para1 = 0, para2 = 0 et ne sont pas utilisés
 
     public CoupIa(Action action, int para1, int para2){
         this.action = action;
@@ -42,7 +42,7 @@ public class CoupIa {
             case ECHANGE:
                 return 8;
             case ALIBI:
-                return 1;
+                return 0;
         }
         return 0;
     }

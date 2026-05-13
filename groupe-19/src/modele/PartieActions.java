@@ -61,10 +61,10 @@ public class PartieActions {
             return;
         }
         if (detective == null){
-            System.out.println("Mr. Jack choisit de ne déplacer aucun détective.");
+            if(!partie.estSimulation) System.out.println("Mr. Jack choisit de ne déplacer aucun détective.");
         } else {
             detective.deplacer(1);
-            System.out.println(detective.getType() + " avance de 1");
+            if(!partie.estSimulation) System.out.println(detective.getType() + " avance de 1");
         }
         jeton.setJoue(true);
         partie.apresAction();
@@ -82,7 +82,7 @@ public class PartieActions {
             return;
         }
         quartier.pivoter(quarts);
-        System.out.println("Quartier pivoté");
+        if(!partie.estSimulation) System.out.println("Quartier pivoté");
         jeton.setJoue(true);
         partie.apresAction();
     }
@@ -94,7 +94,7 @@ public class PartieActions {
             return;
         }
         partie.district.echanger(x1, y1, x2, y2);
-        System.out.println("Échange de quartier");
+        if(!partie.estSimulation) System.out.println("Échange de quartier");
         jeton.setJoue(true);
         partie.apresAction();
     }
@@ -111,10 +111,10 @@ public class PartieActions {
             jeton.setJoue(true);
             return;
         }
-        System.out.println("Carte alibi piochée : " + carte.getPersonnage());
+        if(!partie.estSimulation) System.out.println("Carte alibi piochée : " + carte.getPersonnage());
         if (partie.joueurCourant == Joueur.JACK) {
             partie.sabliersDeJack += carte.getSabliers();
-            System.out.println("Jack récupère les " + carte.getSabliers() + " sabliers de la carte. Il en est à " + partie.sabliersDeJack + " sabliers");
+            if(!partie.estSimulation) System.out.println("Jack récupère les " + carte.getSabliers() + " sabliers de la carte. Il en est à " + partie.sabliersDeJack + " sabliers");
         } else {
             partie.suspects.remove(carte.getPersonnage());
             partie.district.innocenter(carte.getPersonnage());

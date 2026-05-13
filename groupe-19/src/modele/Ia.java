@@ -3,6 +3,16 @@ import java.util.*;
 
 public class Ia {
 
+    public class resultatMinMax { // classe pour stocker le résultat du MinMax
+        public double score;
+        public CoupIa coup;
+
+        public resultatMinMax(double score, CoupIa coup) {
+            this.score = score;
+            this.coup = coup;
+        }
+    }
+    
     Random r;
     int difficulte; // 0 pour random, 1 pour facile, 2 pour moyen, 3 pour difficile
 
@@ -60,7 +70,6 @@ public class Ia {
     }
 
     public CoupIa choisirActionRandom(Partie partie, boolean estJack){
-        System.out.println("entre dans IA Random");
         try {
             // J'ai mis 1 seconde (1000ms) pour que ce soit fluide mais que tu aies le temps de voir !
             Thread.sleep(0);
@@ -93,6 +102,14 @@ public class Ia {
     }
 
     public CoupIa choisirActionMoyen(Partie partie, boolean estJack) {
+
+         try {
+            // J'ai mis 1 seconde (1000ms) pour que ce soit fluide mais que tu aies le temps de voir !
+            Thread.sleep(0);
+        } catch (InterruptedException e) {
+            System.err.println("Erreur lors de la pause dans IA Moyen : ");
+        }
+
         List<Action> listeActionsPossibles = partie.actions.getActionsPossibles();
         CoupIa meilleurCoup = null;
 
@@ -120,6 +137,10 @@ public class Ia {
 
                 for (int param2 = 0; param2 <= coup.para2Max(action); param2++) {
 
+                    if (action == Action.JOKER && param2 == 0 && !estJack) {
+                        continue; // illégal !
+                    }
+
                     CoupIa tentative = new CoupIa(action, param1, param2);
 
                     // On simule et on note le coup
@@ -141,7 +162,89 @@ public class Ia {
     }
 
     public CoupIa choisirActionDifficile(Partie partie, boolean estJack){
-        //à définir
-        return choisirActionRandom(partie, estJack);
+        
+        int profondeur = 4 - partie.totalActionsJouees;// jusqu'à la fin du tour actuel
+        return IaMinMax(partie, estJack, profondeur).coup;
+    }
+
+    public resultatMinMax IaMinMax(Partie partie, boolean estJack, int profondeur){
+        //System.out.println("Entre dans MinMax Profondeur : " + profondeur);
+        //si mode max alors on cherche à maximiser le score, sinon on cherche à minimiser le score
+        boolean modeMax = estJack ? partie.joueurCourant == Joueur.JACK : partie.joueurCourant == Joueur.ENQUETEUR;
+        double scoreMax = modeMax ? -8000 : 8000;
+        CoupIa meilleurCoup = null;
+        if(profondeur == 1){ 
+            for(Action action : partie.actions.getActionsPossibles()){
+                CoupIa coup = new CoupIa(action);
+                for (int param1 = 0; param1 <= coup.para1Max(action); param1++) {
+                    for (int param2 = 0; param2 <= coup.para2Max(action); param2++) {
+
+                        // --- Filtre anti coup illégal ---
+                        if(action == Action.JOKER && param2 == 0 && !estJack){
+                            continue; // illégal !
+                        }
+
+                        if(action == Action.ROTATION){
+                            int ligne = param1 / 3;
+                            int colonne = param1 % 3;
+                            if (partie.district.get(ligne, colonne).getAPivote()) {
+                                continue; // C'est illégal
+                            }
+                        }
+
+                        CoupIa tentative = new CoupIa(action, param1, param2);
+                        double note = partie.simulerEtNoter(tentative, estJack);
+                        if(modeMax && note > scoreMax){
+                            meilleurCoup = tentative;
+                            scoreMax = note;
+                        } else if (!modeMax && note < scoreMax){
+                            meilleurCoup = tentative;
+                            scoreMax = note;
+                        }
+                    }
+                }
+            }
+        }
+        else{
+            for(Action action : partie.actions.getActionsPossibles()){
+                CoupIa coup = new CoupIa(action);
+                for (int param1 = 0; param1 <= coup.para1Max(action); param1++) {
+                    for (int param2 = 0; param2 <= coup.para2Max(action); param2++) {
+                        
+                        // --- Filtre anti coup illégal ---
+                        if(action == Action.JOKER && param2 == 0 && !estJack){
+                            continue; // illégal !
+                        }
+
+                        if(action == Action.ROTATION){
+                            int ligne = param1 / 3;
+                            int colonne = param1 % 3;
+                            if (partie.district.get(ligne, colonne).getAPivote()) {
+                                continue; // C'est illégal
+                            }
+                        }
+
+                        CoupIa tentative = new CoupIa(action, param1, param2);
+                        Partie partieSimulee = new Partie(partie);
+                        partieSimulee.jouerCoup(tentative);
+                        double note = IaMinMax(partieSimulee, estJack, profondeur - 1).score;
+                        if(modeMax && note > scoreMax){
+                            meilleurCoup = tentative;
+                            scoreMax = note;
+                        } else if (!modeMax && note < scoreMax){
+                            meilleurCoup = tentative;
+                            scoreMax = note;
+                        }
+                    }
+                }
+            }
+        }
+
+        if(meilleurCoup != null){
+            return new resultatMinMax(scoreMax, meilleurCoup);
+        } else {
+            System.out.println("/!\\ Aucun coup trouvé en MinMax, renvoie random /!\\");
+            return new resultatMinMax(scoreMax, choisirActionRandom(partie, estJack));
+        }
     }
 }
