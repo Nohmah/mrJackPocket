@@ -25,13 +25,13 @@ public class Partie {
     public int sabliersDeJack;
     private final int MAX_SABLIER = 6;
     public volatile Joueur gagnant = null;
-    private boolean coursePoursuiteActive = false;
+    boolean coursePoursuiteActive = false;
 
     //Suivi de tour
     private final int MAX_TOUR = 8;
     public int numeroTour = 0;
-    private int totalActionsJouees;
-    private boolean jackVisibleCeTour;
+    int totalActionsJouees;
+    boolean jackVisibleCeTour;
 
     //pour l'ia et le thread
     private Ia ia = new Ia();
@@ -40,6 +40,11 @@ public class Partie {
     public boolean estSimulation = false;
     public int niveauJack;  // niveau de son IA (-1 = manuel, 0 = random, 1 = facile, 2 = moyen)
     public int niveauEnqueteur; // niveau de l'IA de l'enquêteur (-1 = manuel, 0 = random, 1 = facile, 2 = moyen)
+
+    //Pour l'historique
+    Deque<Partie> undo = new ArrayDeque<>();
+    Deque<Partie> redo = new ArrayDeque<>();
+
 
     /** Constructeur **/
     public Partie(int niveauJack, int niveauEnqueteur){
@@ -77,6 +82,8 @@ public class Partie {
         cartesAlibiPioche.clear();
         detectives.clear();
         suspects.clear();
+        undo.clear();
+        redo.clear();
         initialiserPartie();
         tourSuivant();
         verifTourIa();
@@ -356,5 +363,76 @@ public class Partie {
         this.jackVisibleCeTour = p.jackVisibleCeTour;
         this.coursePoursuiteActive = p.coursePoursuiteActive;
         this.gagnant = p.gagnant;
+        this.joueurChoisi = p.joueurChoisi;
+        this.IAChoisi = p.IAChoisi;
+        this.difficulteIAChoisi = p.difficulteIAChoisi;
+        this.niveauJack = p.niveauJack;
+        this.niveauEnqueteur = p.niveauEnqueteur;
+        this.undo = new ArrayDeque<>();
+        this.redo = new ArrayDeque<>();
+    }
+
+    /**
+     *
+     *
+     * HISTORIQUE ET SAUVEGARDE
+     *
+     */
+
+    public void saveEtat() {
+        if(estSimulation) return;
+        undo.push(new Partie(this));
+        redo.clear();
+    }
+
+    public void annuler(){
+        if(undo.isEmpty()) return;
+        redo.push(new Partie(this));
+        Partie ancien = undo.pop();
+        restaurer(ancien);
+    }
+
+    public void refaire(){
+        if(redo.isEmpty()) return;
+        undo.push(new Partie(this));
+        Partie nouveau = redo.pop();
+        restaurer(nouveau);
+    }
+
+    private void restaurer(Partie p){
+        this.district = p.district;
+        this.detectives = p.detectives;
+        this.suspects = p.suspects;
+        this.identiteJack = p.identiteJack;
+        this.sabliersDeJack = p.sabliersDeJack;
+        this.joueurCourant = p.joueurCourant;
+        this.totalActionsJouees = p.totalActionsJouees;
+        this.numeroTour = p.numeroTour;
+        this.jetonsAction = p.jetonsAction;
+        this.cartesAlibiPioche = p.cartesAlibiPioche;
+        this.gagnant = p.gagnant;
+        this.jackVisibleCeTour = p.jackVisibleCeTour;
+        this.coursePoursuiteActive = p.coursePoursuiteActive;
+        this.IAChoisi = p.IAChoisi;
+        this.difficulteIAChoisi = p.difficulteIAChoisi;
+        this.joueurChoisi = p.joueurChoisi;
+        this.niveauEnqueteur = p.niveauEnqueteur;
+        this.niveauJack = p.niveauJack;
+    }
+
+    public PartieSnapshot toSnapshot() {
+        return PartieSaveMapper.toSnapshot(this);
+    }
+
+    public void fromSnapshot(PartieSnapshot snap){
+        PartieSaveMapper.fromSnapshot(this, snap);
+    }
+
+    public GameSave toGameSave() {
+        return PartieSaveMapper.toGameSave(this);
+    }
+
+    public void fromGameSave(GameSave save) {
+        PartieSaveMapper.fromGameSave(this, save);
     }
 }

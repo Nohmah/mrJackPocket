@@ -12,7 +12,8 @@ package src.modele;
 public class Quartier {
 
     public enum Face {SUSPECT, VIDE}
-    private final Personnage personnage;
+
+    private Personnage personnage;
     private Orientation orientationMur;
     private Face face;
     private boolean aPivote;
@@ -25,9 +26,19 @@ public class Quartier {
         this.aPivote = false;
     }
 
+    /** Définit la face visible du quartier (pour save-load) */
+    public void setFace(boolean suspect) {
+        this.face = suspect ? Face.SUSPECT : Face.VIDE;
+    }
+
     /** Renvoie true si le quartier montre sa face 'suspect', false sinon **/
     public boolean estFaceSuspect(){
         return face == Face.SUSPECT;
+    }
+
+    /** Définit le personnage lié au quartier (utile pour le load)*/
+    public void setPersonnage(Personnage personnage) {
+        this.personnage = personnage;
     }
 
     /** Définit si le quartier a été pivoté **/
