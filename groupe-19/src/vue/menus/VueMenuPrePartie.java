@@ -8,6 +8,7 @@ import src.vue.VueJeu;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
+import java.awt.event.ActionListener;
 
 public class VueMenuPrePartie extends JPanel {
 
@@ -59,26 +60,55 @@ public class VueMenuPrePartie extends JPanel {
     }
 
     private void demandePseudonyme(JPanel position){
+
+        JPanel zoneSaisie = new JPanel();
+        zoneSaisie.setLayout(new BoxLayout(zoneSaisie, BoxLayout.Y_AXIS));
+        zoneSaisie.setOpaque(false);
+
         JLabel label = new JLabel("Entrer votre pseudo :");
         label.setFont(new Font("Arial", Font.PLAIN, 20));
         label.setForeground(Color.WHITE);
         label.setAlignmentX(Component.CENTER_ALIGNMENT);
-        position.add(label);
 
         JTextField pseudoField = new JTextField(15);
         pseudoField.setFont(new Font("Arial", Font.PLAIN, 20));
         pseudoField.setAlignmentX(Component.CENTER_ALIGNMENT);
         pseudoField.setMaximumSize(new Dimension(200, pseudoField.getPreferredSize().height));
-        position.add(pseudoField);
 
         JButton confirmationPseudo = new JButton("Confirmer votre pseudo");
         confirmationPseudo.setAlignmentX(Component.CENTER_ALIGNMENT);
         confirmationPseudo.setFont(new Font("Arial", Font.PLAIN, 18));
-        confirmationPseudo.addActionListener(e -> {
+
+        zoneSaisie.add(label);
+        zoneSaisie.add(pseudoField);
+        zoneSaisie.add(confirmationPseudo);
+        zoneSaisie.add(Box.createVerticalGlue());
+
+        ActionListener actionPseudoRecu = e -> {
             this.pseudo = pseudoField.getText();
             System.out.println("[DEBUG] reception pseudo : "+pseudo);
-        });
-        position.add(confirmationPseudo);
+            if(!this.pseudo.isEmpty()){
+                zoneSaisie.removeAll();
+
+                JLabel pseudoValide = new JLabel("Votre pseudo : " + pseudo);
+                pseudoValide.setFont(new Font("Arial", Font.PLAIN, 22));
+                pseudoValide.setForeground(Color.WHITE);
+
+                pseudoValide.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+                zoneSaisie.add(pseudoValide);
+                zoneSaisie.add(Box.createVerticalGlue());
+                zoneSaisie.revalidate();
+                zoneSaisie.repaint();
+            }
+        };
+        confirmationPseudo.addActionListener(actionPseudoRecu);
+        pseudoField.addActionListener(actionPseudoRecu);
+        position.add(zoneSaisie);
+
+
+
+
     }
 
     private void soloMenu(JFrame parent, JPanel retourVers){
@@ -246,16 +276,13 @@ public class VueMenuPrePartie extends JPanel {
         contenuPrincipal.setLayout(new GridLayout(1, 2));
         contenuPrincipal.setOpaque(false);
 
-        // Bordure
+
 
         Border contourColonnes = BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(Color.BLACK, 10),
                 BorderFactory.createEmptyBorder(10,10,10,10)
         );
 
-
-
-        //Côté Gauche
         JPanel contenueColonneGauche = new JPanel();
         contenueColonneGauche.setOpaque(false);
         contenueColonneGauche.setLayout(new BoxLayout(contenueColonneGauche, BoxLayout.Y_AXIS));
@@ -267,28 +294,37 @@ public class VueMenuPrePartie extends JPanel {
         titreColonneGauche.setForeground(Color.WHITE);
         titreColonneGauche.setAlignmentX(Component.CENTER_ALIGNMENT);
 
+        JButton creeServeur = new JButton("Créé un nouveau serveur !");
+        creeServeur.setAlignmentX(Component.CENTER_ALIGNMENT);
+        creeServeur.setFont(new Font("Arial", Font.PLAIN, 18));
+        creeServeur.addActionListener(e -> {
+            System.out.println("[DEBUG] création serveur confirmé :) ");
+            VueLobby lobby = new VueLobby(parent, retourVers, pseudo, true);
+            parent.setContentPane(lobby);
+            parent.revalidate();
+            parent.repaint();
+        });
+
         contenueColonneGauche.add(titreColonneGauche);
         contenueColonneGauche.add(Box.createVerticalGlue());
         demandePseudonyme(contenueColonneGauche);
 
         contenueColonneGauche.add(Box.createVerticalGlue());
-
+        contenueColonneGauche.add(creeServeur);
+        contenueColonneGauche.add(Box.createVerticalGlue());
         contenueColonneGauche.setBorder(contourColonnes);
         contenuPrincipal.add(contenueColonneGauche);
 
 
-        //Côté Droit
         JPanel contenueColonneDroite = new JPanel();
         contenueColonneDroite.setOpaque(false);
         contenueColonneDroite.setLayout(new BoxLayout(contenueColonneDroite, BoxLayout.Y_AXIS));
 
-        // Titre
         JLabel titreColonneDroite = new JLabel("Rejoindre un serveur !");
         titreColonneDroite.setFont(new Font("Arial", Font.PLAIN, 40));
         titreColonneDroite.setForeground(Color.WHITE);
         titreColonneDroite.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // input rejoindre serveur
 
         JLabel label = new JLabel("Entrer l'IP d'un serveur :");
         label.setFont(new Font("Arial", Font.PLAIN, 20));
@@ -306,8 +342,11 @@ public class VueMenuPrePartie extends JPanel {
         confirmationServeur.addActionListener(e -> {
             this.serveur = serveurField.getText();
             System.out.println("[DEBUG] reception serveur  : "+serveur);
+            VueLobby lobby = new VueLobby(parent, retourVers, pseudo, false);
+            parent.setContentPane(lobby);
+            parent.revalidate();
+            parent.repaint();
         });
-
 
 
         // Ajout des élements dans la colonne de droite
