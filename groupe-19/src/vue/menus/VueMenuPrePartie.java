@@ -6,6 +6,7 @@ import src.utils.utils;
 import src.vue.VueJeu;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 
 public class VueMenuPrePartie extends JPanel {
@@ -14,12 +15,28 @@ public class VueMenuPrePartie extends JPanel {
     private boolean IAChoisi = false;
     private int difficulteIAChoisi = -1;
     private String message;
+    private String pseudo;
+    private String serveur;
 
     public VueMenuPrePartie(JFrame parent, JPanel retourVers, String mode) {
-
         setBackground(Color.GRAY);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
+        switch(mode) {
+            case "solo":
+                soloMenu(parent, retourVers);
+                break;
+            case "multi":
+                multiMenu(parent, retourVers);
+                break;
+            default:
+                throw new RuntimeException("Appel constructeur 'VueMenuPrePartie' avec paramètre 'String mode' invalide : "+mode+" !");
+        }
+
+
+    }
+
+    private void retourFenetrePrecedent(JFrame parent, JPanel retourVers, JPanel positionnement) {
         JButton retour = new BoutonsMenu(
                 utils.loadImage("fast-forward"),
                 null
@@ -38,21 +55,38 @@ public class VueMenuPrePartie extends JPanel {
 
         panneauRetour.add(retour);
 
-        add(panneauRetour);
+        positionnement.add(panneauRetour);
+    }
 
-        add(Box.createVerticalGlue());
-
+    private void demandePseudonyme(JPanel position){
         JLabel label = new JLabel("Entrer votre pseudo :");
         label.setFont(new Font("Arial", Font.PLAIN, 20));
         label.setForeground(Color.WHITE);
         label.setAlignmentX(Component.CENTER_ALIGNMENT);
-        add(label);
+        position.add(label);
 
         JTextField pseudoField = new JTextField(15);
         pseudoField.setFont(new Font("Arial", Font.PLAIN, 20));
         pseudoField.setAlignmentX(Component.CENTER_ALIGNMENT);
         pseudoField.setMaximumSize(new Dimension(200, pseudoField.getPreferredSize().height));
-        add(pseudoField);
+        position.add(pseudoField);
+
+        JButton confirmationPseudo = new JButton("Confirmer votre pseudo");
+        confirmationPseudo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        confirmationPseudo.setFont(new Font("Arial", Font.PLAIN, 18));
+        confirmationPseudo.addActionListener(e -> {
+            this.pseudo = pseudoField.getText();
+            System.out.println("[DEBUG] reception pseudo : "+pseudo);
+        });
+        position.add(confirmationPseudo);
+    }
+
+    private void soloMenu(JFrame parent, JPanel retourVers){
+        retourFenetrePrecedent(parent,retourVers,this);
+
+        add(Box.createVerticalGlue());
+
+        demandePseudonyme(this);
 
         JLabel choixUnLabel = new JLabel("Qui voulez-vous incarnez ?");
         choixUnLabel.setFont(new Font("Arial", Font.PLAIN, 20));
@@ -76,78 +110,78 @@ public class VueMenuPrePartie extends JPanel {
 
         add(radioPanel);
 
-        if (mode.equals("solo")) {
 
-            JLabel choixIALabel = new JLabel("Jouer contre l'IA ?");
-            choixIALabel.setFont(new Font("Arial", Font.PLAIN, 20));
-            choixIALabel.setForeground(Color.WHITE);
-            choixIALabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-            add(choixIALabel);
+        JLabel choixIALabel = new JLabel("Jouer contre l'IA ?");
+        choixIALabel.setFont(new Font("Arial", Font.PLAIN, 20));
+        choixIALabel.setForeground(Color.WHITE);
+        choixIALabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-            JPanel radioPanelIA = new JPanel();
-            radioPanelIA.setLayout(new BoxLayout(radioPanelIA, BoxLayout.X_AXIS));
-            radioPanelIA.setBackground(Color.GRAY);
+        add(choixIALabel);
 
-            JRadioButton oui = new JRadioButton("Oui");
-            JRadioButton non = new JRadioButton("Non");
+        JPanel radioPanelIA = new JPanel();
+        radioPanelIA.setLayout(new BoxLayout(radioPanelIA, BoxLayout.X_AXIS));
+        radioPanelIA.setBackground(Color.GRAY);
 
-            non.setSelected(true);
+        JRadioButton oui = new JRadioButton("Oui");
+        JRadioButton non = new JRadioButton("Non");
 
-            ButtonGroup groupIA = new ButtonGroup();
-            groupIA.add(oui);
-            groupIA.add(non);
+        non.setSelected(true);
 
-            radioPanelIA.add(oui);
-            radioPanelIA.add(non);
+        ButtonGroup groupIA = new ButtonGroup();
+        groupIA.add(oui);
+        groupIA.add(non);
 
-            add(radioPanelIA);
+        radioPanelIA.add(oui);
+        radioPanelIA.add(non);
 
-            JLabel choixDifficulteIALabel = new JLabel("Choisir la difficulté de l'IA");
-            choixDifficulteIALabel.setFont(new Font("Arial", Font.PLAIN, 20));
-            choixDifficulteIALabel.setForeground(Color.WHITE);
-            choixDifficulteIALabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        add(radioPanelIA);
+
+        JLabel choixDifficulteIALabel = new JLabel("Choisir la difficulté de l'IA");
+        choixDifficulteIALabel.setFont(new Font("Arial", Font.PLAIN, 20));
+        choixDifficulteIALabel.setForeground(Color.WHITE);
+        choixDifficulteIALabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        choixDifficulteIALabel.setVisible(false);
+
+        JPanel radioPanelDifficulteIA = new JPanel();
+        radioPanelDifficulteIA.setLayout(new BoxLayout(radioPanelDifficulteIA, BoxLayout.X_AXIS));
+        radioPanelDifficulteIA.setBackground(Color.GRAY);
+
+        JRadioButton facile = new JRadioButton("Facile");
+        facile.addActionListener(e -> difficulteIAChoisi = 0);
+
+        JRadioButton intermediaire = new JRadioButton("Intermédiaire");
+        intermediaire.addActionListener(e -> difficulteIAChoisi = 1);
+
+        JRadioButton difficile = new JRadioButton("Difficile");
+        difficile.addActionListener(e -> difficulteIAChoisi = 2);
+
+        ButtonGroup groupDifficulteIA = new ButtonGroup();
+        groupDifficulteIA.add(facile);
+        groupDifficulteIA.add(intermediaire);
+        groupDifficulteIA.add(difficile);
+
+        radioPanelDifficulteIA.add(facile);
+        radioPanelDifficulteIA.add(intermediaire);
+        radioPanelDifficulteIA.add(difficile);
+
+        radioPanelDifficulteIA.setVisible(false);
+
+        add(choixDifficulteIALabel);
+        add(radioPanelDifficulteIA);
+
+        oui.addActionListener(e -> {
+            choixDifficulteIALabel.setVisible(true);
+            radioPanelDifficulteIA.setVisible(true);
+            IAChoisi = true;
+        });
+
+        non.addActionListener(e -> {
             choixDifficulteIALabel.setVisible(false);
-
-            JPanel radioPanelDifficulteIA = new JPanel();
-            radioPanelDifficulteIA.setLayout(new BoxLayout(radioPanelDifficulteIA, BoxLayout.X_AXIS));
-            radioPanelDifficulteIA.setBackground(Color.GRAY);
-
-            JRadioButton facile = new JRadioButton("Facile");
-            facile.addActionListener(e -> difficulteIAChoisi = 0);
-
-            JRadioButton intermediaire = new JRadioButton("Intermédiaire");
-            intermediaire.addActionListener(e -> difficulteIAChoisi = 1);
-
-            JRadioButton difficile = new JRadioButton("Difficile");
-            difficile.addActionListener(e -> difficulteIAChoisi = 2);
-
-            ButtonGroup groupDifficulteIA = new ButtonGroup();
-            groupDifficulteIA.add(facile);
-            groupDifficulteIA.add(intermediaire);
-            groupDifficulteIA.add(difficile);
-
-            radioPanelDifficulteIA.add(facile);
-            radioPanelDifficulteIA.add(intermediaire);
-            radioPanelDifficulteIA.add(difficile);
-
             radioPanelDifficulteIA.setVisible(false);
+            IAChoisi = false;
+        });
 
-            add(choixDifficulteIALabel);
-            add(radioPanelDifficulteIA);
-
-            oui.addActionListener(e -> {
-                choixDifficulteIALabel.setVisible(true);
-                radioPanelDifficulteIA.setVisible(true);
-                IAChoisi = true;
-            });
-
-            non.addActionListener(e -> {
-                choixDifficulteIALabel.setVisible(false);
-                radioPanelDifficulteIA.setVisible(false);
-                IAChoisi = false;
-            });
-        }
 
         JButton lancerBouton = new JButton();
 
@@ -181,14 +215,11 @@ public class VueMenuPrePartie extends JPanel {
 
         add(Box.createVerticalStrut(20));
         add(lancerBouton);
-
         mrJack.addActionListener(e -> {
             joueurChoisi = Joueur.JACK;
-            if (mode.equals("multi")) {
-                message = "Lancer un serveur en tant que Jack.";
-            } else {
-                message = "Vite ! Je dois m'échapper !";
-            }
+
+            message = "Vite ! Je dois m'échapper !";
+
             lancerBouton.setText(message);
             lancerBouton.setVisible(true);
             lancerBouton.setEnabled(true);
@@ -197,17 +228,107 @@ public class VueMenuPrePartie extends JPanel {
         lEnqueteur.addActionListener(e -> {
             joueurChoisi = Joueur.ENQUETEUR;
             // String pseudo = pseudoField.getText(); pour avoir le pseudo entré par l'utilisateur
-            if (mode.equals("multi")){
-                message = "Lancer un serveur en tant que l'Enquêteur";
-                // ça crée un serveur.
-            } else {
-                message = "Jack, nous te trouverons !";
-            }
+
+            message = "Jack, nous te trouverons !";
+
             lancerBouton.setText(message);
             lancerBouton.setVisible(true);
             lancerBouton.setEnabled(true);
         });
 
+
         add(Box.createVerticalGlue());
     }
+
+    private void multiMenu(JFrame parent, JPanel retourVers){
+
+        JPanel contenuPrincipal = new JPanel();
+        contenuPrincipal.setLayout(new GridLayout(1, 2));
+        contenuPrincipal.setOpaque(false);
+
+        // Bordure
+
+        Border contourColonnes = BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.BLACK, 10),
+                BorderFactory.createEmptyBorder(10,10,10,10)
+        );
+
+
+
+        //Côté Gauche
+        JPanel contenueColonneGauche = new JPanel();
+        contenueColonneGauche.setOpaque(false);
+        contenueColonneGauche.setLayout(new BoxLayout(contenueColonneGauche, BoxLayout.Y_AXIS));
+
+        retourFenetrePrecedent(parent,retourVers,contenueColonneGauche);
+
+        JLabel titreColonneGauche = new JLabel("Créé un serveur !");
+        titreColonneGauche.setFont(new Font("Arial", Font.PLAIN, 40));
+        titreColonneGauche.setForeground(Color.WHITE);
+        titreColonneGauche.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        contenueColonneGauche.add(titreColonneGauche);
+        contenueColonneGauche.add(Box.createVerticalGlue());
+        demandePseudonyme(contenueColonneGauche);
+
+        contenueColonneGauche.add(Box.createVerticalGlue());
+
+        contenueColonneGauche.setBorder(contourColonnes);
+        contenuPrincipal.add(contenueColonneGauche);
+
+
+        //Côté Droit
+        JPanel contenueColonneDroite = new JPanel();
+        contenueColonneDroite.setOpaque(false);
+        contenueColonneDroite.setLayout(new BoxLayout(contenueColonneDroite, BoxLayout.Y_AXIS));
+
+        // Titre
+        JLabel titreColonneDroite = new JLabel("Rejoindre un serveur !");
+        titreColonneDroite.setFont(new Font("Arial", Font.PLAIN, 40));
+        titreColonneDroite.setForeground(Color.WHITE);
+        titreColonneDroite.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // input rejoindre serveur
+
+        JLabel label = new JLabel("Entrer l'IP d'un serveur :");
+        label.setFont(new Font("Arial", Font.PLAIN, 20));
+        label.setForeground(Color.WHITE);
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JTextField serveurField = new JTextField(15);
+        serveurField.setFont(new Font("Arial", Font.PLAIN, 20));
+        serveurField.setAlignmentX(Component.CENTER_ALIGNMENT);
+        serveurField.setMaximumSize(new Dimension(200, serveurField.getPreferredSize().height));
+
+        JButton confirmationServeur = new JButton("Rejoindre le serveur !");
+        confirmationServeur.setAlignmentX(Component.CENTER_ALIGNMENT);
+        confirmationServeur.setFont(new Font("Arial", Font.PLAIN, 18));
+        confirmationServeur.addActionListener(e -> {
+            this.serveur = serveurField.getText();
+            System.out.println("[DEBUG] reception serveur  : "+serveur);
+        });
+
+
+
+        // Ajout des élements dans la colonne de droite
+        contenueColonneDroite.add(titreColonneDroite);
+        contenueColonneDroite.add(Box.createVerticalGlue());
+        contenueColonneDroite.add(label);
+        contenueColonneDroite.add(serveurField);
+        contenueColonneDroite.add(confirmationServeur);
+        contenueColonneDroite.add(Box.createVerticalGlue());
+
+        contenueColonneDroite.setBorder(contourColonnes);
+
+        contenuPrincipal.add(contenueColonneDroite);
+
+
+        add(contenuPrincipal);
+    }
+
+
+
+
+
+
 }
