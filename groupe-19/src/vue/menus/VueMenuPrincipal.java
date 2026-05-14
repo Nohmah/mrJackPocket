@@ -13,7 +13,7 @@ public class VueMenuPrincipal extends JPanel {
         private final BufferedImage backgroundImage;
 
         public BackgroundPanel() {
-            String nomImage = "MenuBackground" + nb;
+            String nomImage = "MenuFond";
             backgroundImage = utils.loadImage(nomImage);
             setLayout(new BorderLayout());
         }
@@ -60,7 +60,7 @@ public class VueMenuPrincipal extends JPanel {
         contenu.setOpaque(false);
         background.add(contenu, BorderLayout.CENTER);
 
-        BufferedImage imageIllustration = utils.loadImage("MenuIllustration");
+        BufferedImage imageIllustration = utils.loadImage("MenuIllustration2");
 
         if (imageIllustration != null) {
             IllustrationMenu illustrationMenu = new IllustrationMenu(imageIllustration);
@@ -80,14 +80,20 @@ public class VueMenuPrincipal extends JPanel {
         titrePanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JButton partieSolo = creerBouton("Boutonpartiesolo", () -> {
-            VueMenuPrePartie prePartie = new VueMenuPrePartie("solo");
-            parent.setContentPane(prePartie);
+            VueMenuPrePartie prePartieSolo =
+                    new VueMenuPrePartie(parent, this, "solo");
+            parent.setContentPane(prePartieSolo);
             parent.revalidate();
             parent.repaint();
         });
 
-        JButton partieMulti = creerBouton("Boutonpartiemultijoueur",
-                () -> System.out.println("Partie Multijoueur"));
+        JButton partieMulti = creerBouton("Boutonpartiemultijoueur", () -> {
+            VueMenuPrePartie prePartieMulti =
+                    new VueMenuPrePartie(parent, this, "multi");
+                parent.setContentPane(prePartieMulti);
+                parent.revalidate();
+                parent.repaint();
+        });
 
         JPanel panneauHaut = new JPanel(new GridLayout(1, 2, 50, 50));
         panneauHaut.setOpaque(false);
