@@ -197,6 +197,7 @@ public class Camera extends JComponent {
     // override de reshape() car c'est l'approche moderne recommandée.
     private void InitResizeListener()
     {
+        if (frame == null) return;
         frame.addComponentListener(new ComponentAdapter()
         {
             @Override

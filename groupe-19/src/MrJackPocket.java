@@ -2,12 +2,14 @@ package src;
 
 import src.modele.Joueur;
 import src.modele.Partie;
-import src.vue.VueMenuPrincipal;
+import src.vue.menus.VueMenuPrincipal;
 import src.vue.VueJeu;
-import javax.swing.SwingUtilities;
+
+import javax.swing.*;
+import java.awt.*;
 
 public class MrJackPocket {
-    public static boolean menu = true;
+    public static boolean menu = false;
     public static boolean simulePartieIa = false;
     public static void main(String[] args) {
         // Simulation de parties entre IA
@@ -40,8 +42,16 @@ public class MrJackPocket {
         else {
             SwingUtilities.invokeLater(() -> {
                 if (menu){
-                    VueMenuPrincipal menu = new VueMenuPrincipal();
-                    menu.setVisible(true);
+                    SwingUtilities.invokeLater(() -> {
+                        JFrame frame = new JFrame("Mr. Jack Pocket");
+                        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                        frame.setSize(1280, 720);
+                        frame.setMinimumSize(new Dimension(1280, 720));
+                        frame.setLocationRelativeTo(null);
+                        VueMenuPrincipal menu = new VueMenuPrincipal(frame);
+                        frame.setContentPane(menu);
+                        frame.setVisible(true);
+                    });
                 } else {
                     Partie partie = new Partie(-1, -1);//lance par defaut une partie humain contre humain
                     VueJeu jeu = new VueJeu(partie);

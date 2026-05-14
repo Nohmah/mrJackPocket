@@ -84,6 +84,11 @@ public class Detective {
         return this.type;
     }
 
+    /** Définit la position du détective */
+    public void setPosition(int position){
+        this.position = position;
+    }
+
     /** Retourne la position du détective **/
     public int getPosition(){
         return this.position;

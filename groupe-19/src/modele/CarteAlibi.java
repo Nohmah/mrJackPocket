@@ -1,10 +1,12 @@
 package src.modele;
 
+import java.io.Serializable;
+
 /**
  * Représente une carte Alibi, une association d'un Personnage à un nombre de sabliers.
  **/
 
-public class CarteAlibi {
+public class CarteAlibi implements Serializable {
     private final Personnage personnage;
     private final int sabliers;
 

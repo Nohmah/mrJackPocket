@@ -1,8 +1,10 @@
 package src.vue;
+import src.vue.VueMonde;
 
 import java.awt.event.*;
 import java.util.ArrayDeque;
 import java.util.Deque;
+
 
 /**
  * IHMControler — Interpréteur d'intentions utilisateur.
@@ -140,7 +142,7 @@ public class IHMControler implements MouseListener, KeyListener {
      */
     public void joueIa() {
         if (!"AI".equals(activePlayerType)) return;
-        Vector2 pos = VueJeu.BOARD_ORIGIN.Add(new Vector2(VueJeu.TILE_SIZE / 2, VueJeu.TILE_SIZE / 2));
+        Vector2 pos = VueMonde.BOARD_ORIGIN.Add(new Vector2(VueMonde.TILE_SIZE / 2, VueMonde.TILE_SIZE / 2));
         pendingIntent = new ClickIntent(0, 0, pos, false);
         confirmPendingIntent();
     }
@@ -152,8 +154,8 @@ public class IHMControler implements MouseListener, KeyListener {
     @Override
     public void mouseClicked(MouseEvent e) {
         Vector2 world = screenToWorld(new Vector2(e.getX(), e.getY()));
-        int col = (int) ((world.x - VueJeu.BOARD_ORIGIN.x) / VueJeu.TILE_SIZE);
-        int row = (int) ((world.y - VueJeu.BOARD_ORIGIN.y) / VueJeu.TILE_SIZE);
+        int col = (int) ((world.x - VueMonde.BOARD_ORIGIN.x) / VueMonde.TILE_SIZE);
+        int row = (int) ((world.y - VueMonde.BOARD_ORIGIN.y) / VueMonde.TILE_SIZE);
         //int col = (int) ((world.x - BOARD_WORLD_ORIGIN.x) / TILE_WORLD_SIZE);
         //int row = (int) ((world.y - BOARD_WORLD_ORIGIN.y) / TILE_WORLD_SIZE);
 

@@ -12,6 +12,7 @@ package src.modele;
 public class JetonAction {
     private final Action faceRecto;
     private final Action faceVerso;
+
     private boolean faceRectoVisible;
     private boolean joue;
 
@@ -47,10 +48,21 @@ public class JetonAction {
         return joue;
     }
 
+    /** Définit la face visible du jeton action */
+    public void setFaceRectoVisible(boolean faceRectoVisible) {
+        this.faceRectoVisible = faceRectoVisible;
+    }
+
+    /** Récupère la face visible du jeton action */
+    public boolean isFaceRectoVisible() {
+        return faceRectoVisible;
+    }
+
     /** Renvoie l'action de la face visible du jeton **/
     public Action getActionVisible(){
         return faceRectoVisible ? faceRecto : faceVerso;
     }
+
 
     /** Définit le jeton comme joué ou non joué **/
     public void setJoue(boolean value){
