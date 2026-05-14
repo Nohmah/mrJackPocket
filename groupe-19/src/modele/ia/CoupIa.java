@@ -1,16 +1,17 @@
-package src.modele;
+package src.modele.ia;
+
+import src.modele.*;
 
 public class CoupIa {
-    Action action;
-    int para1;
-    int para2;
+    public Action action;
+    public int para1;
+    public int para2;
 
     //si action = holmes, watson ou toby : para1 = deplacement, para2 = veut rien dire
     //si action = joker : para1 = choix du detective (0,1,2), para2 = 0(seulement pour jack) ou 1 nb deplacement
     //si action = rotation : para1 = quartier (0-8), para2 = nombre de quart de tour (0-3)
     //si action = echange : para1 = quartier 1 (0-8), para2 = quartier 2 (0-8)
     //si action = les para veulent rien dire
-
     public CoupIa(Action action, int para1, int para2){
         this.action = action;
         this.para1 = para1;
