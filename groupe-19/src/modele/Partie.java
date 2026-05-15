@@ -31,8 +31,8 @@ public class Partie {
     //Suivi de tour
     private final int MAX_TOUR = 8;
     public int numeroTour = 0;
-    int totalActionsJouees;
-    boolean jackVisibleCeTour;
+    public int totalActionsJouees;
+    public boolean jackVisibleCeTour;
 
     //pour l'ia et le thread
     private Ia ia = new Ia();
@@ -221,10 +221,16 @@ public class Partie {
     public double simulerEtNoter(CoupIa coup, boolean estJack) {
         Partie copie = new Partie(this);
         copie.jouerCoup(coup);
-        if(estJack){
-            return EvaluateurIa.jeSuisJack(copie);
-        } else {
-            return EvaluateurIa.jeSuisEnqueteur(copie);
+        try {
+            if(estJack){
+                return EvaluateurIa.jeSuisJack(copie);
+            } else {
+                return EvaluateurIa.jeSuisEnqueteur(copie);
+            }
+        } catch (Exception e) {
+            System.err.println("Exception dans EvaluateurIa : " + e.getMessage());
+            e.printStackTrace();
+            return 0;
         }
     }
 

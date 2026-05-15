@@ -11,9 +11,9 @@ public class PoidsIa {
     public static final double[] POIDS_ENQ_FIN    = {1.0, 1.0, 1.0, 1.0};
 
     // Jack
-    public static final double[] POIDS_JACK_DEBUT  = {1.0, 1.0, 1.0, 1.0, 1.0};
-    public static final double[] POIDS_JACK_MILIEU = {1.0, 1.0, 1.0, 1.0, 1.0};
-    public static final double[] POIDS_JACK_FIN    = {1.0, 1.0, 1.0, 1.0, 1.0};
+    public static final double[] POIDS_JACK_DEBUT  = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+    public static final double[] POIDS_JACK_MILIEU = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+    public static final double[] POIDS_JACK_FIN    = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
 
     private static Phase determinerPhase(int tour) {
         if (tour <= 3) return Phase.DEBUT;

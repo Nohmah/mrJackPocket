@@ -22,14 +22,13 @@ public class Ia {
     }
 
     public CoupIa choisirAction(Partie partie, boolean estJack){
+        //System.out.println("Choix de l'action de l'ia avec difficulte : " + difficulte);
         switch (difficulte){
             case 0:
-                return ChoixIa.choisirActionRandom(partie, estJack, r);
-            case 1:
                 return ChoixIa.choisirActionFacile(partie, estJack, r);
-            case 2:
+            case 1:
                 return ChoixIa.choisirActionMoyen(partie, estJack, r);
-            case 3:
+            case 2:
                 return ChoixIa.choisirActionDifficile(partie, estJack, r);
             case 4:
                 if (!estJack) {

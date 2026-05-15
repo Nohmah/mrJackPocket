@@ -1,10 +1,12 @@
 package src.modele.ia;
 
 import src.modele.*;
+
 import java.util.List;
 import java.util.Random;
 
 public class ChoixIa {
+
 
     public static CoupIa choisirActionRandom(Partie partie, boolean estJack, Random r){
         System.out.println("entre dans IA Random");
@@ -74,6 +76,15 @@ public class ChoixIa {
     }
 
     public static CoupIa choisirActionDifficile(Partie partie, boolean estJack, Random r){
-        return choisirActionRandom(partie, estJack, r);
+        System.out.println("entre dans IA Difficile");
+        int profondeur = 4 - partie.totalActionsJouees;// jusqu'à la fin du tour actuel
+        //if(partie.numeroTour % 2 == 1) profondeur += 2 ;// si on est a un tour impair on peut aller plus loin car pas de hasard sur les jetons
+        CoupIa meilleurCoup = IaMinMax.choisirActionMinMax(partie, estJack, profondeur);
+        if(meilleurCoup != null){
+            return meilleurCoup;
+        } else {
+            System.out.println("/!\\ Aucun coup trouvé en MinMax, renvoie random /!\\  Avec profondeur : " + profondeur + " et nb actions possibles : " + partie.actions.getActionsPossibles().size() + " et tour actuell : " + partie.numeroTour);
+            return choisirActionRandom(partie, estJack, r);
+        }
     }
 }
