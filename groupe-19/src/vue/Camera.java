@@ -26,7 +26,7 @@ public class Camera extends JComponent {
     public static List<String> spriteNames;
     public static List<Image> sprites;
     public static int nbreSprites;
-    private static int backgroundSpriteId = -1;
+    private static int backgroundSpriteId = -1; 
 
     //Pour les calculs de temps entre chaque redessinement, utilisés dans paintComponent
     //Cela servira à avoir des animations consistantes

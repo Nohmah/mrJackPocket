@@ -150,6 +150,45 @@ public class VueMonde extends JPanel {
     }
 
     // =========================================================================
+    // Etat survol — feedback visuel
+    // =========================================================================
+
+    /** Index du jeton d'action actuellement survole (-1 = aucun). */
+    private int hoveredTokenIndex = -1;
+
+    /**
+     * Retourne l'index (0-3) de la boule d'action sous les coordonnees ecran
+     * donnees, ou -1 si aucune boule n'est touchee.
+     * Methode intentionnellement publique pour IHMControler.
+     */
+    public int actionBallAt(int sx, int sy) {
+        Vector2 worldPos = toWorld(new Vector2(sx, sy));
+        for (int i = 0; i < actionBalls.length; i++) {
+            Composant2D ball = actionBalls[i];
+            if (ball == null) continue;
+            double rx = (ball.taille.x * ball.echelle.x) / 2.0;
+            double ry = (ball.taille.y * ball.echelle.y) / 2.0;
+            double r  = Math.min(rx, ry);
+            double dx = worldPos.x - ball.position.x;
+            double dy = worldPos.y - ball.position.y;
+            if (dx * dx + dy * dy <= r * r) return i;
+        }
+        return -1;
+    }
+
+    /**
+     * Definit le jeton survole et rafraichit l'affichage.
+     * Appele par Gameplay (lui-meme notifie par IHMControler).
+     *
+     * @param index Index 0-3, ou -1 pour annuler le survol.
+     */
+    public void setHoveredToken(int index) {
+        if (index == hoveredTokenIndex) return;
+        hoveredTokenIndex = index;
+        Camera.Repaint();
+    }
+
+    // =========================================================================
     // Constructeur
     // =========================================================================
 
@@ -180,6 +219,7 @@ public class VueMonde extends JPanel {
                         RenderingHints.KEY_INTERPOLATION,
                         RenderingHints.VALUE_INTERPOLATION_BILINEAR);
                 super.paintComponent(g);
+                paintHoverOverlay((Graphics2D) g);
             }
         };
         cam.setBounds(0, 0, WORLD_W, WORLD_H);
@@ -639,5 +679,111 @@ public class VueMonde extends JPanel {
             positionnerRectangle(playerRects[p], p);
         }
         uiOverlay.revalidate();
+    }
+
+    // =========================================================================
+    // Rendu feedback survol — appele depuis paintComponent de la Camera
+    // =========================================================================
+
+    /**
+     * Dessine les feedbacks visuels de survol sur le Graphics2D de la Camera.
+     * Les coordonnees sont en espace ecran (apres projection Camera).
+     */
+    private void paintHoverOverlay(Graphics2D g) {
+        if (hoveredTokenIndex < 0) return;
+        String sprite = actionBallCurrentSprite[hoveredTokenIndex];
+        if (sprite == null) return;
+
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        switch (sprite) {
+            case "action_rotation", "action_echange" -> dessinerLisereBoard(g);
+            case "action_holmes"  -> dessinerCercleDeMouvement(g, detectivePosition[0],
+                                        new Color(200, 40,  40,  130));
+            case "action_watson"  -> dessinerCercleDeMouvement(g, detectivePosition[1],
+                                        new Color(120, 60,  20,  130));
+            case "action_toby"    -> dessinerCercleDeMouvement(g, detectivePosition[2],
+                                        new Color(40,  80,  200, 130));
+            case "action_joker"   -> {
+                dessinerCercleDeMouvement(g, detectivePosition[0], new Color(200, 40,  40,  130));
+                dessinerCercleDeMouvement(g, detectivePosition[1], new Color(120, 60,  20,  130));
+                dessinerCercleDeMouvement(g, detectivePosition[2], new Color(40,  80,  200, 130));
+            }
+            // action_alibi et variantes _grisee : pas de feedback geometrique
+        }
+    }
+
+    /**
+     * Dessine un liseré jaune semi-transparent autour des 9 tuiles du plateau.
+     * Utilise les positions de tileComponents (espace monde → espace ecran via Camera).
+     */
+    private void dessinerLisereBoard(Graphics2D g) {
+        Color jaune = new Color(255, 220, 0, 150);
+        Stroke ancienStroke = g.getStroke();
+        Color ancienneColor = g.getColor();
+
+        g.setStroke(new java.awt.BasicStroke(3f));
+        g.setColor(jaune);
+
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 3; col++) {
+                Composant2D comp = tileComponents[row][col];
+                if (comp == null) continue;
+                Vector2 coinHG    = comp.CoinHG();
+                Vector2 screenPos = coinHG.Sub(Camera.positionHG).Mult(Camera.zoom);
+                Vector2 screenTail = comp.TailleRel().Mult(Camera.zoom);
+                g.drawRect(
+                    (int) screenPos.x,
+                    (int) screenPos.y,
+                    (int) screenTail.x,
+                    (int) screenTail.y
+                );
+            }
+        }
+
+        g.setStroke(ancienStroke);
+        g.setColor(ancienneColor);
+    }
+
+    /**
+     * Dessine deux cercles de mouvement autour de la position courante d'un detective
+     * sur l'anneau (1 pas et 2 pas de distance visuelle).
+     *
+     * @param g             Graphics2D de la Camera (espace ecran).
+     * @param positionIndex Index 0-based dans OUTER_POSITIONS (-1 → rien dessiné).
+     * @param couleur       Couleur de base avec alpha souhaite.
+     */
+    private void dessinerCercleDeMouvement(Graphics2D g, int positionIndex, Color couleur) {
+        if (positionIndex < 0 || positionIndex >= OUTER_POSITIONS.length) return;
+
+        Vector2 centre = OUTER_POSITIONS[positionIndex];
+        Vector2 screenCentre = centre.Sub(Camera.positionHG).Mult(Camera.zoom);
+
+        // Rayon d'un pas = largeur d'une tuile en pixels ecran
+        double rayonPas = TILE_SIZE * Camera.zoom.x;
+
+        Stroke ancienStroke = g.getStroke();
+        Color  ancienneColor = g.getColor();
+        g.setStroke(new java.awt.BasicStroke(2.5f));
+
+        for (int pas = 1; pas <= 2; pas++) {
+            double r = rayonPas * pas;
+            int alpha = (pas == 1) ? couleur.getAlpha() : 70;
+            g.setColor(new Color(couleur.getRed(), couleur.getGreen(), couleur.getBlue(), alpha));
+            g.drawOval(
+                (int) (screenCentre.x - r),
+                (int) (screenCentre.y - r),
+                (int) (2 * r),
+                (int) (2 * r)
+            );
+        }
+
+        // Point central pour reperer la position exacte
+        g.setColor(new Color(couleur.getRed(), couleur.getGreen(), couleur.getBlue(), 180));
+        int dotR = 5;
+        g.fillOval((int) screenCentre.x - dotR, (int) screenCentre.y - dotR, dotR * 2, dotR * 2);
+
+        g.setStroke(ancienStroke);
+        g.setColor(ancienneColor);
     }
 }

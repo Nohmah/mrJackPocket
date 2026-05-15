@@ -110,6 +110,7 @@ public class VueJeu extends JFrame {
         Component cam = vueMonde.getLayeredPane()
                 .getComponentsInLayer(JLayeredPane.DEFAULT_LAYER)[0];
         cam.addMouseListener(controler);
+        cam.addMouseMotionListener(controler);  // Survol des jetons d'action
         cam.addKeyListener(controler);
         cam.setFocusable(true);
         cam.requestFocusInWindow();
@@ -194,6 +195,14 @@ public class VueJeu extends JFrame {
 
     /** Retourne l'instance VueMonde (pour les acces directs si necessaire). */
     public VueMonde getVueMonde() {
+        return vueMonde;
+    }
+
+    /**
+     * Alias de {@link #getVueMonde()} — utilise par Gameplay pour injecter
+     * la sonde de survol et piloter le feedback visuel des jetons.
+     */
+    public VueMonde getMonde() {
         return vueMonde;
     }
 

@@ -21,7 +21,7 @@ import java.util.Deque;
  *   - Appeler partie.actions.*.
  *   - Décider quoi faire d'une action (c'est Gameplay qui décide).
  */
-public class IHMControler implements MouseListener, KeyListener {
+public class IHMControler implements MouseListener, MouseMotionListener, KeyListener {
 
     // =========================================================================
     // Records d'intentions
@@ -46,6 +46,21 @@ public class IHMControler implements MouseListener, KeyListener {
     public record ActionIntent(int ballIndex, String actionName) {}
 
     // =========================================================================
+    // Interface fonctionnelle — sonde de survol
+    // =========================================================================
+
+    /**
+     * Permet à IHMControler de tester si un point écran survole une boule
+     * d'action, sans couplage direct à VueMonde.
+     * Implémentée par Gameplay via un lambda : {@code (sx,sy) -> monde.actionBallAt(sx,sy)}.
+     */
+    @FunctionalInterface
+    public interface HoverProbe {
+        /** @return index 0-3 de la boule sous (sx,sy), ou -1. */
+        int ballAt(int sx, int sy);
+    }
+
+    // =========================================================================
     // Constantes plateau
     // =========================================================================
 
@@ -61,6 +76,9 @@ public class IHMControler implements MouseListener, KeyListener {
     private ClickIntent              pendingIntent = null;
     private final Gameplay           gameplay;
     private String                   activePlayerType = "HUMAN";
+
+    /** Sonde de survol injectée par Gameplay après initialisation de VueMonde. */
+    private HoverProbe hoverProbe = null;
 
     // =========================================================================
     // Constructeur
@@ -80,6 +98,14 @@ public class IHMControler implements MouseListener, KeyListener {
     }
 
     public ClickIntent getPendingIntent() { return pendingIntent; }
+
+    /**
+     * Injecte la sonde de survol (appelé par Gameplay une fois VueMonde prêt).
+     * Sans sonde, le hover est simplement ignoré.
+     */
+    public void setHoverProbe(HoverProbe probe) {
+        this.hoverProbe = probe;
+    }
 
     // =========================================================================
     // Point d'entrée : hit sur une boule d'action (appelé par VueJeu)
@@ -179,7 +205,24 @@ public class IHMControler implements MouseListener, KeyListener {
     @Override public void mousePressed(MouseEvent e)  {}
     @Override public void mouseReleased(MouseEvent e) {}
     @Override public void mouseEntered(MouseEvent e)  {}
-    @Override public void mouseExited(MouseEvent e)   {}
+    @Override public void mouseExited(MouseEvent e)   {
+        // La souris quitte la fenêtre : annuler le survol
+        gameplay.onTokenHovered(-1);
+    }
+
+    // =========================================================================
+    // MouseMotionListener
+    // =========================================================================
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        if (hoverProbe == null) return;
+        int index = hoverProbe.ballAt(e.getX(), e.getY());
+        gameplay.onTokenHovered(index);
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent e) { /* non utilisé */ }
 
     // =========================================================================
     // KeyListener
@@ -191,7 +234,10 @@ public class IHMControler implements MouseListener, KeyListener {
             case KeyEvent.VK_Z -> { if (e.isControlDown()) undo(); }
             case KeyEvent.VK_Y -> { if (e.isControlDown()) redo(); }
             case KeyEvent.VK_ENTER  -> confirmPendingIntent();
-            case KeyEvent.VK_ESCAPE -> pendingIntent = null;
+            case KeyEvent.VK_ESCAPE -> {
+                pendingIntent = null;
+                gameplay.onTokenHovered(-1);
+            }
         }
     }
 

@@ -45,6 +45,8 @@ public class Gameplay {
     private void initGame() {
         refreshView();
         vue.updateTurnIndicator(partie.numeroTour);
+        // Injecte la sonde de survol dans IHMControler une fois VueMonde initialisé
+        controler.setHoverProbe((sx, sy) -> vue.getMonde().actionBallAt(sx, sy));
         startTurn();
     }
 
@@ -97,6 +99,7 @@ public class Gameplay {
     public void onValidatePressed() {
         if (partie.isPartieTerminee()) return;
         controler.confirmPendingIntent();
+        vue.getMonde().setHoveredToken(-1);   // Nettoyage survol à la validation
         endTurn();
     }
 
@@ -135,6 +138,9 @@ public class Gameplay {
         int ballIndex = intent.ballIndex();
 
         System.out.println("Gameplay — action sur boule " + ballIndex + " : " + actionName);
+
+        // L'utilisateur a cliqué : on efface le survol
+        vue.getMonde().setHoveredToken(-1);
 
         switch (actionName) {
             case "action_holmes"   -> demanderDeplacementEtDeplacer(Detective.Type.HOLMES);
@@ -266,6 +272,16 @@ public class Gameplay {
     public void onRedoRequested(IHMControler.ClickIntent intent) {
         System.out.println("Gameplay — redo (" + intent.cellRow() + "," + intent.cellCol() + ")");
         Camera.RecalculateZoom();
+    }
+
+    /**
+     * Relaye le survol d'un jeton d'action à VueMonde pour le rendu du feedback.
+     * Appelé depuis IHMControler à chaque événement mouseMoved/mouseExited.
+     *
+     * @param index Index 0-3 du jeton survol, ou -1 (aucun survol).
+     */
+    public void onTokenHovered(int index) {
+        vue.getMonde().setHoveredToken(index);
     }
 
     public void onCellHovered(int row, int col) {
