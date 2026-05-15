@@ -5,7 +5,7 @@ import java.util.Random;
 
 public class Ia {
     Random r;
-    public int difficulte; // 0 pour random, 1 pour facile, 2 pour moyen, 3 pour difficile
+    public int difficulte; //0 pour facile, 1 pour moyen, 2 pour difficile
 
     public Ia(){
         r = new Random();
@@ -25,33 +25,25 @@ public class Ia {
         //System.out.println("Choix de l'action de l'ia avec difficulte : " + difficulte);
         switch (difficulte){
             case 0:
-                return ChoixIa.choisirActionFacile(partie, estJack, r);
+                return ChoixIa.choisirActionFacile(partie, estJack);
             case 1:
-                return ChoixIa.choisirActionMoyen(partie, estJack, r);
+                return ChoixIa.choisirActionMoyen(partie, estJack);
             case 2:
-                return ChoixIa.choisirActionDifficile(partie, estJack, r);
+                return ChoixIa.choisirActionDifficile(partie, estJack);
             case 4:
                 if (!estJack) {
-                    return ChoixIa.choisirActionFacile(partie, estJack, r);
+                    return ChoixIa.choisirActionFacile(partie, estJack);
                 } else {
-                    return ChoixIa.choisirActionMoyen(partie, estJack, r);
+                    return ChoixIa.choisirActionMoyen(partie, estJack);
                 }
             case 5:
                 if (!estJack) {
-                    return ChoixIa.choisirActionMoyen(partie, estJack, r);
+                    return ChoixIa.choisirActionMoyen(partie, estJack);
                 } else {
-                    return ChoixIa.choisirActionFacile(partie, estJack, r);
+                    return ChoixIa.choisirActionFacile(partie, estJack);
                 }
             default:
-                return ChoixIa.choisirActionRandom(partie, estJack, r);
+                return ChoixIa.choisirActionRandom(partie, estJack);
         }
-    }
-
-    public int GagnantEnqueteur(Partie partie){
-        return 0;
-    }
-
-    public int GagnantJack(Partie partie){
-        return 0;
     }
 }

@@ -255,7 +255,7 @@ public class Partie {
             case ROTATION:
                 for(int i = 0; i < jetonsAction.size(); i++){
                     if(jetonsAction.get(i).getActionVisible() == Action.ROTATION && !jetonsAction.get(i).isJoue()){
-                        actions.rotationQuartier(i, coupIa.para1 / 3, coupIa.para1 % 3, coupIa.para2);
+                        actions.rotationQuartier(i, coupIa.para1 / 3, coupIa.para1 % 3, coupIa.para2 + 1);
                         break;
                     }
                 }
