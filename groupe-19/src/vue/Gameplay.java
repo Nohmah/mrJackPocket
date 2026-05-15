@@ -232,7 +232,6 @@ public class Gameplay {
 
     public void startRotationMode(int jetonIndex) {
         rotationState = new RotationState(jetonIndex);
-        rotationMode = true;
         System.out.println("Mode rotation actif. Cliquez sur une tuile, recliquez pour accumuler, cliquez ailleurs pour confirmer.");
     }
 
@@ -298,6 +297,7 @@ public class Gameplay {
         } else if (rotationState != null) {
             if (!rotationState.hasTarget()) {
                 rotationState.setTarget(row, col);
+                rotationMode = true;
                 vue.rotateTile(row, col, 90);
                 System.out.println("Rotation — tuile sélectionnée : (" + row + "," + col + ")");
             } else if (rotationState.isSameTile(row, col)) {
