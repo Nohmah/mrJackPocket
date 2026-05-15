@@ -4,18 +4,20 @@ import src.utils.utils;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.image.BufferedImage;
 
 public class VueMenuPrincipal extends JPanel {
 
     private static class BackgroundPanel extends JPanel {
-        public int nb = (int)(Math.random() * 9) + 1;
         private final BufferedImage backgroundImage;
+        private Rectangle imageBounds = new Rectangle();
 
         public BackgroundPanel() {
             String nomImage = "MenuFond";
             backgroundImage = utils.loadImage(nomImage);
-            setLayout(new BorderLayout());
+            setLayout(null);
         }
 
         @Override
@@ -23,8 +25,27 @@ public class VueMenuPrincipal extends JPanel {
             super.paintComponent(g);
 
             if (backgroundImage != null) {
-                g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+
+                int imageWidth = backgroundImage.getWidth();
+                int imageHeight = backgroundImage.getHeight();
+
+                double scale = Math.min(
+                        (double) getWidth() / imageWidth,
+                        (double) getHeight() / imageHeight
+                );
+
+                int newWidth = (int) (imageWidth * scale);
+                int newHeight = (int) (imageHeight * scale);
+
+                int x = (getWidth() - newWidth) / 2;
+                int y = (getHeight() - newHeight) / 2;
+
+                imageBounds.setBounds(x, y, newWidth, newHeight);
+
+                g.drawImage(backgroundImage, x, y, newWidth, newHeight, this);
+
             } else {
+
                 g.setColor(Color.GRAY);
                 g.fillRect(0, 0, getWidth(), getHeight());
             }
@@ -51,25 +72,32 @@ public class VueMenuPrincipal extends JPanel {
         setLayout(new BorderLayout());
 
         BackgroundPanel background = new BackgroundPanel();
-        setLayout(new BorderLayout());
         setOpaque(false);
 
         add(background, BorderLayout.CENTER);
 
         JPanel contenu = new JPanel(new GridLayout(1, 2));
         contenu.setOpaque(false);
-        background.add(contenu, BorderLayout.CENTER);
+        background.add(contenu);
+        background.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
 
-        BufferedImage imageIllustration = utils.loadImage("MenuIllustration2");
+                Rectangle r = background.imageBounds;
 
-        if (imageIllustration != null) {
-            IllustrationMenu illustrationMenu = new IllustrationMenu(imageIllustration);
-            illustrationMenu.setOpaque(false);
-            contenu.add(illustrationMenu);
-        }
+                contenu.setBounds(r);
+                contenu.revalidate();
+                contenu.repaint();
+            }
+        });
+
+        JPanel vide = new JPanel();
+        vide.setOpaque(false);
+        contenu.add(vide);
 
         JPanel panneauBoutons = new JPanel();
         panneauBoutons.setLayout(new BoxLayout(panneauBoutons, BoxLayout.Y_AXIS));
+        panneauBoutons.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
         panneauBoutons.setOpaque(false);
         contenu.add(panneauBoutons);
 
@@ -90,9 +118,9 @@ public class VueMenuPrincipal extends JPanel {
         JButton partieMulti = creerBouton("Boutonpartiemultijoueur", () -> {
             VueMenuPrePartie prePartieMulti =
                     new VueMenuPrePartie(parent, this, "multi");
-                parent.setContentPane(prePartieMulti);
-                parent.revalidate();
-                parent.repaint();
+            parent.setContentPane(prePartieMulti);
+            parent.revalidate();
+            parent.repaint();
         });
 
         JPanel panneauHaut = new JPanel(new GridLayout(1, 2, 50, 50));

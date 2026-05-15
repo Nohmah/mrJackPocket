@@ -14,23 +14,19 @@ import java.awt.event.MouseEvent;
 
 public class BoutonsMenu extends JButton {
 
-    private final BufferedImage ImageNormale;
-    private final BufferedImage ImageSurvolee;
-    private boolean estSurvolee = false;
+    private final BufferedImage ImageNormale; // Image du bouton par défaut
+    private final BufferedImage ImageSurvolee; // Image quand survolée par la souris
+    private boolean estSurvolee = false; // True si la souris est sur le bouton
 
-    public BoutonsMenu(BufferedImage normal, BufferedImage hover) {
-
+    public BoutonsMenu(BufferedImage normal, BufferedImage survolee) {
         this.ImageNormale = normal;
-        this.ImageSurvolee = hover;
-
-        setContentAreaFilled(false);
+        this.ImageSurvolee = survolee;
         setBorderPainted(false);
-        setFocusPainted(false);
         setOpaque(false);
-
+        // Tailles optimales pour le visuel
         setPreferredSize(new Dimension(273, 113));
         setMaximumSize(new Dimension(273, 113));
-
+        // Pour centrer les boutons
         setAlignmentX(Component.CENTER_ALIGNMENT);
         addMouseListener(new MouseAdapter() {
 
