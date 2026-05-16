@@ -9,7 +9,7 @@ import javax.swing.*;
 import java.awt.*;
 
 public class MrJackPocket {
-    public static boolean menu = false;
+    public static boolean menu = true;
     public static boolean simulePartieIa = false;
     public static void main(String[] args) {
         // Simulation de parties entre IA

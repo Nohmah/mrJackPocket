@@ -1,0 +1,10 @@
+package src.reseau;
+
+public enum CommunicationLobbySC {
+    NOUVEAU_MESSAGE,
+    MISE_A_JOUR_CONFIRMATION,
+    MISE_A_JOUR_CHOIX,
+    MISE_A_JOUR_INFORMATIONS_JOUEURS,
+    HOTE_QUITTE,
+    LANCEMENT_PARTIE
+}

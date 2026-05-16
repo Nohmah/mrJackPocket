@@ -1,5 +1,6 @@
 package src.vue.menus;
 
+import src.reseau.Client;
 import src.utils.utils;
 
 import javax.swing.*;
@@ -8,9 +9,9 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 
 public class VueLobby extends JPanel {
-    //TODO DECOMMENTER QUAND CLASS CLIENT CREE
-    // private Client client;
-    private String pseudo;
+
+    private final Client client;
+    private final String pseudo;
 
     private JTextArea historiqueChat;
     private JLabel labelJ1;
@@ -22,13 +23,17 @@ public class VueLobby extends JPanel {
     private JRadioButton mrJackJ2, lEnqueteurJ2;
 
     private boolean jeSuisPret = false;
-    private boolean estHote;
+    private final boolean estHote;
 
-    public VueLobby(JFrame parent, JPanel retourVers, String pseudoJoueur, boolean estHote) {
-        //TODO AJOUTER DANS LE CONSTRUCTEUR "Client client"
-        // this.client = client;
+    private final JFrame parent;
+    private final JPanel panel;
+
+    public VueLobby(JFrame parent, JPanel retourVers, String pseudoJoueur, boolean estHote, Client client) {
+        this.client = client;
         this.pseudo = pseudoJoueur;
         this.estHote = estHote;
+        this.parent = parent;
+        this.panel = retourVers;
 
         setBackground(Color.GRAY);
         setLayout(new BorderLayout());
@@ -62,7 +67,6 @@ public class VueLobby extends JPanel {
 
         add(contenuPrincipal, BorderLayout.CENTER);
 
-        // Initialisation par défaut : Le joueur 1 est Mr. Jack au lancement
         mettreAJourRoles(true);
     }
 
@@ -70,7 +74,7 @@ public class VueLobby extends JPanel {
         JButton retour = new BoutonsMenu(utils.loadImage("fast-forward"), null);
         retour.setAlignmentX(Component.LEFT_ALIGNMENT);
         retour.addActionListener(e -> {
-            //TODO FERME LE SERVEUR SI HOTE SINON DECONNECTE CLIENT
+            client.joueurQuitte();
             parent.setContentPane(retourVers);
             parent.revalidate();
             parent.repaint();
@@ -97,6 +101,7 @@ public class VueLobby extends JPanel {
 
         JScrollPane scrollPane = new JScrollPane(historiqueChat);
         scrollPane.setAlignmentX(Component.CENTER_ALIGNMENT);
+        scrollPane.setPreferredSize(new Dimension(100, 400));
 
         JPanel zoneSaisie = new JPanel(new BorderLayout(5, 0));
         zoneSaisie.setOpaque(false);
@@ -108,12 +113,9 @@ public class VueLobby extends JPanel {
         ActionListener actionEnvoyer = e -> {
             String msg = champSaisie.getText().trim();
             if (!msg.isEmpty()) {
-                // TODO NOTIFIE SERVEUR A TRAVERS CLIENT QUE CETTE UTILISATEUR A ENVOYER MESSAGE
-
+               client.nouveauMessage(msg);
                 champSaisie.setText("");
 
-                // Montrer résultat du chat
-                ajouterMessageChat(pseudo, msg);
             }
         };
 
@@ -127,6 +129,7 @@ public class VueLobby extends JPanel {
         zoneSaisie.add(champSaisie, BorderLayout.CENTER);
         zoneSaisie.add(boutonEnvoyer, BorderLayout.EAST);
         positionnement.add(zoneSaisie);
+        positionnement.add(Box.createVerticalGlue());
     }
 
     private void creerPanneauJoueurs(JPanel positionnement) {
@@ -179,10 +182,8 @@ public class VueLobby extends JPanel {
 
         ActionListener changementRoleJ1 = e -> {
             boolean j1VeutEtreJack = mrJackJ1.isSelected();
-            // TODO NOTIFIER SERVEUR A TRAVERS CLIENT POUR QU'IL MET A JOUR LA VUE
+            client.nouveauChoix(j1VeutEtreJack);
 
-            // Montrer résultat du choix
-            mettreAJourRoles(j1VeutEtreJack);
         };
         mrJackJ1.addActionListener(changementRoleJ1);
         lEnqueteurJ1.addActionListener(changementRoleJ1);
@@ -206,12 +207,7 @@ public class VueLobby extends JPanel {
         boutonPret.addActionListener(e -> {
             jeSuisPret = !jeSuisPret;
 
-            if(jeSuisPret){
-                mettreAJourCompteurPrets(1);
-            }else{
-                mettreAJourCompteurPrets(0);
-            }
-            // TODO NOTIFIER SERVEUR QUE LE JOUEUR EST PRET
+            client.boutonPretAppuyer(jeSuisPret);
 
             if (jeSuisPret) {
                 boutonPret.setText("Annuler");
@@ -276,7 +272,6 @@ public class VueLobby extends JPanel {
         statutPret.setText("Joueurs prêts : " + nbPrets + "/2");
         if(nbPrets == 2) {
             statutPret.setForeground(Color.GREEN);
-            // TODO DECLANCHER LE COMPTE A REBOUR POUR LANCER UNE PARTIE
         } else {
             statutPret.setForeground(Color.WHITE);
         }
@@ -307,6 +302,53 @@ public class VueLobby extends JPanel {
 
     }
 
+    public void setJoueur2Deconnecte(String message) {
+        SwingUtilities.invokeLater(() -> {
+            if(estHote) {
+                labelJ2.setText("Joueur 2 : En attente d'une connexion...");
+                ajouterMessageChat("Système", message);
+                if(this.jeSuisPret){
+                    this.jeSuisPret = false;
+                    boutonPret.setText("Je suis prêt !");
+                    boutonPret.setBackground(Color.GREEN);
+                    client.boutonPretAppuyer(this.jeSuisPret);
+                }
+            }
+            revalidate();
+            repaint();
+        });
 
+    }
+
+    public void hoteEstDeconnecter(){
+        SwingUtilities.invokeLater(() -> {
+            this.parent.setContentPane(this.panel);
+            this.parent.revalidate();
+            this.parent.repaint();
+        });
+    }
+
+    public void lancementPartie(){
+        ajouterMessageChat("Système", "Lancement de la partie dans :");
+
+        Timer timer = new Timer(1000, new ActionListener() {
+            int compteur = 3;
+
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                if (compteur > 0) {
+                    ajouterMessageChat("Système", String.valueOf(compteur));
+                    compteur--;
+                } else {
+                    ajouterMessageChat("Système", "GO !");
+                    ((Timer)e.getSource()).stop(); // On arrête le timer
+
+                    // TODO : lancer la partie
+                }
+            }
+        });
+
+        timer.start();
+    }
 
 }

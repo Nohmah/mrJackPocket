@@ -2,6 +2,8 @@ package src.vue.menus;
 
 import src.modele.Joueur;
 import src.modele.Partie;
+import src.reseau.Client;
+import src.reseau.Serveur;
 import src.utils.utils;
 import src.vue.VueJeu;
 
@@ -298,8 +300,15 @@ public class VueMenuPrePartie extends JPanel {
         creeServeur.setAlignmentX(Component.CENTER_ALIGNMENT);
         creeServeur.setFont(new Font("Arial", Font.PLAIN, 18));
         creeServeur.addActionListener(e -> {
+            if(this.pseudo == null || this.pseudo.trim().isEmpty()) {
+                //TODO ; afficher message d'erreur, pour dire qu'il faut un pseudo
+                return;
+            }
             System.out.println("[DEBUG] création serveur confirmé :) ");
-            VueLobby lobby = new VueLobby(parent, retourVers, pseudo, true);
+            Serveur serveur = new Serveur();
+            Client clientHote = new Client(pseudo, true, "localhost");
+            VueLobby lobby = new VueLobby(parent, retourVers, pseudo, true, clientHote);
+            clientHote.setVueLobby(lobby);
             parent.setContentPane(lobby);
             parent.revalidate();
             parent.repaint();
@@ -340,9 +349,15 @@ public class VueMenuPrePartie extends JPanel {
         confirmationServeur.setAlignmentX(Component.CENTER_ALIGNMENT);
         confirmationServeur.setFont(new Font("Arial", Font.PLAIN, 18));
         confirmationServeur.addActionListener(e -> {
+            if (this.pseudo == null || this.pseudo.trim().isEmpty()) {
+                //TODO ; afficher message d'erreur, pour dire qu'il faut un pseudo (code refacorisable)
+                return;
+            }
             this.serveur = serveurField.getText();
             System.out.println("[DEBUG] reception serveur  : "+serveur);
-            VueLobby lobby = new VueLobby(parent, retourVers, pseudo, false);
+            Client client = new Client(pseudo, false, serveur);
+            VueLobby lobby = new VueLobby(parent, retourVers, pseudo, false,client);
+            client.setVueLobby(lobby);
             parent.setContentPane(lobby);
             parent.revalidate();
             parent.repaint();
@@ -360,7 +375,6 @@ public class VueMenuPrePartie extends JPanel {
         contenueColonneDroite.setBorder(contourColonnes);
 
         contenuPrincipal.add(contenueColonneDroite);
-
 
         add(contenuPrincipal);
     }
