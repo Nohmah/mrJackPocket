@@ -18,7 +18,7 @@ public class Client {
 
     private ObjectOutputStream out;
     private ObjectInputStream in;
-    private BlockingQueue<MessageServeur> receptionRequeteServeur;
+    private final BlockingQueue<MessageServeur> receptionRequeteServeur;
 
     private VueLobby vueLobby;
 
