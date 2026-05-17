@@ -19,13 +19,17 @@ public class BoutonsMenu extends JButton {
     private boolean estSurvolee = false; // True si la souris est sur le bouton
 
     public BoutonsMenu(BufferedImage normal, BufferedImage survolee) {
+        this(normal, survolee, new Dimension(273, 113));
+        // taille optimale pour le visuel et le redimensionnement
+    }
+
+    public BoutonsMenu(BufferedImage normal, BufferedImage survolee, Dimension size) {
         this.ImageNormale = normal;
         this.ImageSurvolee = survolee;
         setBorderPainted(false);
         setOpaque(false);
-        // Tailles optimales pour le visuel
-        setPreferredSize(new Dimension(273, 113));
-        setMaximumSize(new Dimension(273, 113));
+        setPreferredSize(size);
+        setMaximumSize(size);
         // Pour centrer les boutons
         setAlignmentX(Component.CENTER_ALIGNMENT);
         addMouseListener(new MouseAdapter() {
@@ -44,6 +48,29 @@ public class BoutonsMenu extends JButton {
         });
     }
 
+    public static JButton creerBouton(String baseName, Runnable action, Dimension size) {
+        JButton bouton = new BoutonsMenu(
+                utils.loadImage(baseName),
+                utils.loadImage(baseName + "survole"),
+                size
+        );
+        if (action != null) {
+            bouton.addActionListener(e -> action.run());
+        }
+        return bouton;
+    }
+
+    public static JButton creerBouton(String baseName, Runnable action) {
+        JButton bouton = new BoutonsMenu(
+                utils.loadImage(baseName),
+                utils.loadImage(baseName + "survole")
+        );
+        if (action != null) {
+            bouton.addActionListener(e -> action.run());
+        }
+        return bouton;
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
 
@@ -60,6 +87,7 @@ public class BoutonsMenu extends JButton {
         int w = (int)(d.width * modificateurDeTaille);
         int h = (int)(d.height * modificateurDeTaille);
 
+        // Pour que l'effet du clic soit centré
         int x = (getWidth() - w) / 2;
         int y = (getHeight() - h) / 2;
 

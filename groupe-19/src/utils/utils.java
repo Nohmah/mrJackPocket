@@ -13,7 +13,7 @@ import java.io.InputStream;
 
 public class utils {
 
-    /** Charge une image **/
+    /** Charge et renvoie une image **/
     public static BufferedImage loadImage(String name){
         try (InputStream in = new FileInputStream("res/Images/" + name + ".png")) {
             return ImageIO.read(in);
