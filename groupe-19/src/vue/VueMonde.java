@@ -685,10 +685,6 @@ public class VueMonde extends JPanel {
     // Rendu feedback survol — appele depuis paintComponent de la Camera
     // =========================================================================
 
-    /**
-     * Dessine les feedbacks visuels de survol sur le Graphics2D de la Camera.
-     * Les coordonnees sont en espace ecran (apres projection Camera).
-     */
     private void paintHoverOverlay(Graphics2D g) {
         if (hoveredTokenIndex < 0) return;
         String sprite = actionBallCurrentSprite[hoveredTokenIndex];
@@ -698,19 +694,37 @@ public class VueMonde extends JPanel {
 
         switch (sprite) {
             case "action_rotation", "action_echange" -> dessinerLisereBoard(g);
-            case "action_holmes"  -> dessinerCercleDeMouvement(g, detectivePosition[0],
-                                        new Color(200, 40,  40,  130));
-            case "action_watson"  -> dessinerCercleDeMouvement(g, detectivePosition[1],
-                                        new Color(120, 60,  20,  130));
-            case "action_toby"    -> dessinerCercleDeMouvement(g, detectivePosition[2],
-                                        new Color(40,  80,  200, 130));
+            case "action_holmes"  -> dessinerDemiCercleDeMouvement(g, detectivePosition[0],
+                                        new Color(200, 40,  40,  130), getDirection(detectivePosition[0]),1);
+            case "action_watson"  -> dessinerDemiCercleDeMouvement(g, detectivePosition[1],
+                                        new Color(120, 60,  20,  130), getDirection(detectivePosition[1]),1);
+            case "action_toby"    -> dessinerDemiCercleDeMouvement(g, detectivePosition[2],
+                                        new Color(40,  80,  200, 130), getDirection(detectivePosition[2]),1);
             case "action_joker"   -> {
-                dessinerCercleDeMouvement(g, detectivePosition[0], new Color(200, 40,  40,  130));
-                dessinerCercleDeMouvement(g, detectivePosition[1], new Color(120, 60,  20,  130));
-                dessinerCercleDeMouvement(g, detectivePosition[2], new Color(40,  80,  200, 130));
+                dessinerDemiCercleDeMouvement(g, detectivePosition[0], new Color(200, 40,  40,  130), getDirection(detectivePosition[0]),0);
+                dessinerDemiCercleDeMouvement(g, detectivePosition[1], new Color(120, 60,  20,  130), getDirection(detectivePosition[1]),0);
+                dessinerDemiCercleDeMouvement(g, detectivePosition[2], new Color(40,  80,  200, 130), getDirection(detectivePosition[2]),0);
             }
             // action_alibi et variantes _grisee : pas de feedback geometrique
         }
+    }
+
+        /**
+     * Détermine la direction du demi-cercle en fonction de l'index de position (0 à 11).
+     * @param positionIndex Index de la position du détective (0-based)
+     * @return 0 = droite, 1 = bas, 2 = gauche, 3 = haut
+     */
+    private int getDirection(int positionIndex) {
+        if (positionIndex >= 0 && positionIndex <= 2) {
+            return 0; // droite (positions 1, 2, 3)
+        } else if (positionIndex >= 3 && positionIndex <= 5) {
+            return 1; // bas (positions 4, 5, 6)
+        } else if (positionIndex >= 6 && positionIndex <= 8) {
+            return 2; // gauche (positions 7, 8, 9)
+        } else if (positionIndex >= 9 && positionIndex <= 11) {
+            return 3; // haut (positions 10, 11, 12)
+        }
+        return 0; // Valeur par défaut
     }
 
     /**
@@ -746,14 +760,16 @@ public class VueMonde extends JPanel {
     }
 
     /**
-     * Dessine deux cercles de mouvement autour de la position courante d'un detective
-     * sur l'anneau (1 pas et 2 pas de distance visuelle).
+     * Dessine un ou deux demi-cercles de mouvement autour de la position courante d'un detective
+     * sur l'anneau (1 pas et/ou 2 pas de distance visuelle).
      *
      * @param g             Graphics2D de la Camera (espace ecran).
      * @param positionIndex Index 0-based dans OUTER_POSITIONS (-1 → rien dessiné).
      * @param couleur       Couleur de base avec alpha souhaite.
+     * @param direction     0 = droite, 1 = bas, 2 = gauche, 3 = haut
+     * @param nbCercles     0 = dessine seulement le cercle à 1 pas, 1 = dessine les deux (1 et 2 pas)
      */
-    private void dessinerCercleDeMouvement(Graphics2D g, int positionIndex, Color couleur) {
+    private void dessinerDemiCercleDeMouvement(Graphics2D g, int positionIndex, Color couleur, int direction, int nbCercles) {
         if (positionIndex < 0 || positionIndex >= OUTER_POSITIONS.length) return;
 
         Vector2 centre = OUTER_POSITIONS[positionIndex];
@@ -763,18 +779,34 @@ public class VueMonde extends JPanel {
         double rayonPas = TILE_SIZE * Camera.zoom.x;
 
         Stroke ancienStroke = g.getStroke();
-        Color  ancienneColor = g.getColor();
+        Color ancienneColor = g.getColor();
         g.setStroke(new java.awt.BasicStroke(2.5f));
 
-        for (int pas = 1; pas <= 2; pas++) {
+        // Détermine combien de cercles dessiner
+        int maxPas = (nbCercles == 0) ? 1 : 2;
+
+        for (int pas = 1; pas <= maxPas; pas++) {
             double r = rayonPas * pas;
-            int alpha = (pas == 1) ? couleur.getAlpha() : 70;
+            int alpha = 255;
             g.setColor(new Color(couleur.getRed(), couleur.getGreen(), couleur.getBlue(), alpha));
-            g.drawOval(
+            
+            // Détermine l'angle de départ en fonction de la direction
+            int startAngle = 0;
+            switch (direction) {
+                case 0: startAngle = 270; break;  // droite
+                case 1: startAngle = 180; break;  // bas
+                case 2: startAngle = 90;  break;  // gauche
+                case 3: startAngle = 0;   break;  // haut
+            }
+            
+            // Dessine un arc de 180 degrés (demi-cercle)
+            g.drawArc(
                 (int) (screenCentre.x - r),
                 (int) (screenCentre.y - r),
                 (int) (2 * r),
-                (int) (2 * r)
+                (int) (2 * r),
+                startAngle,
+                180
             );
         }
 
