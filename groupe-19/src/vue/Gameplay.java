@@ -73,6 +73,7 @@ public class Gameplay {
         vue.updateDistrictView(partie.district);
         vue.updateJetons(partie.jetonsAction);
         vue.updateDetectivesView(partie.detectives);
+        vue.updateSabliers(partie.sabliersDeJack, 6);
     }
 
     // -------------------------------------------------------------------------
@@ -113,6 +114,7 @@ public class Gameplay {
 
         // Délégation complète au modèle : appelATemoin + tourSuivant + verifFinDePartie
         partie.terminerTour();
+        vue.updateSabliers(partie.sabliersDeJack, 6);
 
         // Lecture de l'état post-tour
         refreshView();
@@ -152,6 +154,7 @@ public class Gameplay {
             case "action_alibi"    -> {
                 partie.actions.alibi();
                 refreshView();
+                vue.updateSabliers(partie.sabliersDeJack, 6);
             }
             default -> System.out.println("Action inconnue : " + actionName);
         }
