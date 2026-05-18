@@ -1,69 +1,63 @@
 package src.vue.menus;
 
-import src.utils.utils;
 import src.vue.regles.VueReglesPanel;
+
 import javax.swing.*;
 import java.awt.*;
-import java.awt.image.BufferedImage;
 
 public class VueRegles extends JPanel {
 
-    private final BufferedImage fond;
-    private final BufferedImage imageDroite;
-
-    public VueRegles(JFrame parent, JPanel retourVers, BufferedImage fond) {
-        this.fond = fond;
-
-        this.imageDroite = utils.loadImage("Regles");
+    public VueRegles(JFrame parent, JPanel retourVers) {
 
         setLayout(new BorderLayout());
 
+        Background background = new Background();
+        add(background, BorderLayout.CENTER);
+
+        JPanel panelGlobal = new JPanel(new BorderLayout());
+        panelGlobal.setOpaque(false);
+
         JLabel label = new JLabel(VueReglesPanel.getHtml());
+        label.setOpaque(false);
         label.setVerticalAlignment(SwingConstants.TOP);
+        label.setHorizontalAlignment(SwingConstants.LEFT);
 
         JScrollPane scroll = new JScrollPane(label);
         scroll.setOpaque(false);
+        scroll.setBorder(null);
+        scroll.setViewportBorder(null);
         scroll.getViewport().setOpaque(false);
 
-        JPanel gauche = new JPanel(new BorderLayout());
-        gauche.setOpaque(false);
-        gauche.add(scroll, BorderLayout.CENTER);
+        JPanel centre = new JPanel(new BorderLayout());
+        centre.setOpaque(false);
+        centre.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
 
-        JLabel imageLabel = new JLabel();
+        JPanel fondNoir = new JPanel(new BorderLayout());
+        fondNoir.setBackground(new Color(0, 0, 0, 200));
+        fondNoir.setOpaque(true);
 
-        if (imageDroite != null) {
-            Image scaled = imageDroite.getScaledInstance(400, -1, Image.SCALE_SMOOTH);
-            imageLabel.setIcon(new ImageIcon(scaled));
-        }
+        fondNoir.add(scroll, BorderLayout.CENTER);
 
-        JPanel droite = new JPanel(new BorderLayout());
-        droite.setOpaque(false);
-        droite.add(imageLabel, BorderLayout.CENTER);
-        droite.setPreferredSize(new Dimension(400, 0));
+        centre.add(fondNoir, BorderLayout.CENTER);
 
-        add(gauche, BorderLayout.CENTER);
-        add(droite, BorderLayout.EAST);
+        panelGlobal.add(centre, BorderLayout.CENTER);
 
-        JButton retour = new JButton("Retour");
-        retour.addActionListener(e -> {
-            parent.setContentPane(retourVers);
-            parent.revalidate();
-            parent.repaint();
-        });
+        JButton retour = BoutonsMenu.creerBouton(
+                "Boutonretour",
+                () -> {
+                    parent.setContentPane(retourVers);
+                    parent.revalidate();
+                    parent.repaint();
+                },
+                new Dimension(160, 66)
+        );
 
         JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT));
         top.setOpaque(false);
         top.add(retour);
 
-        add(top, BorderLayout.NORTH);
-    }
+        panelGlobal.add(top, BorderLayout.NORTH);
 
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-
-        if (fond != null) {
-            g.drawImage(fond, 0, 0, getWidth(), getHeight(), this);
-        }
+        background.add(panelGlobal);
     }
 }

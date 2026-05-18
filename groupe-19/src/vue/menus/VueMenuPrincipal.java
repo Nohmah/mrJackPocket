@@ -70,7 +70,7 @@ public class VueMenuPrincipal extends JPanel {
         boutonsPartiePanel.add(partieMulti);
 
         JButton regles = BoutonsMenu.creerBouton("Boutonreglesdujeu",() -> {
-            VueRegles reglesPanel = new VueRegles(parent, this, background.getBackgroundImage());
+            VueRegles reglesPanel = new VueRegles(parent, this);
             parent.setContentPane(reglesPanel);
             parent.revalidate();
             parent.repaint();
