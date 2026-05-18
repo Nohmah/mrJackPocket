@@ -31,8 +31,9 @@ public class VueMonde extends JPanel {
     /** true si il ne devrait plus être possible de cliquer sur les boutons, car par exemple il y a une animation en cours
      * Il faut étendre cette variable partout où c'est nécessaire**/
     private boolean jeuVerrouille = false;
+    private JLabel centerMessage;
+    private JPanel centerMessagePanel;
     private JPanel alibiPanel;
-    private JLabel alibiLabel;
     // =========================================================================
     // Constantes monde (proprietaires de VueMonde)
     // =========================================================================
@@ -57,12 +58,42 @@ public class VueMonde extends JPanel {
             (WORLD_H - BOARD_SIZE) / 2.0
     );
 
-    public boolean isJeuVerrouille() {
-        return jeuVerrouille;
-    }
+    public void showCenterMessage(String text) {
+        if (centerMessagePanel != null) {
+            uiOverlay.remove(centerMessagePanel);
+        }
 
-    public void setJeuVerrouille(boolean verrouille) {
-        this.jeuVerrouille = verrouille;
+        jeuVerrouille = true;
+
+        centerMessagePanel = new JPanel(new GridBagLayout());
+        centerMessagePanel.setOpaque(false);
+        centerMessagePanel.setBounds(0, 0, WORLD_W, WORLD_H);
+
+        centerMessage = new JLabel(text, SwingConstants.CENTER);
+        centerMessage.setFont(new Font("SansSerif", Font.BOLD, 48));
+        centerMessage.setForeground(Color.WHITE);
+        centerMessage.setOpaque(true);
+        centerMessage.setBackground(new Color(0, 0, 0, 180));
+        centerMessage.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
+
+        centerMessagePanel.add(centerMessage);
+
+        uiOverlay.add(centerMessagePanel, JLayeredPane.POPUP_LAYER);
+        uiOverlay.revalidate();
+        uiOverlay.repaint();
+
+        new javax.swing.Timer(2000, e -> {
+            uiOverlay.remove(centerMessagePanel);
+            centerMessagePanel = null;
+            centerMessage = null;
+
+            jeuVerrouille = false;
+            uiOverlay.revalidate();
+            uiOverlay.repaint();
+        }) {{
+            setRepeats(false);
+            start();
+        }};
     }
 
     public void afficherCarteAlibi(Personnage personnage) {
@@ -796,6 +827,7 @@ public class VueMonde extends JPanel {
      * sur chaque boule d'action et notifie le listener si un hit est detecte.
      */
     private void notifyActionBallClick(int sx, int sy) {
+        if (jeuVerrouille) return;
         Vector2 worldPos = toWorld(new Vector2(sx, sy));
         for (int i = 0; i < actionBalls.length; i++) {
             Composant2D ball = actionBalls[i];

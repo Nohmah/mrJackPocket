@@ -25,6 +25,9 @@ public class Partie {
     public Personnage identiteJack;
     public CarteAlibi derniereCarteAlibiPiochee;
     private transient Runnable alibiListener;
+    private transient Runnable appelTemoinListener;
+    private transient Runnable tourEnqueteurListener;
+    private transient Runnable tourJackListener;
 
     public int sabliersDeJack;
     private final int MAX_SABLIER = 6;
@@ -63,6 +66,30 @@ public class Partie {
         initialiserPartie();
         tourSuivant();
         verifTourIa();
+    }
+
+    public void setTourEnqueteurListener(Runnable listener) {
+        this.tourEnqueteurListener = listener;
+    }
+
+    public void fireTourEnqueteurEvent() {
+        if (tourEnqueteurListener != null) tourEnqueteurListener.run();
+    }
+
+    public void setTourJackListener(Runnable listener) {
+        this.tourJackListener = listener;
+    }
+
+    public void fireTourJackEvent() {
+        if (tourJackListener != null) tourJackListener.run();
+    }
+
+    public void setAppelTemoinListener(Runnable listener) {
+        this.appelTemoinListener = listener;
+    }
+
+    public void fireAppelTemoinEvent() {
+        if (appelTemoinListener != null) appelTemoinListener.run();
     }
 
     public void setAlibiListener(Runnable listener) {
@@ -154,9 +181,18 @@ public class Partie {
                 if(!estSimulation) System.out.println("Le joueur change. Le joueur est maintenant" +
                         ((joueurCourant == Joueur.JACK) ? Joueur.ENQUETEUR : Joueur.JACK));
                 changerJoueur();
+                if (joueurCourant == Joueur.ENQUETEUR) {
+                    fireTourEnqueteurEvent();
+                } else {
+                    fireTourJackEvent();
+                }
                 break;
             case 4:
-                if(!estSimulation) appelATemoin();
+                if(!estSimulation){
+                    // On informe que c'est au tour de l'appel à témoin
+                    fireAppelTemoinEvent();
+                    appelATemoin();
+                }
                 break;
             default:
                 break;

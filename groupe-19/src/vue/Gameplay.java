@@ -46,11 +46,36 @@ public class Gameplay {
                 vue.getMonde().afficherCarteAlibi(carte.getPersonnage());
             });
         });
-        afficherIdentiteJack();
+        partie.setAppelTemoinListener(() -> {
+            SwingUtilities.invokeLater(() -> {
+                vue.getMonde().showCenterMessage("Appel à témoin !");
+            });
+        });
+        partie.setTourEnqueteurListener(() -> {
+            SwingUtilities.invokeLater(() -> {
+                vue.getMonde().showCenterMessage("Tour de l'enquêteur");
+            });
+        });
+        partie.setTourJackListener(() -> {
+            SwingUtilities.invokeLater(() -> {
+                vue.getMonde().showCenterMessage("Tour de Jack");
+            });
+        });
+
         initGame();
+        // On affiche ou pas l'identité de jack
+        // On affiche que c'est le tour de l'enqueteur (c'est toujours le cas)
+
+        afficherIdentiteJack(() -> {
+
+            SwingUtilities.invokeLater(() -> {
+                vue.getMonde().showCenterMessage("Tour de l'enquêteur");
+            });
+
+        });
     }
 
-    private void afficherIdentiteJack() {
+    private void afficherIdentiteJack(Runnable onFinished) {
         // n'affiche correctement l'identité de jack que si une seule carte alibi a été piochée
 
         // if partie solo and
@@ -62,8 +87,16 @@ public class Gameplay {
         if (jackHumain) {
             System.out.println("Affichage de l'identité de Jack");
             partie.fireAlibiEvent();
+            // on attend 2 secondes puis on continue
+            new javax.swing.Timer(2000, e -> {
+                onFinished.run();
+            }) {{
+                setRepeats(false);
+                start();
+            }};
         } else {
             System.out.println("Refus de l'affichage de l'identité de Jack");
+            onFinished.run();
         }
     }
 
@@ -107,12 +140,19 @@ public class Gameplay {
 
     public void resetGame() {
         partie.reset();
-        afficherIdentiteJack();
         vue.hideGameOverScreen();
         vue.enableValidateButton(true);
         resetAllTurnIndicators();
         refreshView();
-        startTurn();
+        initGame();
+
+        afficherIdentiteJack(() -> {
+
+            SwingUtilities.invokeLater(() -> {
+                vue.getMonde().showCenterMessage("Tour de l'enquêteur");
+            });
+
+        });
     }
 
     public void resetAllTurnIndicators() {
