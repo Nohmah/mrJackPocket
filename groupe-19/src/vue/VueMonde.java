@@ -92,6 +92,8 @@ public class VueMonde extends JPanel {
 
     private final boolean[]  ballFaceIsPile          = { true, true, true, true };
     private final String[]   actionBallCurrentSprite = new String[4];
+    /** Vrai si le jeton i a été utilisé (sprite grisé), faux sinon. */
+    private final boolean[]  actionBallIsUsed        = { false, false, false, false };
     private final boolean[]  turnFaceIsPile           = { true, true, true, true, true, true, true, true };
 
     // =========================================================================
@@ -360,7 +362,7 @@ public class VueMonde extends JPanel {
         sablierLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
         sablierLabel.setOpaque(true);
         sablierLabel.setBackground(new Color(0, 0, 0, 180));
-        sablierLabel.setBorder(BorderFactory.createLineBorder(Color.YELLOW, 2));
+        sablierLabel.setBorder(BorderFactory.createLineBorder(Color.RED, 2));
         sablierLabel.setPreferredSize(new Dimension(70, 50));
 
         // Conteneur horizontal
@@ -446,12 +448,12 @@ public class VueMonde extends JPanel {
         // Changer la couleur selon le danger
         if (sabliers >= maxSabliers) {
             sablierLabel.setBackground(new Color(180, 0, 0, 200));
-            sablierLabel.setForeground(Color.YELLOW);
+            sablierLabel.setForeground(Color.RED);
         } else if (sabliers >= maxSabliers - 2) {
-            sablierLabel.setBackground(new Color(180, 80, 0, 200));
+            sablierLabel.setBackground(new Color(180, 0, 0, 200));
             sablierLabel.setForeground(Color.WHITE);
         } else {
-            sablierLabel.setBackground(new Color(0, 0, 0, 180));
+            sablierLabel.setBackground(new Color(180, 0, 0, 200));
             sablierLabel.setForeground(Color.WHITE);
         }
         sablierLabel.repaint();
@@ -502,9 +504,11 @@ public class VueMonde extends JPanel {
                 case ECHANGE  -> "action_echange";
                 case ALIBI    -> "action_alibi";
             };
-            String spriteName = j.isJoue() ? earlyName + "_grisee" : earlyName;
+            boolean joue = j.isJoue();
+            String spriteName = joue ? earlyName + "_grisee" : earlyName;
             actionBalls[i].spriteId = Camera.AddSprite(spriteName);
             actionBallCurrentSprite[i] = spriteName;
+            actionBallIsUsed[i] = joue;
         }
     }
 
@@ -787,6 +791,9 @@ public class VueMonde extends JPanel {
     // =========================================================================
 
     private void paintHoverOverlay(Graphics2D g) {
+        // Liseré permanent sur les jetons non utilisés et non survolés
+        drawUnusedActionBorders(g);
+
         if (hoveredTokenIndex < 0) return;
         String sprite = actionBallCurrentSprite[hoveredTokenIndex];
         if (sprite == null) return;
@@ -826,6 +833,48 @@ public class VueMonde extends JPanel {
             return 3; // haut (positions 10, 11, 12)
         }
         return 0; // Valeur par défaut
+    }
+
+    /**
+     * Dessine un liseré jaune permanent autour des jetons d'action non encore utilisés,
+     * sauf celui qui est actuellement survolé (le feedback de survol prend le relais).
+     */
+    private void drawUnusedActionBorders(Graphics2D g) {
+        Color jaune = new Color(255, 220, 0, 150);
+        Stroke ancienStroke = g.getStroke();
+        Color  ancienneColor = g.getColor();
+
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setStroke(new java.awt.BasicStroke(5f));
+        g.setColor(jaune);
+
+        for (int i = 0; i < actionBalls.length; i++) {
+            // Liseré visible uniquement si : jeton non utilisé ET non survolé
+            if (actionBallIsUsed[i]) continue;
+            if (i == hoveredTokenIndex) continue;
+
+            Composant2D ball = actionBalls[i];
+            if (ball == null) continue;
+
+            // Rayon du cercle en espace monde (min des demi-dimensions * échelle)
+            double rx = (ball.taille.x * ball.echelle.x) / 2.0;
+            double ry = (ball.taille.y * ball.echelle.y) / 2.0;
+            double r  = Math.min(rx, ry);
+
+            // Centre du jeton → coordonnées écran
+            Vector2 screenCenter = ball.position.Sub(Camera.positionHG).Mult(Camera.zoom);
+            double  screenR      = r * Camera.zoom.x;
+
+            g.drawOval(
+                (int) Math.round(screenCenter.x - screenR),
+                (int) Math.round(screenCenter.y - screenR),
+                (int) Math.round(screenR * 2),
+                (int) Math.round(screenR * 2)
+            );
+        }
+
+        g.setStroke(ancienStroke);
+        g.setColor(ancienneColor);
     }
 
     /**
