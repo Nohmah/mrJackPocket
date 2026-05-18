@@ -48,6 +48,7 @@ public class PartieActions {
         if (jeton==null){
             return;
         }
+        partie.saveEtat();
         detective.deplacer(pas);
         jeton.setJoue(true);
         partie.apresAction();
@@ -60,6 +61,7 @@ public class PartieActions {
         if (jeton==null){
             return;
         }
+        partie.saveEtat();
         if (detective == null){
             if(!partie.estSimulation) System.out.println("Mr. Jack choisit de ne déplacer aucun détective.");
         } else {
@@ -81,6 +83,7 @@ public class PartieActions {
             System.out.println("Il est interdit de pivoter un quartier déjà pivoté dans le même tour de jeu");
             return;
         }
+        partie.saveEtat();
         quartier.pivoter(quarts);
         if(!partie.estSimulation) System.out.println("Quartier pivoté");
         jeton.setJoue(true);
@@ -93,6 +96,7 @@ public class PartieActions {
         if (jeton==null){
             return;
         }
+        partie.saveEtat();
         partie.district.echanger(x1, y1, x2, y2);
         if(!partie.estSimulation) System.out.println("Échange de quartier");
         jeton.setJoue(true);
@@ -105,6 +109,7 @@ public class PartieActions {
         if (jeton==null){
             return;
         }
+        partie.saveEtat();
         CarteAlibi carte = piocherCarteAlibi();
         if (carte == null) {
             System.out.println("Plus de carte alibi dans la pioche !");

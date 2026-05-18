@@ -7,6 +7,7 @@ import java.awt.image.BufferedImage;
 import java.util.List;
 import javax.swing.*;
 import src.modele.*;
+import src.utils.SaveManager;
 
 /**
  * VueJeu — Fenetre principale du jeu (1200×800).
@@ -301,6 +302,46 @@ public class VueJeu extends JFrame {
         JButton ia      = makeStripButton("IA");
         ia.addActionListener(e -> { if (gameplay != null) gameplay.partie.lanceIa(); });
 
+        JButton annuler = makeStripButton("Annuler");
+        annuler.addActionListener(e -> {
+            if (gameplay != null) {
+                gameplay.partie.annuler();
+                refreshBoardComponents();
+            }
+        });
+
+        JButton refaire = makeStripButton("Refaire");
+        refaire.addActionListener(e -> {
+            if (gameplay != null) {
+                gameplay.partie.refaire();
+                refreshBoardComponents();
+            }
+        });
+
+        JButton save = makeStripButton("Save");
+        save.addActionListener(e -> {
+            if (gameplay != null) {
+                try {
+                    SaveManager.save(gameplay.partie.toGameSave(), "save.dat");
+                } catch (Exception ex) {
+                    System.err.println("Save echoue: " + ex.getMessage());
+                }
+            }
+        });
+
+        JButton load = makeStripButton("Load");
+        load.addActionListener(e -> {
+            if (gameplay != null) {
+                try {
+                    GameSave saveFile = SaveManager.load("save.dat");
+                    gameplay.partie.fromGameSave(saveFile);
+                    refreshBoardComponents();
+                } catch (Exception ex) {
+                    System.err.println("Load echoue: " + ex.getMessage());
+                }
+            }
+        });
+
         JButton regles  = makeStripButton("Regles");
         regles.addActionListener(e -> onReglesPressed());
 
@@ -312,6 +353,14 @@ public class VueJeu extends JFrame {
         leftStrip.add(newGame);
         leftStrip.add(Box.createVerticalStrut(8));
         leftStrip.add(ia);
+        leftStrip.add(Box.createVerticalStrut(8));
+        leftStrip.add(annuler);
+        leftStrip.add(Box.createVerticalStrut(8));
+        leftStrip.add(refaire);
+        leftStrip.add(Box.createVerticalStrut(8));
+        leftStrip.add(save);
+        leftStrip.add(Box.createVerticalStrut(8));
+        leftStrip.add(load);
         leftStrip.add(Box.createVerticalStrut(8));
         leftStrip.add(regles);
         leftStrip.add(Box.createVerticalGlue());
