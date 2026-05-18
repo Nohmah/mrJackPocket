@@ -112,6 +112,10 @@ public class VueMonde extends JPanel {
     private final Composant2D[]    turnIndicators     = new Composant2D[8];
     private final Composant2D[]    outerBalls         = new Composant2D[12];
 
+    // Noms et types des joueurs pour modification dynamique
+    private final JLabel[] playerNameLabels = new JLabel[2];
+    private final JLabel[] playerTypeLabels = new JLabel[2];
+
     /** Cache de sprites tournes (cle = "nom_angle"). */
     private final Map<String, Integer> rotatedSpriteCache = new HashMap<>();
 
@@ -126,6 +130,9 @@ public class VueMonde extends JPanel {
     private JPanel     uiOverlay;
     private JPanel[]   playerRects   = new JPanel[2];
     private JLabel     gameOverLabel = null;
+
+    private JLabel     sablierLabel = null;
+    private JPanel sablierPanel = null;
 
     // =========================================================================
     // Letterbox / scale
@@ -287,30 +294,82 @@ public class VueMonde extends JPanel {
         uiOverlay.setBounds(0, 0, WORLD_W, WORLD_H);
         initPlayerRects();
         layeredPane.add(uiOverlay, JLayeredPane.PALETTE_LAYER);
+
+        initSablierLabel();
     }
 
     private void initPlayerRects() {
         String[] labels = { "Joueur 1", "Joueur 2" };
-        Color[]  colors = { new Color(180, 40, 40, 200), new Color(40, 80, 180, 200) };
+        String[] types  = { "Humain", "Humain" };   // ou "IA" selon config
+        Color[]  colors = { new Color(180,40,40,200), new Color(40,80,180,200) };
         int rectW = 200, rectH = 50;
         for (int p = 0; p < 2; p++) {
-            final int pi = p;
             JPanel rect = new JPanel(new BorderLayout());
             rect.setBackground(colors[p]);
             rect.setBorder(BorderFactory.createLineBorder(Color.WHITE, 2));
-            JLabel name = new JLabel(labels[p], SwingConstants.CENTER);
-            name.setForeground(Color.WHITE);
-            name.setFont(new Font("SansSerif", Font.BOLD, 14));
-            JLabel type = new JLabel("Humain", SwingConstants.CENTER);
-            type.setForeground(new Color(220, 220, 220));
-            type.setFont(new Font("SansSerif", Font.PLAIN, 11));
-            rect.add(name, BorderLayout.CENTER);
-            rect.add(type, BorderLayout.SOUTH);
+            
+            JLabel nameLabel = new JLabel(labels[p], SwingConstants.CENTER);
+            nameLabel.setForeground(Color.WHITE);
+            nameLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+            playerNameLabels[p] = nameLabel;
+            
+            JLabel typeLabel = new JLabel(types[p], SwingConstants.CENTER);
+            typeLabel.setForeground(new Color(220,220,220));
+            typeLabel.setFont(new Font("SansSerif", Font.PLAIN, 11));
+            playerTypeLabels[p] = typeLabel;
+            
+            rect.add(nameLabel, BorderLayout.CENTER);
+            rect.add(typeLabel, BorderLayout.SOUTH);
             playerRects[p] = rect;
             uiOverlay.add(rect);
             rect.setSize(rectW, rectH);
-            positionnerRectangle(rect, pi);
+            positionnerRectangle(rect, p);
         }
+    }
+
+    private void initSablierLabel() {
+        // Panneau personnalisé pour l'icône T0
+        JPanel turnIndicatorPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                                    RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                BufferedImage img = Camera.GetSpriteImage("T0");
+                if (img != null) {
+                    g2.drawImage(img, 0, 0, getWidth(), getHeight(), null);
+                } else {
+                    g2.setColor(Color.WHITE);
+                    g2.setFont(new Font("SansSerif", Font.BOLD, 20));
+                    g2.drawString("T0", getWidth() / 2 - 10, getHeight() / 2 + 7);
+                }
+            }
+        };
+        turnIndicatorPanel.setPreferredSize(new Dimension(50, 50));
+        turnIndicatorPanel.setOpaque(false);
+
+        // Chargement de l'image T0 si absente
+        if (Camera.GetSpriteImage("T0") == null) {
+            Camera.AddSprite("T0");
+        }
+
+        // Label du compteur de sabliers
+        sablierLabel = new JLabel("0/6", SwingConstants.CENTER);
+        sablierLabel.setForeground(Color.WHITE);
+        sablierLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+        sablierLabel.setOpaque(true);
+        sablierLabel.setBackground(new Color(0, 0, 0, 180));
+        sablierLabel.setBorder(BorderFactory.createLineBorder(Color.YELLOW, 2));
+        sablierLabel.setPreferredSize(new Dimension(70, 50));
+
+        // Conteneur horizontal
+        sablierPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 2, 0));
+        sablierPanel.setOpaque(false);
+        sablierPanel.add(turnIndicatorPanel);
+        sablierPanel.add(sablierLabel);
+
+        uiOverlay.add(sablierPanel);
     }
 
     // =========================================================================
@@ -379,6 +438,24 @@ public class VueMonde extends JPanel {
     // =========================================================================
     // Mise a jour visuelle (API appelee par VueJeu / Gameplay)
     // =========================================================================
+
+    /** Met à jour l'affichage des sabliers de Jack. */
+    public void updateSabliers(int sabliers, int maxSabliers) {
+        if (sablierLabel == null) return;
+        sablierLabel.setText(sabliers + "/" + maxSabliers);
+        // Changer la couleur selon le danger
+        if (sabliers >= maxSabliers) {
+            sablierLabel.setBackground(new Color(180, 0, 0, 200));
+            sablierLabel.setForeground(Color.YELLOW);
+        } else if (sabliers >= maxSabliers - 2) {
+            sablierLabel.setBackground(new Color(180, 80, 0, 200));
+            sablierLabel.setForeground(Color.WHITE);
+        } else {
+            sablierLabel.setBackground(new Color(0, 0, 0, 180));
+            sablierLabel.setForeground(Color.WHITE);
+        }
+        sablierLabel.repaint();
+    }
 
     /** Met a jour les 9 tuiles du plateau selon l'etat du district. */
     public void updateDistrictView(District district) {
@@ -485,6 +562,22 @@ public class VueMonde extends JPanel {
         if (player < 0 || player >= 2 || playerRects[player] == null) return;
         playerRects[player].setBackground(color);
         playerRects[player].repaint();
+    }
+
+    public void setPlayerName(int player, String newName) {
+    if (player >= 0 && player < 2 && playerNameLabels[player] != null) {
+        playerNameLabels[player].setText(newName);
+        playerRects[player].revalidate();
+        playerRects[player].repaint();
+    }
+    }
+
+    public void setPlayerType(int player, String newType) {
+        if (player >= 0 && player < 2 && playerTypeLabels[player] != null) {
+            playerTypeLabels[player].setText(newType);
+            playerRects[player].revalidate();
+            playerRects[player].repaint();
+        }
     }
 
     public void showGameOverScreen(String vainqueur) {
@@ -677,6 +770,14 @@ public class VueMonde extends JPanel {
         for (int p = 0; p < 2; p++) {
             if (playerRects[p] == null) continue;
             positionnerRectangle(playerRects[p], p);
+        }
+        // Positionner le panneau du sablier en haut à droite
+        if (sablierPanel != null) {
+            int panelW = sablierPanel.getPreferredSize().width;
+            int panelH = sablierPanel.getPreferredSize().height;
+            int x = camW - panelW - 10;
+            int y = 10;
+            sablierPanel.setBounds(x, y, panelW, panelH);
         }
         uiOverlay.revalidate();
     }

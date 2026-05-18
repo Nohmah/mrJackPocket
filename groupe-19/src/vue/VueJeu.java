@@ -118,8 +118,13 @@ public class VueJeu extends JFrame {
     }
 
     // =========================================================================
-    // API de mise a jour visuelle — pure delegation vers VueMonde
+    // API de mise a jour visuelle — pure delegation vers VueMonde BRICOLAGE POUR MAINTENANCE
     // =========================================================================
+
+    /** Met à jour l'affichage des sabliers de Jack. */
+    public void updateSabliers(int sabliers, int maxSabliers) {
+        vueMonde.updateSabliers(sabliers, maxSabliers);
+    }
 
     /** Met a jour les 9 tuiles du plateau selon l'etat du district. */
     public void updateDistrictView(District district) {
@@ -371,6 +376,7 @@ public class VueJeu extends JFrame {
     // =========================================================================
 
     private void onReglesPressed() {
+        //vueMonde.setPlayerType(1, "IA diabolique");
         if (panneauRegles != null && panneauRegles.isShowing()) {
             fermerPanneauRegles();
             return;
