@@ -5,23 +5,25 @@ package src.modele;
  **/
 
 public enum Personnage {
-    NORA_NOIRE("Nora Noire", Couleur.ROSE),
-    SGT_GOODLEY("Sgt. Goodley", Couleur.NOIR),
-    JEREMY_BERT("Jeremy Bert", Couleur.ORANGE),
-    WILLIAM_GULL("William Gull", Couleur.VIOLET),
-    MISS_STEALTHY("Miss Stealthy", Couleur.VERT),
-    JOHN_SMITH("John Smith", Couleur.JAUNE),
-    INSPECTEUR_LESTRADE("Insp. Lestrade", Couleur.BLEU),
-    JOHN_PIZER("John Pizer", Couleur.BLANC),
-    JOSEPH_LANE("Joseph Lane", Couleur.GRIS);
+    NORA_NOIRE("Nora Noire", Couleur.ROSE, "A1"),
+    SGT_GOODLEY("Sgt. Goodley", Couleur.NOIR, "A3"),
+    JEREMY_BERT("Jeremy Bert", Couleur.ORANGE, "A2"),
+    WILLIAM_GULL("William Gull", Couleur.VIOLET, "A4"),
+    MISS_STEALTHY("Miss Stealthy", Couleur.VERT, "A7"),
+    JOHN_SMITH("John Smith", Couleur.JAUNE, "A8"),
+    INSPECTEUR_LESTRADE("Insp. Lestrade", Couleur.BLEU, "A9"),
+    JOHN_PIZER("John Pizer", Couleur.BLANC, "A5"),
+    JOSEPH_LANE("Joseph Lane", Couleur.GRIS, "A6");
 
     public final String nom;
     public final Couleur couleur;
+    public final String image;
 
     /** Constructeur **/
-    Personnage(String nom, Couleur couleur){
+    Personnage(String nom, Couleur couleur, String image){
         this.nom = nom;
         this.couleur = couleur;
+        this.image = image;
     }
 
     public enum Couleur{

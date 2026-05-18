@@ -18,7 +18,7 @@ public class MrJackPocket {
             int nbVictoiresJack = 0;
             int nbVictoiresEnqueteur = 0;
             for(int i = 0; i < 1000; i++){
-                partie = new Partie(2, 2);
+                partie = new Partie(null, 2, 2);
                 System.out.println("\nDébut de la partie " + (i+1));
                 while (!partie.isPartieTerminee()){
                     try {
@@ -53,7 +53,7 @@ public class MrJackPocket {
                         frame.setVisible(true);
                     });
                 } else {
-                    Partie partie = new Partie(-1, -1);//lance par defaut une partie humain contre humain
+                    Partie partie = new Partie(Joueur.ENQUETEUR, -1, -1);//lance par defaut une partie humain contre humain en ayant choisi l'enqueteur
                     VueJeu jeu = new VueJeu(partie);
                     jeu.setVisible(true);
                 }

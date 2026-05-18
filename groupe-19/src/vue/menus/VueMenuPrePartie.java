@@ -227,16 +227,16 @@ public class VueMenuPrePartie extends JPanel {
             Partie partie;
 
             if (!IAChoisi) {
-                partie = new Partie(-1, -1);
+                partie = new Partie(joueurChoisi, -1, -1);
             }
             else if (joueurChoisi == Joueur.JACK) {
-                partie = new Partie(-1, difficulteIAChoisi);
+                partie = new Partie(joueurChoisi, -1, difficulteIAChoisi);
             }
             else if (joueurChoisi == Joueur.ENQUETEUR) {
-                partie = new Partie(difficulteIAChoisi, -1);
+                partie = new Partie(joueurChoisi, difficulteIAChoisi, -1);
             }
             else {
-                partie = new Partie(-1, -1);
+                partie = new Partie(joueurChoisi, -1, -1);
             }
 
             VueJeu jeu = new VueJeu(partie);

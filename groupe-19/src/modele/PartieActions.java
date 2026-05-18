@@ -30,7 +30,9 @@ public class PartieActions {
     /** Enlève et renvoie (=pioche) une carte alibi de cartesAlibiPioche **/
     public CarteAlibi piocherCarteAlibi() {
         if (partie.cartesAlibiPioche.isEmpty()) return null;
-        return partie.cartesAlibiPioche.remove(0);
+        partie.derniereCarteAlibiPiochee = partie.cartesAlibiPioche.remove(0);
+        //System.out.println("derniereCarteAlibiPiochee est" + partie.derniereCarteAlibiPiochee.getPersonnage());
+        return partie.derniereCarteAlibiPiochee;
     }
 
     /** Action d'un jeton action. Déplace un détective de [pas] dans le sens horaire autour du District **/
@@ -117,6 +119,20 @@ public class PartieActions {
             return;
         }
         if(!partie.estSimulation) System.out.println("Carte alibi piochée : " + carte.getPersonnage());
+        // si le joueur qui a utilisé ce jeton est l'Enquêteur, tout le monde voit la carte alibi
+        if (partie.joueurCourant == Joueur.ENQUETEUR){
+            System.out.println("Affichage de l'identité de Jack");
+            partie.fireAlibiEvent();
+        }
+            // Si le joueur qui a utilisé ce jeton est jack, uniquement Jack doit le voir:
+            // si on est humain contre humain, on va l'afficher (l'enqueteur doit détourner le regard)
+            // si on est humain vs IA, on affiche si l'humain joue Jack (si Jack n'est pas l'IA)
+            else if (partie.joueurCourant == Joueur.JACK && partie.niveauJack == -1){
+                System.out.println("Affichage de l'identité de Jack");
+                partie.fireAlibiEvent();
+        } else {
+            System.out.println("Refus de l'affichage de l'identité de Jack");
+        }
         if (partie.joueurCourant == Joueur.JACK) {
             partie.sabliersDeJack += carte.getSabliers();
             if(!partie.estSimulation) System.out.println("Jack récupère les " + carte.getSabliers() + " sabliers de la carte. Il en est à " + partie.sabliersDeJack + " sabliers");

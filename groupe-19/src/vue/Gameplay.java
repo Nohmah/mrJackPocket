@@ -39,7 +39,32 @@ public class Gameplay {
         this.partie = partie;
         this.controler = new IHMControler(this);
         vue.registerControler(controler);
+        partie.setAlibiListener(() -> {
+            CarteAlibi carte = partie.derniereCarteAlibiPiochee;
+            if (carte == null) return;
+            SwingUtilities.invokeLater(() -> {
+                vue.getMonde().afficherCarteAlibi(carte.getPersonnage());
+            });
+        });
+        afficherIdentiteJack();
         initGame();
+    }
+
+    private void afficherIdentiteJack() {
+        // n'affiche correctement l'identité de jack que si une seule carte alibi a été piochée
+
+        // if partie solo and
+        boolean jackHumain = (partie.niveauJack == -1);
+        // humain vs humain → Jack humain → affichage
+        // humain vs IA avec joueur = Jack → Jack humain → affichage
+        // IA vs humain avec Jack IA → pas affiché
+        // IA vs IA → pas affiché
+        if (jackHumain) {
+            System.out.println("Affichage de l'identité de Jack");
+            partie.fireAlibiEvent();
+        } else {
+            System.out.println("Refus de l'affichage de l'identité de Jack");
+        }
     }
 
     private void initGame() {
@@ -82,6 +107,7 @@ public class Gameplay {
 
     public void resetGame() {
         partie.reset();
+        afficherIdentiteJack();
         vue.hideGameOverScreen();
         vue.enableValidateButton(true);
         resetAllTurnIndicators();

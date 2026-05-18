@@ -28,6 +28,11 @@ import src.modele.*;
  */
 public class VueMonde extends JPanel {
 
+    /** true si il ne devrait plus être possible de cliquer sur les boutons, car par exemple il y a une animation en cours
+     * Il faut étendre cette variable partout où c'est nécessaire**/
+    private boolean jeuVerrouille = false;
+    private JPanel alibiPanel;
+    private JLabel alibiLabel;
     // =========================================================================
     // Constantes monde (proprietaires de VueMonde)
     // =========================================================================
@@ -51,6 +56,67 @@ public class VueMonde extends JPanel {
             (WORLD_W - BOARD_SIZE) / 2.0 - 60,
             (WORLD_H - BOARD_SIZE) / 2.0
     );
+
+    public boolean isJeuVerrouille() {
+        return jeuVerrouille;
+    }
+
+    public void setJeuVerrouille(boolean verrouille) {
+        this.jeuVerrouille = verrouille;
+    }
+
+    public void afficherCarteAlibi(Personnage personnage) {
+        if (alibiPanel != null) {
+            uiOverlay.remove(alibiPanel);
+        }
+
+        jeuVerrouille = true;
+
+        String spriteName = personnage.image;
+        Camera.AddSprite(spriteName);
+
+        alibiPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+
+                BufferedImage img = Camera.GetSpriteImage(spriteName);
+                if (img == null) return;
+
+                int panelW = getWidth();
+                int panelH = getHeight();
+
+                int drawW = img.getWidth() / 2;
+                int drawH = img.getHeight() / 2;
+
+                int x = (panelW - drawW) / 2;
+                int y = (panelH - drawH) / 2;
+
+                g.drawImage(img, x, y, drawW, drawH, null);
+            }
+        };
+
+        alibiPanel.setOpaque(false);
+        alibiPanel.setBounds(0, 0, WORLD_W, WORLD_H);
+
+        uiOverlay.add(alibiPanel, JLayeredPane.POPUP_LAYER);
+        uiOverlay.revalidate();
+        uiOverlay.repaint();
+
+        // auto-suppression après 2 secondes
+        new javax.swing.Timer(2000, e -> {
+            uiOverlay.remove(alibiPanel);
+            alibiPanel = null;
+
+            jeuVerrouille = false;
+
+            uiOverlay.revalidate();
+            uiOverlay.repaint();
+        }) {{
+            setRepeats(false);
+            start();
+        }};
+    }
 
     // -------------------------------------------------------------------------
     // Anneau OuterBall

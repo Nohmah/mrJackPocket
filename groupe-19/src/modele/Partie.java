@@ -23,6 +23,9 @@ public class Partie {
     public boolean IAChoisi;
     public String difficulteIAChoisi;
     public Personnage identiteJack;
+    public CarteAlibi derniereCarteAlibiPiochee;
+    private transient Runnable alibiListener;
+
     public int sabliersDeJack;
     private final int MAX_SABLIER = 6;
     public volatile Joueur gagnant = null;
@@ -48,7 +51,8 @@ public class Partie {
 
 
     /** Constructeur **/
-    public Partie(int niveauJack, int niveauEnqueteur){
+    public Partie(Joueur joueurChoisi, int niveauJack, int niveauEnqueteur){
+        this.joueurChoisi = joueurChoisi;
         this.niveauJack = niveauJack;
         this.niveauEnqueteur = niveauEnqueteur;
         actions = new PartieActions(this);
@@ -59,6 +63,15 @@ public class Partie {
         initialiserPartie();
         tourSuivant();
         verifTourIa();
+    }
+
+    public void setAlibiListener(Runnable listener) {
+        this.alibiListener = listener;
+    }
+
+    /** Listener **/
+    public void fireAlibiEvent() {
+        if (alibiListener != null) alibiListener.run();
     }
 
     /** Initialise les élements de la partie **/
