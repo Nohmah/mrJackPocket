@@ -534,37 +534,6 @@ public class VueMonde extends JPanel {
         uiOverlay.repaint();
     }
 
-    public void swapPlayers() {
-        if (playerRects[0] == null || playerRects[1] == null) return;
-        
-        // Échanger les panneaux
-        JPanel tmpRect = playerRects[0];
-        playerRects[0] = playerRects[1];
-        playerRects[1] = tmpRect;
-        
-        // Échanger les labels associés
-        JLabel tmpName = playerNameLabels[0];
-        playerNameLabels[0] = playerNameLabels[1];
-        playerNameLabels[1] = tmpName;
-        
-        JLabel tmpType = playerTypeLabels[0];
-        playerTypeLabels[0] = playerTypeLabels[1];
-        playerTypeLabels[1] = tmpType;
-        
-        // Recalculer les positions
-        positionnerRectangle(playerRects[0], 0);
-        positionnerRectangle(playerRects[1], 1);
-        
-        // Optionnel : échanger aussi les couleurs de fond
-        Color col0 = playerRects[0].getBackground();
-        Color col1 = playerRects[1].getBackground();
-        playerRects[0].setBackground(col1);
-        playerRects[1].setBackground(col0);
-        
-        uiOverlay.revalidate();
-        uiOverlay.repaint();
-    }
-
     // =========================================================================
     // Manipulation des tuiles
     // =========================================================================
