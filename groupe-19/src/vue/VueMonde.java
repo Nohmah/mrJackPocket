@@ -112,6 +112,10 @@ public class VueMonde extends JPanel {
     private final Composant2D[]    turnIndicators     = new Composant2D[8];
     private final Composant2D[]    outerBalls         = new Composant2D[12];
 
+    // Noms et types des joueurs pour modification dynamique
+    private final JLabel[] playerNameLabels = new JLabel[2];
+    private final JLabel[] playerTypeLabels = new JLabel[2];
+
     /** Cache de sprites tournes (cle = "nom_angle"). */
     private final Map<String, Integer> rotatedSpriteCache = new HashMap<>();
 
@@ -291,25 +295,30 @@ public class VueMonde extends JPanel {
 
     private void initPlayerRects() {
         String[] labels = { "Joueur 1", "Joueur 2" };
-        Color[]  colors = { new Color(180, 40, 40, 200), new Color(40, 80, 180, 200) };
+        String[] types  = { "Humain", "Humain" };   // ou "IA" selon config
+        Color[]  colors = { new Color(180,40,40,200), new Color(40,80,180,200) };
         int rectW = 200, rectH = 50;
         for (int p = 0; p < 2; p++) {
-            final int pi = p;
             JPanel rect = new JPanel(new BorderLayout());
             rect.setBackground(colors[p]);
             rect.setBorder(BorderFactory.createLineBorder(Color.WHITE, 2));
-            JLabel name = new JLabel(labels[p], SwingConstants.CENTER);
-            name.setForeground(Color.WHITE);
-            name.setFont(new Font("SansSerif", Font.BOLD, 14));
-            JLabel type = new JLabel("Humain", SwingConstants.CENTER);
-            type.setForeground(new Color(220, 220, 220));
-            type.setFont(new Font("SansSerif", Font.PLAIN, 11));
-            rect.add(name, BorderLayout.CENTER);
-            rect.add(type, BorderLayout.SOUTH);
+            
+            JLabel nameLabel = new JLabel(labels[p], SwingConstants.CENTER);
+            nameLabel.setForeground(Color.WHITE);
+            nameLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+            playerNameLabels[p] = nameLabel;
+            
+            JLabel typeLabel = new JLabel(types[p], SwingConstants.CENTER);
+            typeLabel.setForeground(new Color(220,220,220));
+            typeLabel.setFont(new Font("SansSerif", Font.PLAIN, 11));
+            playerTypeLabels[p] = typeLabel;
+            
+            rect.add(nameLabel, BorderLayout.CENTER);
+            rect.add(typeLabel, BorderLayout.SOUTH);
             playerRects[p] = rect;
             uiOverlay.add(rect);
             rect.setSize(rectW, rectH);
-            positionnerRectangle(rect, pi);
+            positionnerRectangle(rect, p);
         }
     }
 
@@ -487,6 +496,22 @@ public class VueMonde extends JPanel {
         playerRects[player].repaint();
     }
 
+    public void setPlayerName(int player, String newName) {
+    if (player >= 0 && player < 2 && playerNameLabels[player] != null) {
+        playerNameLabels[player].setText(newName);
+        playerRects[player].revalidate();
+        playerRects[player].repaint();
+    }
+    }
+
+    public void setPlayerType(int player, String newType) {
+        if (player >= 0 && player < 2 && playerTypeLabels[player] != null) {
+            playerTypeLabels[player].setText(newType);
+            playerRects[player].revalidate();
+            playerRects[player].repaint();
+        }
+    }
+
     public void showGameOverScreen(String vainqueur) {
         gameOverLabel = new JLabel(vainqueur + " a gagne !", SwingConstants.CENTER);
         gameOverLabel.setFont(new Font("SansSerif", Font.BOLD, 64));
@@ -506,6 +531,37 @@ public class VueMonde extends JPanel {
     /** Repeint la camera et l'overlay. */
     public void repaintWorld() {
         Camera.Repaint();
+        uiOverlay.repaint();
+    }
+
+    public void swapPlayers() {
+        if (playerRects[0] == null || playerRects[1] == null) return;
+        
+        // Échanger les panneaux
+        JPanel tmpRect = playerRects[0];
+        playerRects[0] = playerRects[1];
+        playerRects[1] = tmpRect;
+        
+        // Échanger les labels associés
+        JLabel tmpName = playerNameLabels[0];
+        playerNameLabels[0] = playerNameLabels[1];
+        playerNameLabels[1] = tmpName;
+        
+        JLabel tmpType = playerTypeLabels[0];
+        playerTypeLabels[0] = playerTypeLabels[1];
+        playerTypeLabels[1] = tmpType;
+        
+        // Recalculer les positions
+        positionnerRectangle(playerRects[0], 0);
+        positionnerRectangle(playerRects[1], 1);
+        
+        // Optionnel : échanger aussi les couleurs de fond
+        Color col0 = playerRects[0].getBackground();
+        Color col1 = playerRects[1].getBackground();
+        playerRects[0].setBackground(col1);
+        playerRects[1].setBackground(col0);
+        
+        uiOverlay.revalidate();
         uiOverlay.repaint();
     }
 
