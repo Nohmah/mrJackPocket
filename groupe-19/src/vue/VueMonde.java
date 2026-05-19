@@ -59,41 +59,41 @@ public class VueMonde extends JPanel {
     );
 
     public void showCenterMessage(String text) {
-        if (centerMessagePanel != null) {
-            uiOverlay.remove(centerMessagePanel);
-        }
-
-        jeuVerrouille = true;
-
-        centerMessagePanel = new JPanel(new GridBagLayout());
-        centerMessagePanel.setOpaque(false);
-        centerMessagePanel.setBounds(0, 0, WORLD_W, WORLD_H);
-
-        centerMessage = new JLabel(text, SwingConstants.CENTER);
-        centerMessage.setFont(new Font("SansSerif", Font.BOLD, 48));
-        centerMessage.setForeground(Color.WHITE);
-        centerMessage.setOpaque(true);
-        centerMessage.setBackground(new Color(0, 0, 0, 180));
-        centerMessage.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
-
-        centerMessagePanel.add(centerMessage);
-
-        uiOverlay.add(centerMessagePanel, JLayeredPane.POPUP_LAYER);
-        uiOverlay.revalidate();
-        uiOverlay.repaint();
-
-        new javax.swing.Timer(2000, e -> {
-            uiOverlay.remove(centerMessagePanel);
-            centerMessagePanel = null;
-            centerMessage = null;
-
-            jeuVerrouille = false;
-            uiOverlay.revalidate();
-            uiOverlay.repaint();
-        }) {{
-            setRepeats(false);
-            start();
-        }};
+//        if (centerMessagePanel != null) {
+//            uiOverlay.remove(centerMessagePanel);
+//        }
+//
+//        jeuVerrouille = true;
+//
+//        centerMessagePanel = new JPanel(new GridBagLayout());
+//        centerMessagePanel.setOpaque(false);
+//        centerMessagePanel.setBounds(0, 0, WORLD_W, WORLD_H);
+//
+//        centerMessage = new JLabel(text, SwingConstants.CENTER);
+//        centerMessage.setFont(new Font("SansSerif", Font.BOLD, 48));
+//        centerMessage.setForeground(Color.WHITE);
+//        centerMessage.setOpaque(true);
+//        centerMessage.setBackground(new Color(0, 0, 0, 180));
+//        centerMessage.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
+//
+//        centerMessagePanel.add(centerMessage);
+//
+//        uiOverlay.add(centerMessagePanel, JLayeredPane.POPUP_LAYER);
+//        uiOverlay.revalidate();
+//        uiOverlay.repaint();
+//
+//        new javax.swing.Timer(2000, e -> {
+//            uiOverlay.remove(centerMessagePanel);
+//            centerMessagePanel = null;
+//            centerMessage = null;
+//
+//            jeuVerrouille = false;
+//            uiOverlay.revalidate();
+//            uiOverlay.repaint();
+//        }) {{
+//            setRepeats(false);
+//            start();
+//        }};
     }
 
     public void afficherCarteAlibi(Personnage personnage) {

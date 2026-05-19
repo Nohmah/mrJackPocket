@@ -39,6 +39,7 @@ public class Gameplay {
         this.partie = partie;
         this.controler = new IHMControler(this);
         vue.registerControler(controler);
+        // Listener pour l'affichage de la carte alibi piochée
         partie.setAlibiListener(() -> {
             CarteAlibi carte = partie.derniereCarteAlibiPiochee;
             if (carte == null) return;
@@ -46,16 +47,19 @@ public class Gameplay {
                 vue.getMonde().afficherCarteAlibi(carte.getPersonnage());
             });
         });
+        // Listener pour l'affichage de la carte alibi piochée
         partie.setAppelTemoinListener(() -> {
             SwingUtilities.invokeLater(() -> {
                 vue.getMonde().showCenterMessage("Appel à témoin !");
             });
         });
+        // Listener pour l'affichage de la carte alibi piochée
         partie.setTourEnqueteurListener(() -> {
             SwingUtilities.invokeLater(() -> {
                 vue.getMonde().showCenterMessage("Tour de l'enquêteur");
             });
         });
+        // Listener pour l'affichage de la carte alibi piochée
         partie.setTourJackListener(() -> {
             SwingUtilities.invokeLater(() -> {
                 vue.getMonde().showCenterMessage("Tour de Jack");
@@ -230,19 +234,28 @@ public class Gameplay {
         Detective detective = trouverDetective(type);
         if (detective == null) return;
 
-        String input = JOptionPane.showInputDialog(vue,
-                "Déplacer " + type + " de combien de pas ? (1 ou 2)",
-                "Déplacement", JOptionPane.QUESTION_MESSAGE);
-        if (input == null) return;
+        String[] options = {"1", "2", "Annuler"};
 
-        try {
-            int pas = Integer.parseInt(input);
-            if (pas != 1 && pas != 2) pas = 1;
-            partie.actions.deplacerDetective(detective, pas);
-            refreshView();
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(vue, "Veuillez entrer 1 ou 2.", "Erreur", JOptionPane.ERROR_MESSAGE);
+        int choix = JOptionPane.showOptionDialog(
+                vue,
+                "Déplacer " + type + " de combien de pas ?",
+                "Déplacement",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[0]
+        );
+
+        // Annuler ou fermeture de fenêtre
+        if (choix == 2 || choix == JOptionPane.CLOSED_OPTION) {
+            return;
         }
+
+        int pas = (choix == 0) ? 1 : 2;
+
+        partie.actions.deplacerDetective(detective, pas);
+        refreshView();
     }
 
     private void gererJoker() {
