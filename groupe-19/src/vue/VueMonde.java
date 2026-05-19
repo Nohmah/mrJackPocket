@@ -153,10 +153,12 @@ public class VueMonde extends JPanel {
     // Anneau OuterBall
     // -------------------------------------------------------------------------
 
-    private static final double    OUTER_BALL_DIAM    = 60.0;
+    private static final double    OUTER_BALL_DIAM    = 30.0;
     private static final Vector2[] OUTER_POSITIONS    = buildOuterPositions();
 
-    private static final double DETECTIVE_SCALE = 1.0;
+    private static final double DETECTIVE_SCALE_1 = 1.0;
+    private static final double DETECTIVE_SCALE_2 = 1.3;
+    private static final double DETECTIVE_SCALE_3 = 1.6;
 
     private static Vector2[] buildOuterPositions() {
         double gap = OUTER_BALL_DIAM / 2.0 + 5;
@@ -259,12 +261,6 @@ public class VueMonde extends JPanel {
 
     /** Index du jeton d'action actuellement survole (-1 = aucun). */
     private int hoveredTokenIndex = -1;
-    private float clignotePhase = 0.0f;
-    private final javax.swing.Timer timerClignote = new javax.swing.Timer(33, e -> {
-        clignotePhase += 0.08f;
-        if (clignotePhase > Math.PI * 2) clignotePhase -= (float) (Math.PI * 2);
-        Camera.Repaint();
-    });
 
     /**
      * Retourne l'index (0-3) de la boule d'action sous les coordonnees ecran
@@ -306,7 +302,6 @@ public class VueMonde extends JPanel {
         super(new BorderLayout());
         setBackground(Color.BLACK);
         setOpaque(true);
-        timerClignote.start();
 
         layeredPane = new JLayeredPane();
         layeredPane.setBackground(Color.BLACK);
@@ -349,7 +344,7 @@ public class VueMonde extends JPanel {
         initTileComponents();
         initActionBalls();
         initTurnIndicators();
-        //initOuterBalls();
+        initOuterBalls();
     }
 
     private void initTileComponents() {
@@ -779,26 +774,13 @@ public class VueMonde extends JPanel {
         for (int d = 0; d < 3; d++)
             if (detectivePosition[d] == posIdx && detectiveComponents[d] != null)
                 onCell[stackCount++] = d;
-        Vector2[] offsets = getStackOffsets(stackCount);
-        for (int k = 0; k < stackCount; k++) {
-            detectiveComponents[onCell[k]].echelle = new Vector2(DETECTIVE_SCALE, DETECTIVE_SCALE);
-            detectiveComponents[onCell[k]].position = OUTER_POSITIONS[posIdx].Add(offsets[k]);
+        if (stackCount <= 1) {
+            if (stackCount == 1) detectiveComponents[onCell[0]].echelle = new Vector2(DETECTIVE_SCALE_1, DETECTIVE_SCALE_1);
+            return;
         }
-    }
-
-    private Vector2[] getStackOffsets(int stackCount) {
-        double delta = OUTER_BALL_DIAM * 0.35;
-        if (stackCount == 2) {
-            return new Vector2[] { new Vector2(-delta, 0), new Vector2(delta, 0) };
-        }
-        if (stackCount >= 3) {
-            return new Vector2[] {
-                    new Vector2(0, -delta),
-                    new Vector2(-delta, delta * 0.6),
-                    new Vector2(delta, delta * 0.6)
-            };
-        }
-        return new Vector2[] { new Vector2(0, 0) };
+        double[] scales = { DETECTIVE_SCALE_1, DETECTIVE_SCALE_2, DETECTIVE_SCALE_3 };
+        for (int k = 0; k < stackCount; k++)
+            detectiveComponents[onCell[k]].echelle = new Vector2(scales[k], scales[k]);
     }
 
     // =========================================================================
@@ -915,26 +897,41 @@ public class VueMonde extends JPanel {
         if (sprite == null) return;
 
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        Color jauneFeedback = new Color(255, 220, 0, 150);
 
         switch (sprite) {
             case "action_rotation", "action_echange" -> dessinerLisereBoard(g);
-            case "action_holmes"  -> dessinerCiblesDeplacement(g, detectivePosition[0],
-                                        new Color(200, 40,  40,  150), 2, false);
-            case "action_watson"  -> dessinerCiblesDeplacement(g, detectivePosition[1],
-                                        new Color(120, 60,  20,  150), 2, false);
-            case "action_toby"    -> dessinerCiblesDeplacement(g, detectivePosition[2],
-                                        new Color(40,  80,  200, 150), 2, false);
+            case "action_holmes"  -> dessinerDemiCercleDeMouvement(g, detectivePosition[0],
+                                        new Color(200, 40,  40,  130), getDirection(detectivePosition[0]),1);
+            case "action_watson"  -> dessinerDemiCercleDeMouvement(g, detectivePosition[1],
+                                        new Color(120, 60,  20,  130), getDirection(detectivePosition[1]),1);
+            case "action_toby"    -> dessinerDemiCercleDeMouvement(g, detectivePosition[2],
+                                        new Color(40,  80,  200, 130), getDirection(detectivePosition[2]),1);
             case "action_joker"   -> {
-                dessinerCiblesDeplacement(g, detectivePosition[0], jauneFeedback, 1, true);
-                dessinerCiblesDeplacement(g, detectivePosition[1], jauneFeedback, 1, true);
-                dessinerCiblesDeplacement(g, detectivePosition[2], jauneFeedback, 1, true);
+                dessinerDemiCercleDeMouvement(g, detectivePosition[0], new Color(200, 40,  40,  130), getDirection(detectivePosition[0]),0);
+                dessinerDemiCercleDeMouvement(g, detectivePosition[1], new Color(120, 60,  20,  130), getDirection(detectivePosition[1]),0);
+                dessinerDemiCercleDeMouvement(g, detectivePosition[2], new Color(40,  80,  200, 130), getDirection(detectivePosition[2]),0);
             }
             // action_alibi et variantes _grisee : pas de feedback geometrique
         }
     }
 
-    // ...existing code...
+        /**
+     * Détermine la direction du demi-cercle en fonction de l'index de position (0 à 11).
+     * @param positionIndex Index de la position du détective (0-based)
+     * @return 0 = droite, 1 = bas, 2 = gauche, 3 = haut
+     */
+    private int getDirection(int positionIndex) {
+        if (positionIndex >= 0 && positionIndex <= 2) {
+            return 0; // droite (positions 1, 2, 3)
+        } else if (positionIndex >= 3 && positionIndex <= 5) {
+            return 1; // bas (positions 4, 5, 6)
+        } else if (positionIndex >= 6 && positionIndex <= 8) {
+            return 2; // gauche (positions 7, 8, 9)
+        } else if (positionIndex >= 9 && positionIndex <= 11) {
+            return 3; // haut (positions 10, 11, 12)
+        }
+        return 0; // Valeur par défaut
+    }
 
     /**
      * Dessine un liseré jaune permanent autour des jetons d'action non encore utilisés,
@@ -1011,44 +1008,62 @@ public class VueMonde extends JPanel {
     }
 
     /**
-     * Dessine des cibles de déplacement directement sur les positions atteignables de l’anneau.
+     * Dessine un ou deux demi-cercles de mouvement autour de la position courante d'un detective
+     * sur l'anneau (1 pas et/ou 2 pas de distance visuelle).
+     *
+     * @param g             Graphics2D de la Camera (espace ecran).
+     * @param positionIndex Index 0-based dans OUTER_POSITIONS (-1 → rien dessiné).
+     * @param couleur       Couleur de base avec alpha souhaite.
+     * @param direction     0 = droite, 1 = bas, 2 = gauche, 3 = haut
+     * @param nbCercles     0 = dessine seulement le cercle à 1 pas, 1 = dessine les deux (1 et 2 pas)
      */
-    private void dessinerCiblesDeplacement(Graphics2D g, int positionIndex, Color couleur, int maxPas, boolean inclureZero) {
+    private void dessinerDemiCercleDeMouvement(Graphics2D g, int positionIndex, Color couleur, int direction, int nbCercles) {
         if (positionIndex < 0 || positionIndex >= OUTER_POSITIONS.length) return;
+
+        Vector2 centre = OUTER_POSITIONS[positionIndex];
+        Vector2 screenCentre = centre.Sub(Camera.positionHG).Mult(Camera.zoom);
+
+        // Rayon d'un pas = largeur d'une tuile en pixels ecran
+        double rayonPas = TILE_SIZE * Camera.zoom.x;
 
         Stroke ancienStroke = g.getStroke();
         Color ancienneColor = g.getColor();
-        g.setStroke(new java.awt.BasicStroke(2.0f));
+        g.setStroke(new java.awt.BasicStroke(2.5f));
 
-        double baseR = (OUTER_BALL_DIAM * 0.6) * Camera.zoom.x;
-
-        if (inclureZero) {
-            dessinerCibleFB(g, positionIndex, new Color(couleur.getRed(), couleur.getGreen(), couleur.getBlue(), 80), baseR * 0.8);
-        }
+        // Détermine combien de cercles dessiner
+        int maxPas = (nbCercles == 0) ? 1 : 2;
 
         for (int pas = 1; pas <= maxPas; pas++) {
-            int cibleIndex = (positionIndex + pas) % OUTER_POSITIONS.length;
-            dessinerCibleFB(g, cibleIndex, couleur, baseR);
+            double r = rayonPas * pas;
+            int alpha = 255;
+            g.setColor(new Color(couleur.getRed(), couleur.getGreen(), couleur.getBlue(), alpha));
+            
+            // Détermine l'angle de départ en fonction de la direction
+            int startAngle = 0;
+            switch (direction) {
+                case 0: startAngle = 270; break;  // droite
+                case 1: startAngle = 180; break;  // bas
+                case 2: startAngle = 90;  break;  // gauche
+                case 3: startAngle = 0;   break;  // haut
+            }
+            
+            // Dessine un arc de 180 degrés (demi-cercle)
+            g.drawArc(
+                (int) (screenCentre.x - r),
+                (int) (screenCentre.y - r),
+                (int) (2 * r),
+                (int) (2 * r),
+                startAngle,
+                180
+            );
         }
+
+        // Point central pour reperer la position exacte
+        g.setColor(new Color(couleur.getRed(), couleur.getGreen(), couleur.getBlue(), 180));
+        int dotR = 5;
+        g.fillOval((int) screenCentre.x - dotR, (int) screenCentre.y - dotR, dotR * 2, dotR * 2);
 
         g.setStroke(ancienStroke);
         g.setColor(ancienneColor);
     }
-
-    private void dessinerCibleFB(Graphics2D g, int positionIndex, Color couleur, double radius) {
-        Vector2 centre = OUTER_POSITIONS[positionIndex];
-        Vector2 screenCentre = centre.Sub(Camera.positionHG).Mult(Camera.zoom);
-        float pulse = (float) ((Math.sin(clignotePhase) + 1.0) / 2.0);
-        int alphaRemplissage = 30 + Math.round(90 * pulse);
-        int alphaContour = 80 + Math.round(140 * pulse);
-
-        g.setColor(new Color(couleur.getRed(), couleur.getGreen(), couleur.getBlue(), alphaRemplissage));
-        g.fillOval((int) Math.round(screenCentre.x - radius), (int) Math.round(screenCentre.y - radius),
-                (int) Math.round(radius * 2), (int) Math.round(radius * 2));
-
-        g.setColor(new Color(couleur.getRed(), couleur.getGreen(), couleur.getBlue(), alphaContour));
-        g.drawOval((int) Math.round(screenCentre.x - radius), (int) Math.round(screenCentre.y - radius),
-                (int) Math.round(radius * 2), (int) Math.round(radius * 2));
-    }
 }
-
