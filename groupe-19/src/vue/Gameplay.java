@@ -2,6 +2,7 @@ package src.vue;
 
 import src.modele.*;
 import javax.swing.*;
+import java.awt.Color;
 
 /**
  * Gameplay — Médiateur (Mediator).
@@ -40,6 +41,7 @@ public class Gameplay {
         this.controler = new IHMControler(this);
         vue.registerControler(controler);
         // Listener pour l'affichage de la carte alibi piochée
+        SwingUtilities.invokeLater(this::updatePlayerRectangles);
         partie.setAlibiListener(() -> {
             CarteAlibi carte = partie.derniereCarteAlibiPiochee;
             if (carte == null) return;
@@ -149,7 +151,7 @@ public class Gameplay {
         resetAllTurnIndicators();
         refreshView();
         initGame();
-
+        updatePlayerRectangles();
         afficherIdentiteJack(() -> {
 
             SwingUtilities.invokeLater(() -> {
@@ -423,4 +425,50 @@ public class Gameplay {
 
         void addQuart() { quarts = (quarts + 1) % 4; }
     }
+
+    /**
+     * Convertit un niveau d'IA en texte lisible pour l'affichage.
+     * 
+     * @param niveau -1 = Humain, 0 = IA Random, 1 = IA Facile, 2 = IA Moyenne
+     * @return une chaîne comme "Humain", "IA Random", "IA Facile" ou "IA Moyenne"
+     */
+    private String getTypeTexte(int niveau) {
+        if (niveau == -1) {
+            return "Humain";
+        }
+        switch (niveau) {
+            case 0: return "IA Facile";
+            case 1: return "IA Moyenne";
+            case 2: return "IA Abominable";
+            default: return "IA";
+        }
+    }
+
+    /**
+     * Met à jour l'affichage des deux rectangles dans VueMonde.
+     * 
+     * Index 0 = Enquêteur (toujours en bleu)
+     * Index 1 = Mr. Jack (toujours en rouge)
+     * 
+     * Le texte sous le nom (Humain / IA Random / IA Facile / IA Moyenne)
+     * change en fonction de la configuration de la partie.
+     */
+    private void updatePlayerRectangles() {
+        VueMonde monde = vue.getMonde();
+        
+        // ----- Enquêteur (index 0, toujours en bleu) -----
+        String enqueteurNom = "Enquêteur";
+        String enqueteurType = getTypeTexte(partie.niveauEnqueteur);
+        monde.setPlayerName(0, enqueteurNom);
+        monde.setPlayerType(0, enqueteurType);
+        monde.updateRectColor(0, new Color(40, 80, 180, 200));  // Bleu personnalisé
+        
+        // ----- Mr. Jack (index 1, toujours en rouge) -----
+        String jackNom = "Mr. Jack";
+        String jackType = getTypeTexte(partie.niveauJack);
+        monde.setPlayerName(1, jackNom);
+        monde.setPlayerType(1, jackType);
+        monde.updateRectColor(1, new Color(180, 40, 40, 200));  // Rouge personnalisé
+    }
+
 }

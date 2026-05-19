@@ -398,8 +398,8 @@ public class VueMonde extends JPanel {
     }
 
     private void initPlayerRects() {
-        String[] labels = { "Joueur 1", "Joueur 2" };
-        String[] types  = { "Humain", "Humain" };   // ou "IA" selon config
+        String[] labels = { "", "" };
+        String[] types  = { "", "" };   // ou "IA" selon config
         Color[]  colors = { new Color(180,40,40,200), new Color(40,80,180,200) };
         int rectW = 200, rectH = 50;
         for (int p = 0; p < 2; p++) {
@@ -542,17 +542,8 @@ public class VueMonde extends JPanel {
     public void updateSabliers(int sabliers, int maxSabliers) {
         if (sablierLabel == null) return;
         sablierLabel.setText(sabliers + "/" + maxSabliers);
-        // Changer la couleur selon le danger
-        if (sabliers >= maxSabliers) {
-            sablierLabel.setBackground(new Color(180, 0, 0, 200));
-            sablierLabel.setForeground(Color.RED);
-        } else if (sabliers >= maxSabliers - 2) {
-            sablierLabel.setBackground(new Color(180, 0, 0, 200));
-            sablierLabel.setForeground(Color.WHITE);
-        } else {
-            sablierLabel.setBackground(new Color(180, 0, 0, 200));
-            sablierLabel.setForeground(Color.WHITE);
-        }
+        sablierLabel.setBackground(new Color(180, 0, 0, 200));
+        sablierLabel.setForeground(Color.RED);
         sablierLabel.repaint();
     }
 
@@ -943,7 +934,7 @@ public class VueMonde extends JPanel {
         Color  ancienneColor = g.getColor();
 
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g.setStroke(new java.awt.BasicStroke(5f));
+        g.setStroke(new java.awt.BasicStroke(3f));
         g.setColor(jaune);
 
         for (int i = 0; i < actionBalls.length; i++) {
