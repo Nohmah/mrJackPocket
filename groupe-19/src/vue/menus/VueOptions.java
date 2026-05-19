@@ -2,6 +2,8 @@ package src.vue.menus;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
+import java.util.Scanner;
 
 public class VueOptions extends JPanel {
 
@@ -55,14 +57,20 @@ public class VueOptions extends JPanel {
 
         // Pour rentrer son pseudo
         JTextField pseudoField = new JTextField();
-        try (java.util.Scanner sc = new java.util.Scanner(new java.io.File("pseudo.txt"))) {
-            if (sc.hasNextLine()) {
-                String ligne = sc.nextLine().trim();
-                String pseudo = ligne.split("\\s")[0]; // On regarde jusqu'au 1er espace
-                pseudoField.setText(pseudo);
+        File fichier = new File("pseudo.txt");
+
+        if (fichier.exists()) {
+            try (Scanner sc = new Scanner(fichier)) {
+
+                if (sc.hasNextLine()) {
+                    String ligne = sc.nextLine().trim();
+                    String pseudo = ligne.split("\\s")[0];
+                    pseudoField.setText(pseudo);
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 
         // Bouton valider
