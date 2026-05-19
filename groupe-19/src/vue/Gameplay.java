@@ -457,7 +457,7 @@ public class Gameplay {
         VueMonde monde = vue.getMonde();
         
         // ----- Enquêteur (index 0, toujours en bleu) -----
-        String enqueteurNom = "Enquêteur";
+        String enqueteurNom = "Enqueteur";
         String enqueteurType = getTypeTexte(partie.niveauEnqueteur);
         monde.setPlayerName(0, enqueteurNom);
         monde.setPlayerType(0, enqueteurType);
