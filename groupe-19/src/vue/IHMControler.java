@@ -1,10 +1,9 @@
 package src.vue;
-import src.vue.VueMonde;
 
+import src.vue.VueMonde;
 import java.awt.event.*;
 import java.util.ArrayDeque;
 import java.util.Deque;
-
 
 /**
  * IHMControler — Interpréteur d'intentions utilisateur.
@@ -15,11 +14,6 @@ import java.util.Deque;
  *   - Gérer la pile Undo/Redo locale.
  *   - Transmettre immédiatement les intentions à {@link Gameplay} sans
  *     prendre aucune décision métier.
- *
- * Ce que IHMControler NE fait plus :
- *   - Afficher des dialogues JOptionPane.
- *   - Appeler partie.actions.*.
- *   - Décider quoi faire d'une action (c'est Gameplay qui décide).
  */
 public class IHMControler implements MouseListener, MouseMotionListener, KeyListener {
 
@@ -27,57 +21,27 @@ public class IHMControler implements MouseListener, MouseMotionListener, KeyList
     // Records d'intentions
     // =========================================================================
 
-    /**
-     * ClickIntent — clic sur une cellule du plateau.
-     *
-     * @param cellRow      Ligne (0-2).
-     * @param cellCol      Colonne (0-2).
-     * @param worldPos     Position monde du clic.
-     * @param isRightClick Vrai si clic droit.
-     */
     public record ClickIntent(int cellRow, int cellCol, Vector2 worldPos, boolean isRightClick) {}
-
-    /**
-     * ActionIntent — clic confirmé sur une boule d'action.
-     *
-     * @param ballIndex  Index de la boule (0-3).
-     * @param actionName Nom du sprite courant (ex: "action_holmes").
-     */
     public record ActionIntent(int ballIndex, String actionName) {}
 
     // =========================================================================
     // Interface fonctionnelle — sonde de survol
     // =========================================================================
 
-    /**
-     * Permet à IHMControler de tester si un point écran survole une boule
-     * d'action, sans couplage direct à VueMonde.
-     * Implémentée par Gameplay via un lambda : {@code (sx,sy) -> monde.actionBallAt(sx,sy)}.
-     */
     @FunctionalInterface
     public interface HoverProbe {
-        /** @return index 0-3 de la boule sous (sx,sy), ou -1. */
         int ballAt(int sx, int sy);
     }
-
-    // =========================================================================
-    // Constantes plateau
-    // =========================================================================
-
-    //private static final double  TILE_WORLD_SIZE   = 150.0;
-    //private static final Vector2 BOARD_WORLD_ORIGIN = new Vector2(375, 175);
 
     // =========================================================================
     // État interne
     // =========================================================================
 
-    private final Deque<ClickIntent> undoStack    = new ArrayDeque<>();
-    private final Deque<ClickIntent> redoStack    = new ArrayDeque<>();
-    private ClickIntent              pendingIntent = null;
-    private final Gameplay           gameplay;
-    private String                   activePlayerType = "HUMAN";
-
-    /** Sonde de survol injectée par Gameplay après initialisation de VueMonde. */
+    private final Deque<ClickIntent> undoStack = new ArrayDeque<>();
+    private final Deque<ClickIntent> redoStack = new ArrayDeque<>();
+    private ClickIntent pendingIntent = null;
+    private final Gameplay gameplay;
+    private String activePlayerType = "HUMAN";
     private HoverProbe hoverProbe = null;
 
     // =========================================================================
@@ -92,40 +56,19 @@ public class IHMControler implements MouseListener, MouseMotionListener, KeyList
     // API publique — configuration
     // =========================================================================
 
-    /** Définit le type du joueur actif avant chaque tour ("HUMAN" ou "AI"). */
     public void setActivePlayerType(String type) {
         this.activePlayerType = type;
     }
 
     public ClickIntent getPendingIntent() { return pendingIntent; }
 
-    /**
-     * Injecte la sonde de survol (appelé par Gameplay une fois VueMonde prêt).
-     * Sans sonde, le hover est simplement ignoré.
-     */
     public void setHoverProbe(HoverProbe probe) {
         this.hoverProbe = probe;
     }
 
-    // =========================================================================
-    // Point d'entrée : hit sur une boule d'action (appelé par VueJeu)
-    // =========================================================================
-
-    /**
-     * Reçoit la notification d'un hit sur une boule d'action depuis VueJeu.
-     * Construit un {@link ActionIntent} et le transmet immédiatement à Gameplay.
-     *
-     * VueJeu a déjà fait la conversion écran→monde et le hitTest.
-     * IHMControler n'interprète pas le sens de l'action.
-     *
-     * @param ballIndex  Index de la boule touchée (0-3).
-     * @param actionName Nom du sprite courant (ex: "action_holmes").
-     */
     public void onActionBallHit(int ballIndex, String actionName) {
         ActionIntent intent = new ActionIntent(ballIndex, actionName);
         System.out.println("IHMControler — ActionIntent créé : [" + ballIndex + "] " + actionName);
-
-        // Transmission directe à Gameplay : aucune décision ici.
         gameplay.onActionBallClicked(intent);
     }
 
@@ -133,7 +76,6 @@ public class IHMControler implements MouseListener, MouseMotionListener, KeyList
     // Gestion Undo / Redo / Confirmation
     // =========================================================================
 
-    /** Confirme l'intention en cours et la pousse dans undoStack. */
     public void confirmPendingIntent() {
         if (pendingIntent == null) return;
         undoStack.push(pendingIntent);
@@ -142,7 +84,6 @@ public class IHMControler implements MouseListener, MouseMotionListener, KeyList
         pendingIntent = null;
     }
 
-    /** Annule la dernière action confirmée. */
     public void undo() {
         if (undoStack.isEmpty()) return;
         ClickIntent last = undoStack.pop();
@@ -150,7 +91,6 @@ public class IHMControler implements MouseListener, MouseMotionListener, KeyList
         gameplay.onUndoRequested(last);
     }
 
-    /** Rétablit la dernière action annulée. */
     public void redo() {
         if (redoStack.isEmpty()) return;
         ClickIntent next = redoStack.pop();
@@ -158,14 +98,6 @@ public class IHMControler implements MouseListener, MouseMotionListener, KeyList
         gameplay.onRedoRequested(next);
     }
 
-    // =========================================================================
-    // Action IA
-    // =========================================================================
-
-    /**
-     * Simule une action IA sur la cellule (0,0) par défaut.
-     * À brancher sur la vraie logique de sélection de coup.
-     */
     public void joueIa() {
         if (!"AI".equals(activePlayerType)) return;
         Vector2 pos = VueMonde.BOARD_ORIGIN.Add(new Vector2(VueMonde.TILE_SIZE / 2, VueMonde.TILE_SIZE / 2));
@@ -180,33 +112,49 @@ public class IHMControler implements MouseListener, MouseMotionListener, KeyList
     @Override
     public void mouseClicked(MouseEvent e) {
         Vector2 world = screenToWorld(new Vector2(e.getX(), e.getY()));
-        int col = (int) ((world.x - VueMonde.BOARD_ORIGIN.x) / VueMonde.TILE_SIZE);
-        int row = (int) ((world.y - VueMonde.BOARD_ORIGIN.y) / VueMonde.TILE_SIZE);
-        //int col = (int) ((world.x - BOARD_WORLD_ORIGIN.x) / TILE_WORLD_SIZE);
-        //int row = (int) ((world.y - BOARD_WORLD_ORIGIN.y) / TILE_WORLD_SIZE);
 
-        if (col < 0 || col > 2 || row < 0 || row > 2) {
-            // Clic hors plateau — Gameplay décide si c'est significatif
-            // (ex: sortir du mode rotation).
+        // Calcul des limites du plateau (3 tuiles de TILE_SIZE chacune)
+        double boardMinX = VueMonde.BOARD_ORIGIN.x;
+        double boardMinY = VueMonde.BOARD_ORIGIN.y;
+        double boardMaxX = boardMinX + 3 * VueMonde.TILE_SIZE;
+        double boardMaxY = boardMinY + 3 * VueMonde.TILE_SIZE;
+
+        // Vérifier si le clic est à l'intérieur du rectangle du plateau
+        if (world.x < boardMinX || world.x > boardMaxX ||
+            world.y < boardMinY || world.y > boardMaxY) {
             gameplay.clicHorsDistrict();
             return;
         }
 
+        // Calcul des indices bruts (peuvent être 0,1,2,3)
+        int colRaw = (int) ((world.x - boardMinX) / VueMonde.TILE_SIZE);
+        int rowRaw = (int) ((world.y - boardMinY) / VueMonde.TILE_SIZE);
+
+        // Ajustement pour les bords droits et bas (raw == 3 → clamp à 2)
+        int col = (colRaw == 3) ? 2 : colRaw;
+        int row = (rowRaw == 3) ? 2 : rowRaw;
+
         boolean isRight = (e.getButton() == MouseEvent.BUTTON3);
         pendingIntent = new ClickIntent(row, col, world, isRight);
 
-        // Notification plateau — Gameplay orchestre la réponse.
+        // Notification plateau — Gameplay orchestre la réponse
         gameplay.onCellHovered(row, col);
 
         System.out.println("IHMControler — ClickIntent : (" + row + "," + col + ")"
                 + (isRight ? " [droit]" : "") + " monde=" + world.ToString());
     }
 
-    @Override public void mousePressed(MouseEvent e)  {}
-    @Override public void mouseReleased(MouseEvent e) {}
-    @Override public void mouseEntered(MouseEvent e)  {}
-    @Override public void mouseExited(MouseEvent e)   {
-        // La souris quitte la fenêtre : annuler le survol
+    @Override
+    public void mousePressed(MouseEvent e) {}
+
+    @Override
+    public void mouseReleased(MouseEvent e) {}
+
+    @Override
+    public void mouseEntered(MouseEvent e) {}
+
+    @Override
+    public void mouseExited(MouseEvent e) {
         gameplay.onTokenHovered(-1);
     }
 
@@ -222,7 +170,7 @@ public class IHMControler implements MouseListener, MouseMotionListener, KeyList
     }
 
     @Override
-    public void mouseDragged(MouseEvent e) { /* non utilisé */ }
+    public void mouseDragged(MouseEvent e) {}
 
     // =========================================================================
     // KeyListener
@@ -233,7 +181,7 @@ public class IHMControler implements MouseListener, MouseMotionListener, KeyList
         switch (e.getKeyCode()) {
             case KeyEvent.VK_Z -> { if (e.isControlDown()) undo(); }
             case KeyEvent.VK_Y -> { if (e.isControlDown()) redo(); }
-            case KeyEvent.VK_ENTER  -> confirmPendingIntent();
+            case KeyEvent.VK_ENTER -> confirmPendingIntent();
             case KeyEvent.VK_ESCAPE -> {
                 pendingIntent = null;
                 gameplay.onTokenHovered(-1);
@@ -241,14 +189,16 @@ public class IHMControler implements MouseListener, MouseMotionListener, KeyList
         }
     }
 
-    @Override public void keyTyped(KeyEvent e)    {}
-    @Override public void keyReleased(KeyEvent e) {}
+    @Override
+    public void keyTyped(KeyEvent e) {}
+
+    @Override
+    public void keyReleased(KeyEvent e) {}
 
     // =========================================================================
     // Helper
     // =========================================================================
 
-    /** Coordonnées écran → monde (inverse de la projection Camera). */
     private Vector2 screenToWorld(Vector2 screen) {
         return screen.Div(Camera.zoom).Add(Camera.positionHG);
     }
