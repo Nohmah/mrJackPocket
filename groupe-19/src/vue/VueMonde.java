@@ -117,26 +117,27 @@ public class VueMonde extends JPanel {
                 int panelW = getWidth();
                 int panelH = getHeight();
 
-                int drawW = img.getWidth() / 2;
-                int drawH = img.getHeight() / 2;
+                int drawW = img.getWidth();
+                int drawH = img.getHeight();
 
                 int x = (panelW - drawW) / 2;
                 int y = (panelH - drawH) / 2;
-
+                g.setColor(new Color(0, 0, 0, 200));
+                g.fillRect(0, 0, getWidth(), getHeight());
                 g.drawImage(img, x, y, drawW, drawH, null);
             }
         };
 
         alibiPanel.setOpaque(false);
-        alibiPanel.setBounds(0, 0, WORLD_W, WORLD_H);
-
+        alibiPanel.setBounds(0, 0, uiOverlay.getWidth(), uiOverlay.getHeight());
+        JPanel currentPanel = alibiPanel;
         uiOverlay.add(alibiPanel, JLayeredPane.POPUP_LAYER);
         uiOverlay.revalidate();
         uiOverlay.repaint();
 
         // auto-suppression après 2 secondes
         new javax.swing.Timer(2000, e -> {
-            uiOverlay.remove(alibiPanel);
+            uiOverlay.remove(currentPanel);
             alibiPanel = null;
 
             jeuVerrouille = false;
