@@ -625,7 +625,19 @@ public class VueMonde extends JPanel {
 
     /** Adapte la couleur de fond au joueur courant. */
     public void updateBackground(Joueur joueurCourant) {
-        setBackgroundColor((joueurCourant == Joueur.JACK) ? BG_RED : BG_BLUE);
+        String couleurFond;
+        if (joueurCourant == Joueur.JACK) {
+            couleurFond = BG_RED;
+            updateRectColor(0, Color.GRAY);
+            updateRectColor(1, new Color(180, 40, 40, 200));
+            } //BRICOLAGE
+            
+        else {
+            couleurFond = BG_BLUE; 
+            updateRectColor(1, Color.GRAY);
+            updateRectColor(0, new Color(40, 80, 180, 200)); }
+        setBackgroundColor(couleurFond);
+
     }
 
     /** Bascule la face d'un indicateur de tour (Pile <-> Face). */
