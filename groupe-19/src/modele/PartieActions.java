@@ -121,17 +121,17 @@ public class PartieActions {
         if(!partie.estSimulation) System.out.println("Carte alibi piochée : " + carte.getPersonnage());
         // si le joueur qui a utilisé ce jeton est l'Enquêteur, tout le monde voit la carte alibi
         if (partie.joueurCourant == Joueur.ENQUETEUR){
-            System.out.println("Affichage de l'identité de Jack");
+            if(!partie.estSimulation) System.out.println("Affichage de l'identité de Jack");
             partie.fireAlibiEvent();
         }
             // Si le joueur qui a utilisé ce jeton est jack, uniquement Jack doit le voir:
             // si on est humain contre humain, on va l'afficher (l'enqueteur doit détourner le regard)
             // si on est humain vs IA, on affiche si l'humain joue Jack (si Jack n'est pas l'IA)
             else if (partie.joueurCourant == Joueur.JACK && partie.niveauJack == -1){
-                System.out.println("Affichage de l'identité de Jack");
+                if(!partie.estSimulation) System.out.println("Affichage de l'identité de Jack");
                 partie.fireAlibiEvent();
         } else {
-            System.out.println("Refus de l'affichage de l'identité de Jack");
+            if(!partie.estSimulation) System.out.println("Refus de l'affichage de l'identité de Jack");
         }
         if (partie.joueurCourant == Joueur.JACK) {
             partie.sabliersDeJack += carte.getSabliers();

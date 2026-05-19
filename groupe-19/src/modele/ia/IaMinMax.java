@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-//import javax.swing.Action; // interdit 
-
 public class IaMinMax{
     
     public static class resultatMinMax { // classe pour stocker le résultat du MinMax
@@ -24,25 +22,26 @@ public class IaMinMax{
     public static CoupIa choisirActionMinMax(Partie partie, boolean estJack, int profondeur){
         //System.out.println("entre dans IA choisirActionMINMAX");
 
-        if(profondeur <= 4){ // petite attente pour que les ia trop rapides ne se fassent pas instantanement
+        if(profondeur < 6){ // petite attente pour que les ia trop rapides ne se fassent pas instantanement
             try {
-                Thread.sleep((6 - profondeur) * 500 );
+                //Thread.sleep((6 - profondeur) * 500 );
+                Thread.sleep(0);
             } catch (InterruptedException e) {
                 System.err.println("Erreur lors de la pause dans choisirActionMinMax : ");
             }
         }   
 
-        CoupIa coup = MinMax(partie, estJack, profondeur, 0).coup ;
+        CoupIa coup = MinMax(partie, estJack, profondeur, 0, -8000, 8000).coup ;
 
         if(coup != null){
             return coup;
         } else {
-            System.out.println("/!\\ Aucun coup trouvé en MinMax, renvoie random /!\\  Avec profondeur : " + profondeur + " et nb actions possibles : " + partie.actions.getActionsPossibles().size() + " et tour actuell : " + partie.numeroTour);
+            System.out.println("/!\\ Aucun coup trouvé en MinMax, renvoie random /!\\  Avec profondeur : " + profondeur);
             return ChoixIa.choisirActionRandom(partie, estJack);
         }
     }
 
-    public static resultatMinMax MinMax(Partie partie, boolean estJack, int profondeur, int skip){
+    public static resultatMinMax MinMax(Partie partie, boolean estJack, int profondeur, int skip, double alpha, double beta){
         //if(profondeur != 1) System.out.println("Entre dans MinMax Profondeur : " + profondeur + " avec " + partie.actions.getActionsPossibles().size() + " actions possibles");
         //si mode max alors on cherche à maximiser le score, sinon on cherche à minimiser le score
         boolean modeMax = estJack ? partie.joueurCourant == Joueur.JACK : partie.joueurCourant == Joueur.ENQUETEUR;
@@ -77,10 +76,10 @@ public class IaMinMax{
             if(estJack){//si on est jack on peut juste continuer normalement
                 partie.appelATemoin();
                 //System.out.println("Mise a jour des jetons : nb actions possibles :" + partie.actions.getActionsPossibles().size());
-                return MinMax(partie, estJack, profondeur, 0);
+                return MinMax(partie, estJack, profondeur, 0, alpha, beta);
             }
             else{// si on est enquêteur, c'est plus compliqué car on connait pas le Jack
-                return MinMaxDivision(partie, estJack, profondeur);
+                return MinMaxDivision(partie, estJack, profondeur, alpha, beta);
             }
         }
 
@@ -129,15 +128,24 @@ public class IaMinMax{
                     else{
                         Partie partieSimulee = new Partie(partie);
                         partieSimulee.jouerCoup(tentative);
-                        note = MinMax(partieSimulee, estJack, profondeur - 1, nbskip).score;
+                        if(modeMax) note = MinMax(partieSimulee, estJack, profondeur - 1, nbskip, scoreMax, 8000).score;
+                        else note = MinMax(partieSimulee, estJack, profondeur - 1, nbskip, -8000, scoreMax).score;
                     }
 
                     if(modeMax && note >= scoreMax){
                         meilleurCoup = tentative;
                         scoreMax = note;
+                        if(scoreMax > beta){
+                            //System.out.println("opti grace a beta, profondeur = " + profondeur + " beta =" + beta + " score = " + scoreMax);
+                            return new resultatMinMax(scoreMax, meilleurCoup);
+                        }
                     } else if (!modeMax && note <= scoreMax){
                         meilleurCoup = tentative;
                         scoreMax = note;
+                        if(scoreMax < alpha){
+                            //System.out.println("opti grace a alpha, profondeur = " + profondeur + " alpha =" + alpha + " score = " + scoreMax);
+                            return new resultatMinMax(scoreMax, meilleurCoup);
+                        }
                     }
                 }
             }
@@ -154,9 +162,11 @@ public class IaMinMax{
 
 
     // UN minMax different pour un cas particulier 
-    public static resultatMinMax MinMaxDivision(Partie partie, boolean estJack, int profondeur){
-        boolean modeMax = estJack ? partie.joueurCourant == Joueur.JACK : partie.joueurCourant == Joueur.ENQUETEUR;
-        double scoreMax = modeMax ? -8000 : 8000;
+    public static resultatMinMax MinMaxDivision(Partie partie, boolean estJack, int profondeur, double alpha, double beta){
+        //boolean modeMax = estJack ? partie.joueurCourant == Joueur.JACK : partie.joueurCourant == Joueur.ENQUETEUR;
+        //double scoreMax = modeMax ? -8000 : 8000;
+        //boolean modeMax = false ; //si on entre dans cette fonction on est au debut d un tour pair (donc a jack de jouer) et on joue detective
+        double scoreMax = 8000;
         CoupIa meilleurCoup = null;
 
         // On simule 2 cas avec Jack visible et Jack invisible
@@ -245,21 +255,17 @@ public class IaMinMax{
                         if(!visTerminee){
                             Partie partieSimulee1 = new Partie(partieVis);
                             partieSimulee1.jouerCoup(tentative);
-                            note += poidsVis * MinMax(partieSimulee1, estJack, profondeur - 1, 0).score;
+                            note += poidsVis * MinMax(partieSimulee1, estJack, profondeur - 1, 0, -8000, scoreMax * poidsVis).score;
                         }
                         
                         if(!invTerminee){
                             Partie partieSimulee2 = new Partie(partieInv);
                             partieSimulee2.jouerCoup(tentative);
-                            note += poidsInv * MinMax(partieSimulee2, estJack, profondeur - 1, 0).score;
+                            note += poidsInv * MinMax(partieSimulee2, estJack, profondeur - 1, 0, -8000, scoreMax * poidsInv).score;
                         }
                     }
 
-
-                    if(modeMax && note >= scoreMax){
-                        meilleurCoup = tentative;
-                        scoreMax = note;
-                    } else if (!modeMax && note <= scoreMax){
+                    if (note <= scoreMax){
                         meilleurCoup = tentative;
                         scoreMax = note;
                     }
@@ -300,6 +306,7 @@ public class IaMinMax{
         for(Personnage p : avantAppel){
             partie.district.innocenter(p);
         }
+
         try{
             partie.verifFinDePartie();
             partie.tourSuivant();
