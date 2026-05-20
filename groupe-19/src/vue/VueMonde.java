@@ -30,7 +30,7 @@ public class VueMonde extends JPanel {
 
     /** true si il ne devrait plus être possible de cliquer sur les boutons, car par exemple il y a une animation en cours
      * Il faut étendre cette variable partout où c'est nécessaire**/
-    private boolean jeuVerrouille = false;
+    public boolean jeuVerrouille = false;
     private JLabel centerMessage;
     private JPanel centerMessagePanel;
     private JPanel alibiPanel;

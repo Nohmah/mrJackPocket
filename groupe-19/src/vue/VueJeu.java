@@ -289,16 +289,24 @@ public class VueJeu extends JFrame {
         leftStrip.setBorder(BorderFactory.createEmptyBorder(20, 5, 10, 5));
 
         JButton retour  = makeStripButton("Retour");
-        retour.addActionListener(e -> System.out.println("VueJeu — Retour (non implemente)"));
+        retour.addActionListener(e -> {
+            if (vueMonde.jeuVerrouille) return;
+            System.out.println("VueJeu — Retour (non implemente)");
+        });
 
         JButton newGame = makeStripButton("Nv. Partie");
-        newGame.addActionListener(e -> { if (gameplay != null) gameplay.resetGame(); });
+        newGame.addActionListener(e -> {
+            if (vueMonde.jeuVerrouille) return;
+            if (gameplay != null) gameplay.resetGame(); });
 
         JButton ia      = makeStripButton("IA");
-        ia.addActionListener(e -> { if (gameplay != null) gameplay.partie.lanceIa(); });
+        ia.addActionListener(e -> {
+            if (vueMonde.jeuVerrouille) return;
+            if (gameplay != null) gameplay.partie.lanceIa(); });
 
         JButton annuler = makeStripButton("Annuler");
         annuler.addActionListener(e -> {
+            if (vueMonde.jeuVerrouille) return;
             if (gameplay != null) {
                 gameplay.partie.annuler();
                 refreshBoardComponents();
@@ -307,6 +315,7 @@ public class VueJeu extends JFrame {
 
         JButton refaire = makeStripButton("Refaire");
         refaire.addActionListener(e -> {
+            if (vueMonde.jeuVerrouille) return;
             if (gameplay != null) {
                 gameplay.partie.refaire();
                 refreshBoardComponents();
@@ -315,6 +324,7 @@ public class VueJeu extends JFrame {
 
         JButton save = makeStripButton("Save");
         save.addActionListener(e -> {
+            if (vueMonde.jeuVerrouille) return;
             if (gameplay != null) {
                 try {
                     SaveManager.save(gameplay.partie.toGameSave(), "save.dat");
@@ -326,6 +336,7 @@ public class VueJeu extends JFrame {
 
         JButton load = makeStripButton("Load");
         load.addActionListener(e -> {
+            if (vueMonde.jeuVerrouille) return;
             if (gameplay != null) {
                 try {
                     GameSave saveFile = SaveManager.load("save.dat");
@@ -338,7 +349,10 @@ public class VueJeu extends JFrame {
         });
 
         JButton regles  = makeStripButton("Regles");
-        regles.addActionListener(e -> onReglesPressed());
+        regles.addActionListener(e -> {
+            if (vueMonde.jeuVerrouille) return;
+            onReglesPressed();
+        });
 
         leftStrip.add(retour);
         leftStrip.add(Box.createVerticalStrut(8));
