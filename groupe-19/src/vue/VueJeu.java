@@ -44,7 +44,6 @@ public class VueJeu extends JFrame {
     // =========================================================================
 
     private JPanel  leftStrip;
-    private JButton validateButton;
 
     /** Panneau de regles actuellement affiche (null = ferme). */
     private JPanel panneauRegles = null;
@@ -171,12 +170,7 @@ public class VueJeu extends JFrame {
         vueMonde.updateRectColor(player, color);
     }
 
-    public void enableValidateButton(boolean enabled) {
-        validateButton.setEnabled(enabled);
-    }
-
     public void showGameOverScreen(String vainqueur) {
-        validateButton.setEnabled(false);
         vueMonde.showGameOverScreen(vainqueur);
     }
 
@@ -256,6 +250,7 @@ public class VueJeu extends JFrame {
 
     /** Rafraichit toutes les vues a chaque frame. */
     public void refreshBoardComponents() {
+        vueMonde.updateTurnIndicator(gameplay.partie.numeroTour);
         vueMonde.updateBackground(gameplay.partie.joueurCourant);
         if (!gameplay.rotationMode) {
             vueMonde.updateDistrictView(gameplay.partie.district);
@@ -345,9 +340,6 @@ public class VueJeu extends JFrame {
         JButton regles  = makeStripButton("Regles");
         regles.addActionListener(e -> onReglesPressed());
 
-        validateButton  = makeStripButton("Terminer tour");
-        validateButton.addActionListener(e -> { if (gameplay != null) gameplay.onValidatePressed(); });
-
         leftStrip.add(retour);
         leftStrip.add(Box.createVerticalStrut(8));
         leftStrip.add(newGame);
@@ -364,8 +356,6 @@ public class VueJeu extends JFrame {
         leftStrip.add(Box.createVerticalStrut(8));
         leftStrip.add(regles);
         leftStrip.add(Box.createVerticalGlue());
-        leftStrip.add(validateButton);
-        leftStrip.add(Box.createVerticalStrut(10));
 
         getContentPane().add(leftStrip, BorderLayout.WEST);
     }

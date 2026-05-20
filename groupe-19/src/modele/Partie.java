@@ -28,6 +28,8 @@ public class Partie {
     private transient Runnable appelTemoinListener;
     private transient Runnable tourEnqueteurListener;
     private transient Runnable tourJackListener;
+    private transient Runnable finPartieListener;
+    private transient Runnable tourChangeListener;
 
     public int sabliersDeJack;
     private final int MAX_SABLIER = 6;
@@ -66,6 +68,22 @@ public class Partie {
         initialiserPartie();
         tourSuivant();
         verifTourIa();
+    }
+
+    public void setTourChangeListener(Runnable listener) {
+        this.tourChangeListener = listener;
+    }
+
+    public void fireTourChangeEvent() {
+        if (tourChangeListener != null) tourChangeListener.run();
+    }
+
+    public void setFinPartieListener(Runnable listener) {
+        this.finPartieListener = listener;
+    }
+
+    public void fireFinPartieEvent() {
+        if (finPartieListener != null) finPartieListener.run();
     }
 
     public void setTourEnqueteurListener(Runnable listener) {
@@ -222,6 +240,7 @@ public class Partie {
             joueurCourant = Joueur.JACK;
             if (!this.estSimulation) System.out.println("Le joueur est Jack");
         }
+        fireTourChangeEvent();
     }
 
     public void verifTourIa(){
@@ -363,6 +382,7 @@ public class Partie {
             } else {
                 if(!estSimulation) System.out.println("----- Victoire de Jack ! -----");
             }
+            fireFinPartieEvent();
         }
     }
 

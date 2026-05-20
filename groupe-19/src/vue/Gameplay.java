@@ -40,6 +40,20 @@ public class Gameplay {
         this.partie = partie;
         this.controler = new IHMControler(this);
         vue.registerControler(controler);
+        // Listener pour mettre à jour les jetons Temps à droite
+        partie.setTourChangeListener(() -> {
+            SwingUtilities.invokeLater(() -> {
+                if (partie.numeroTour >= 1 && partie.numeroTour <= 8) {
+                    vue.switchTurnFace(partie.numeroTour - 2);
+                }
+            });
+        });
+        //Listener pour afficher dès que quelqu'un a gagné
+        partie.setFinPartieListener(() -> {
+            SwingUtilities.invokeLater(() -> {
+                vue.showGameOverScreen(partie.getGagnant().getNom());
+            });
+        });
         // Listener pour l'affichage de la carte alibi piochée
         SwingUtilities.invokeLater(this::updatePlayerRectangles);
         partie.setAlibiListener(() -> {
@@ -147,7 +161,6 @@ public class Gameplay {
     public void resetGame() {
         partie.reset();
         vue.hideGameOverScreen();
-        vue.enableValidateButton(true);
         resetAllTurnIndicators();
         refreshView();
         initGame();
@@ -168,35 +181,6 @@ public class Gameplay {
     }
 
     public IHMControler getControler() { return controler; }
-
-    public void onValidatePressed() {
-        if (partie.isPartieTerminee()) return;
-        controler.confirmPendingIntent();
-        vue.getMonde().setHoveredToken(-1);   // Nettoyage survol à la validation
-        endTurn();
-    }
-
-    private void endTurn() {
-        System.out.println("Gameplay — fin du tour " + partie.numeroTour);
-
-        // Mise à jour visuelle de l'indicateur de tour (index 0-based)
-        if (partie.numeroTour >= 1 && partie.numeroTour <= 8) {
-            vue.switchTurnFace(partie.numeroTour - 1);
-        }
-
-        // Délégation complète au modèle : appelATemoin + tourSuivant + verifFinDePartie
-        partie.terminerTour();
-        vue.updateSabliers(partie.sabliersDeJack, 6);
-
-        // Lecture de l'état post-tour
-        refreshView();
-
-        if (partie.isPartieTerminee()) {
-            onGameOver();
-        } else {
-            startTurn();
-        }
-    }
 
     private void onGameOver() {
         System.out.println("Gameplay — fin de partie");
