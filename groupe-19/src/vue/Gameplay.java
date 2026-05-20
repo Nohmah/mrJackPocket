@@ -209,6 +209,9 @@ public class Gameplay {
         // L'utilisateur a cliqué : on efface le survol
         vue.getMonde().setHoveredToken(-1);
 
+        //reset les states des actions echange et rotation au cas où le joueur change d'action.
+        resetTileState();
+
         switch (actionName) {
             case "action_holmes"   -> demanderDeplacementEtDeplacer(Detective.Type.HOLMES);
             case "action_watson"   -> demanderDeplacementEtDeplacer(Detective.Type.WATSON);
@@ -303,11 +306,15 @@ public class Gameplay {
     // -------------------------------------------------------------------------
 
     public void startEchange() {
+        rotationState = null;
+        rotationMode = false;
         echangeState = new EchangeState();
         System.out.println("Action échange : cliquez sur la première tuile");
     }
 
     public void startRotationMode(int jetonIndex) {
+        echangeState = null;
+        vue.getMonde().setTuileSelected(-1,-1);
         rotationState = new RotationState(jetonIndex);
         System.out.println("Mode rotation actif. Cliquez sur une tuile, recliquez pour accumuler, cliquez ailleurs pour confirmer.");
     }
@@ -329,6 +336,13 @@ public class Gameplay {
 
     public void clicHorsDistrict() {
         if (rotationMode) exitRotationMode();
+    }
+
+    private void resetTileState(){
+        vue.getMonde().setTuileSelected(-1,-1);
+        rotationMode = false;
+        rotationState = null;
+        echangeState = null;
     }
 
     // -------------------------------------------------------------------------
@@ -388,7 +402,6 @@ public class Gameplay {
                 vue.rotateTile(row, col, 90);
                 System.out.println("Rotation — quart supplémentaire (" + rotationState.quarts + " total)");
             } else {
-                vue.getMonde().setTuileSelected(-1,-1);
                 exitRotationMode();
             }
         }
@@ -419,7 +432,7 @@ public class Gameplay {
 
         boolean hasTarget() { return row != -1; }
 
-        void setTarget(int r, int c) { row = r; col = c; quarts = 1; vue.getMonde().setTuileSelected(r,c); }
+        void setTarget(int r, int c) { row = r; col = c; quarts = 1; }
 
         boolean isSameTile(int r, int c) { return row == r && col == c; }
 

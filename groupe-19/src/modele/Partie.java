@@ -464,14 +464,24 @@ public class Partie {
      *
      */
 
+    private boolean estTourHumain(){
+        return (joueurCourant == Joueur.JACK && niveauJack == -1) ||
+                (joueurCourant == Joueur.ENQUETEUR && niveauEnqueteur == -1);
+    }
+
     public void saveEtat() {
         if(estSimulation) return;
-        undo.push(new Partie(this));
-        redo.clear();
+        if(estTourHumain()){
+            undo.push(new Partie(this));
+            redo.clear();
+        }
     }
 
     public void annuler(){
         if(undo.isEmpty()) return;
+        boolean joueurCourantEstIa = (joueurCourant == Joueur.JACK && niveauJack != -1)
+                || (joueurCourant == Joueur.ENQUETEUR && niveauEnqueteur != -1);
+        if(joueurCourantEstIa) return;
         redo.push(new Partie(this));
         Partie ancien = undo.pop();
         changement = true;
@@ -507,6 +517,8 @@ public class Partie {
         this.joueurChoisi = p.joueurChoisi;
         this.niveauEnqueteur = p.niveauEnqueteur;
         this.niveauJack = p.niveauJack;
+
+        if (!estSimulation) verifTourIa();
     }
 
     public PartieSnapshot toSnapshot() {

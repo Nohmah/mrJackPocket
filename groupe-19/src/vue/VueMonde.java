@@ -720,6 +720,12 @@ public class VueMonde extends JPanel {
 
     /** Met en evidence l'indicateur de tour courant. */
     public void updateTurnIndicator(int turn) {
+        for(int i = 0; i < 8; i++){
+            boolean doitEtreFace = (i < turn - 1);
+            if(isTurnFacePile(i) == doitEtreFace){
+                switchTurnFace(i);
+            }
+        }
         for (int i = 0; i < turnIndicators.length; i++) {
             if (turnIndicators[i] == null) continue;
             turnIndicators[i].echelle = (i == turn - 1)
@@ -1047,13 +1053,8 @@ public class VueMonde extends JPanel {
         if (sprite == null) return;
 
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        Color jauneFeedback = new Color(255, 220, 0, 150);
-
         switch (sprite) {
-            case "action_rotation", "action_echange" -> {
-                setTuileSelected(-1,-1);
-                dessinerLisereBoard(g);
-            }
+            case "action_rotation", "action_echange" -> dessinerLisereBoard(g);
             case "action_holmes"  -> dessinerCibleDeplacement(g, detectivePosition[0],
                                         new Color(200, 40,  40,  130), 2,false);
             case "action_watson"  -> dessinerCibleDeplacement(g, detectivePosition[1],
