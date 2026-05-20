@@ -31,8 +31,6 @@ public class VueMonde extends JPanel {
     /** true si il ne devrait plus être possible de cliquer sur les boutons, car par exemple il y a une animation en cours
      * Il faut étendre cette variable partout où c'est nécessaire**/
     public boolean jeuVerrouille = false;
-    private JLabel centerMessage;
-    private JPanel centerMessagePanel;
     private JPanel alibiPanel;
     // =========================================================================
     // Constantes monde (proprietaires de VueMonde)
@@ -57,6 +55,8 @@ public class VueMonde extends JPanel {
             (WORLD_W - BOARD_SIZE) / 2.0 - 60,
             (WORLD_H - BOARD_SIZE) / 2.0
     );
+    private JLabel centerMessage;
+    private JPanel centerMessagePanel;
 
     public void showCenterMessage(String text) {
 //        if (centerMessagePanel != null) {
@@ -96,58 +96,147 @@ public class VueMonde extends JPanel {
 //        }};
     }
 
-    public void afficherCarteAlibi(Personnage personnage) {
+    // =========================================================================
+    // Overlay générique pour affichage d'image avec texte sous l'image
+    // =========================================================================
+
+    /**
+     * Affiche une image en plein écran (overlay) avec un texte optionnel en dessous,
+     * bloque toutes les actions (jeuVerrouille = true) pendant la durée spécifiée.
+     *
+     * @param nomImage        Nom de la sprite à afficher (ex: "VictoireJ").
+     * @param texteSousImage  Texte à afficher sous l'image (peut être null).
+     * @param dureeMs         Durée d'affichage en millisecondes.
+     */
+    private void afficherOverlayAvecImage(String nomImage, String texteSousImage, int dureeMs) {
+        // Nettoyer l'overlay précédent (alibiPanel) s'il existe
         if (alibiPanel != null) {
             uiOverlay.remove(alibiPanel);
+            alibiPanel = null;
         }
 
         jeuVerrouille = true;
 
-        String spriteName = personnage.image;
-        Camera.AddSprite(spriteName);
+        // Charger l'image dans le cache si nécessaire
+        Camera.AddSprite(nomImage);
 
-        alibiPanel = new JPanel() {
+        // Récupérer l'image
+        BufferedImage img = Camera.GetSpriteImage(nomImage);
+
+        // Panneau personnalisé pour l'image + texte
+        JPanel overlayPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                                    RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
-                BufferedImage img = Camera.GetSpriteImage(spriteName);
-                if (img == null) return;
+                // Fond semi-transparent
+                g2.setColor(new Color(0, 0, 0, 200));
+                g2.fillRect(0, 0, getWidth(), getHeight());
 
-                int panelW = getWidth();
-                int panelH = getHeight();
+                // Récupérer l'image (si elle a changé entre temps)
+                BufferedImage currentImg = Camera.GetSpriteImage(nomImage);
+                if (currentImg == null) {
+                    currentImg = img;
+                }
 
-                int drawW = img.getWidth();
-                int drawH = img.getHeight();
+                if (currentImg != null) {
+                    int imgW = currentImg.getWidth();
+                    int imgH = currentImg.getHeight();
+                    int x = (getWidth() - imgW) / 2;
+                    int y = (getHeight() - imgH) / 2;
 
-                int x = (panelW - drawW) / 2;
-                int y = (panelH - drawH) / 2;
-                g.setColor(new Color(0, 0, 0, 200));
-                g.fillRect(0, 0, getWidth(), getHeight());
-                g.drawImage(img, x, y, drawW, drawH, null);
+                    // Si du texte est présent, remonter légèrement l'image pour laisser la place
+                    if (texteSousImage != null && !texteSousImage.isEmpty()) {
+                        g2.setFont(new Font("SansSerif", Font.BOLD, 48));
+                        FontMetrics fm = g2.getFontMetrics();
+                        int textH = fm.getHeight();
+                        y = (getHeight() - imgH - textH - 30) / 2;
+                    }
+
+                    g2.drawImage(currentImg, x, y, imgW, imgH, null);
+
+                    // Afficher le texte sous l'image si demandé
+                    if (texteSousImage != null && !texteSousImage.isEmpty()) {
+                        g2.setFont(new Font("SansSerif", Font.BOLD, 48));
+                        g2.setColor(Color.WHITE);
+                        FontMetrics fm = g2.getFontMetrics();
+                        int textX = (getWidth() - fm.stringWidth(texteSousImage)) / 2;
+                        int textY = y + imgH + fm.getHeight() + 10;
+                        g2.drawString(texteSousImage, textX, textY);
+                    }
+                } else {
+                    // Fallback si l'image n'existe pas
+                    String fallback = (texteSousImage != null) ? texteSousImage : nomImage;
+                    g2.setFont(new Font("SansSerif", Font.BOLD, 48));
+                    g2.setColor(Color.WHITE);
+                    FontMetrics fm = g2.getFontMetrics();
+                    int textX = (getWidth() - fm.stringWidth(fallback)) / 2;
+                    int textY = (getHeight() - fm.getHeight()) / 2;
+                    g2.drawString(fallback, textX, textY);
+                }
             }
         };
 
-        alibiPanel.setOpaque(false);
-        alibiPanel.setBounds(0, 0, uiOverlay.getWidth(), uiOverlay.getHeight());
-        JPanel currentPanel = alibiPanel;
-        uiOverlay.add(alibiPanel, JLayeredPane.POPUP_LAYER);
+        overlayPanel.setOpaque(false);
+
+        // Obtenir les dimensions valides (uiOverlay peut avoir taille 0 au premier appel)
+        int w = uiOverlay.getWidth();
+        int h = uiOverlay.getHeight();
+
+        // Si uiOverlay n'a pas encore de taille, utiliser celle du layeredPane parent
+        if (w <= 0 || h <= 0) {
+            java.awt.Container parent = uiOverlay.getParent();
+            if (parent != null) {
+                w = parent.getWidth();
+                h = parent.getHeight();
+            }
+        }
+
+        // Fallback ultime : utiliser WORLD_W et WORLD_H
+        if (w <= 0 || h <= 0) {
+            w = WORLD_W;
+            h = WORLD_H;
+        }
+
+        overlayPanel.setBounds(0, 0, w, h);
+        uiOverlay.add(overlayPanel, JLayeredPane.POPUP_LAYER);
         uiOverlay.revalidate();
         uiOverlay.repaint();
 
-        // auto-suppression après 2 secondes
-        new javax.swing.Timer(2000, e -> {
-            uiOverlay.remove(currentPanel);
-            alibiPanel = null;
-
+        // Suppression automatique après la durée demandée
+        JPanel finalPanel = overlayPanel;
+        new javax.swing.Timer(dureeMs, e -> {
+            uiOverlay.remove(finalPanel);
             jeuVerrouille = false;
-
             uiOverlay.revalidate();
             uiOverlay.repaint();
         }) {{
             setRepeats(false);
             start();
         }};
+    }
+
+        // Méthode afficherCarteAlibi mise à jour
+    public void afficherCarteAlibi(Personnage personnage) {
+        String spriteName = personnage.image;
+        afficherOverlayAvecImage(spriteName, null, 2000);
+    }
+
+    // Méthode showGameOverScreen mise à jour
+    public void showGameOverScreen(String vainqueur) {
+        String imageName;
+        if (vainqueur != null && vainqueur.toLowerCase().contains("jack")) {
+            imageName = "VictoireJ";
+            String message = "Jack l'emporte";
+            afficherOverlayAvecImage(imageName, message, 3000);
+        } else {
+            imageName = "VictoireE";
+            String message = "Victoire de Sherlock Holmes";
+            afficherOverlayAvecImage(imageName, message, 3000);
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -720,15 +809,6 @@ public class VueMonde extends JPanel {
             playerRects[player].revalidate();
             playerRects[player].repaint();
         }
-    }
-
-    public void showGameOverScreen(String vainqueur) {
-        gameOverLabel = new JLabel(vainqueur + " a gagne !", SwingConstants.CENTER);
-        gameOverLabel.setFont(new Font("SansSerif", Font.BOLD, 64));
-        gameOverLabel.setForeground(Color.RED);
-        gameOverLabel.setBounds(300, 350, 600, 100);
-        uiOverlay.add(gameOverLabel);
-        uiOverlay.revalidate();
     }
 
     public void hideGameOverScreen() {
