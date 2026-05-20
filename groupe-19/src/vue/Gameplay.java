@@ -365,10 +365,16 @@ public class Gameplay {
             if (!echangeState.hasFirstTile()) {
                 echangeState.setFirstTile(row, col);
                 System.out.println("Échange — première tuile : (" + row + "," + col + ")");
-            } else if (!echangeState.isSameTile(row, col)) {
+            } else if (echangeState.isSameTile(row, col)) {
+                System.out.println("Échange — annulation de la 1ere tuile : (" + row + "," + col + ")");
+                vue.getMonde().setTuileSelected(-1,-1);
+                echangeState.setFirstTile(-1,-1);
+                refreshView();
+            } else {
                 System.out.println("Échange — deuxième tuile : (" + row + "," + col + ")");
                 partie.actions.echange(echangeState.row, echangeState.col, row, col);
                 echangeState = null;
+                vue.getMonde().setTuileSelected(-1,-1);
                 refreshView();
             }
         } else if (rotationState != null) {
@@ -382,6 +388,7 @@ public class Gameplay {
                 vue.rotateTile(row, col, 90);
                 System.out.println("Rotation — quart supplémentaire (" + rotationState.quarts + " total)");
             } else {
+                vue.getMonde().setTuileSelected(-1,-1);
                 exitRotationMode();
             }
         }
@@ -392,18 +399,18 @@ public class Gameplay {
     // -------------------------------------------------------------------------
 
     /** Encapsule l'état d'une opération d'échange en cours (attente de 2 clics). */
-    private static class EchangeState {
+    private  class EchangeState {
         int row = -1, col = -1;
 
         boolean hasFirstTile() { return row != -1; }
 
-        void setFirstTile(int r, int c) { row = r; col = c; }
+        void setFirstTile(int r, int c) { row = r; col = c; vue.getMonde().setTuileSelected(r, c); }
 
         boolean isSameTile(int r, int c) { return row == r && col == c; }
     }
 
     /** Encapsule l'état d'une opération de rotation en cours. */
-    private static class RotationState {
+    private class RotationState {
         final int jetonIndex;
         int row = -1, col = -1;
         int quarts = 0;
@@ -412,7 +419,7 @@ public class Gameplay {
 
         boolean hasTarget() { return row != -1; }
 
-        void setTarget(int r, int c) { row = r; col = c; quarts = 1; }
+        void setTarget(int r, int c) { row = r; col = c; quarts = 1; vue.getMonde().setTuileSelected(r,c); }
 
         boolean isSameTile(int r, int c) { return row == r && col == c; }
 
