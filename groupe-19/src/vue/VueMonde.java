@@ -623,21 +623,43 @@ public class VueMonde extends JPanel {
         }
     }
 
-    /** Adapte la couleur de fond au joueur courant. */
-    public void updateBackground(Joueur joueurCourant) {
-        String couleurFond;
+    // À ajouter dans VueMonde.java (après les autres méthodes)
+
+    /**
+     * Met à jour uniquement les deux rectangles joueurs selon le joueur courant.
+     * Le joueur actif a un rectangle coloré, l'inactif devient gris.
+     */
+    public void updatePlayerRectangles(Joueur joueurCourant) {
         if (joueurCourant == Joueur.JACK) {
-            couleurFond = BG_RED;
             updateRectColor(0, Color.GRAY);
             updateRectColor(1, new Color(180, 40, 40, 200));
-            } //BRICOLAGE
-            
-        else {
-            couleurFond = BG_BLUE; 
+        } else {
             updateRectColor(1, Color.GRAY);
-            updateRectColor(0, new Color(40, 80, 180, 200)); }
-        setBackgroundColor(couleurFond);
+            updateRectColor(0, new Color(40, 80, 180, 200));
+        }
+    }
 
+    /**
+     * Ancienne méthode maintenue pour compatibilité.
+     * Appelle la nouvelle méthode avec coursePoursuiteActive = false.
+     */
+    public void updateBackground(Joueur joueurCourant) {
+        updateBackground(joueurCourant, false);
+    }
+
+    /**
+     * Nouvelle méthode : met à jour le fond d'écran (violet si course poursuite,
+     * sinon rouge/bleu selon le joueur) et met à jour les rectangles.
+     */
+    public void updateBackground(Joueur joueurCourant, boolean coursePoursuiteActive) {
+        updatePlayerRectangles(joueurCourant);
+        String couleurFond;
+        if (coursePoursuiteActive) {
+            couleurFond = BG_PURPLE;
+        } else {
+            couleurFond = (joueurCourant == Joueur.JACK) ? BG_RED : BG_BLUE;
+        }
+        setBackgroundColor(couleurFond);
     }
 
     /** Bascule la face d'un indicateur de tour (Pile <-> Face). */

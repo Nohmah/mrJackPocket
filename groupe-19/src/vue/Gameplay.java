@@ -147,11 +147,20 @@ public class Gameplay {
 
     /** Rafraîchit tous les composants visuels depuis l'état courant du modèle. */
     private void refreshView() {
-        vue.updateBackground(partie.joueurCourant);
+        vue.updateBackground(partie.joueurCourant, partie.coursePoursuiteActive);
         vue.updateDistrictView(partie.district);
         vue.updateJetons(partie.jetonsAction);
         vue.updateDetectivesView(partie.detectives);
         vue.updateSabliers(partie.sabliersDeJack, 6);
+    }
+
+    public void activerCoursePoursuiteTest() {
+        partie.coursePoursuiteActive = true;
+        // Force un rafraîchissement complet de l'interface
+        refreshView();
+        // Met à jour l'indicateur de tour si besoin
+        vue.updateTurnIndicator(partie.numeroTour);
+        System.out.println("Test : mode course poursuite activé (fond violet)");
     }
 
     // -------------------------------------------------------------------------

@@ -147,8 +147,8 @@ public class VueJeu extends JFrame {
     }
 
     /** Adapte la couleur de fond au joueur courant. */
-    public void updateBackground(Joueur joueurCourant) {
-        vueMonde.updateBackground(joueurCourant);
+    public void updateBackground(Joueur joueurCourant, boolean coursePoursuiteActive) {
+    vueMonde.updateBackground(joueurCourant, coursePoursuiteActive);
     }
 
     /** Bascule la face d'un indicateur de tour (Pile <-> Face). */
@@ -251,7 +251,7 @@ public class VueJeu extends JFrame {
     /** Rafraichit toutes les vues a chaque frame. */
     public void refreshBoardComponents() {
         vueMonde.updateTurnIndicator(gameplay.partie.numeroTour);
-        vueMonde.updateBackground(gameplay.partie.joueurCourant);
+        vueMonde.updateBackground(gameplay.partie.joueurCourant, gameplay.partie.coursePoursuiteActive); //BRICOLAGE + ajout BG Violet
         if (!gameplay.rotationMode) {
             vueMonde.updateDistrictView(gameplay.partie.district);
         }
@@ -429,6 +429,7 @@ public class VueJeu extends JFrame {
     // =========================================================================
 
     private void onReglesPressed() {
+        //gameplay.activerCoursePoursuiteTest();
         //vueMonde.setPlayerType(1, "IA diabolique");
         if (panneauRegles != null && panneauRegles.isShowing()) {
             fermerPanneauRegles();

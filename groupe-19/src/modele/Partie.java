@@ -34,7 +34,7 @@ public class Partie {
     public int sabliersDeJack;
     private final int MAX_SABLIER = 6;
     public volatile Joueur gagnant = null;
-    boolean coursePoursuiteActive = false;
+    public boolean coursePoursuiteActive = false;
 
     //Suivi de tour
     private final int MAX_TOUR = 8;
