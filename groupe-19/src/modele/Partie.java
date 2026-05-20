@@ -4,6 +4,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.CompletableFuture;
 import javax.swing.*;
+
+
 import src.modele.ia.*;
 
 /**
@@ -47,8 +49,9 @@ public class Partie {
     private ExecutorService executor = Executors.newSingleThreadExecutor();
     private boolean IaEnCours = false;
     public boolean estSimulation = false;
-    public int niveauJack;  // niveau de son IA (-1 = manuel, 0 = random, 1 = facile, 2 = moyen)
-    public int niveauEnqueteur; // niveau de l'IA de l'enquêteur (-1 = manuel, 0 = random, 1 = facile, 2 = moyen)
+    public int niveauJack;  // niveau de son IA (-1 = manuel, 0 = facile, 1 = moyen, 2 = difficile)
+    public int niveauEnqueteur; // niveau de l'IA de l'enquêteur (-1 = manuel, 0 = facile, 1 = moyen, 2 = difficile)
+    public boolean changement; //si il y a eu un changement avec les undo / redo pour annuler le coup de l'ia
 
     //Pour l'historique
     Deque<Partie> undo = new ArrayDeque<>();
@@ -67,6 +70,7 @@ public class Partie {
         suspects = new ArrayList<>();
         initialiserPartie();
         tourSuivant();
+        changement = true;
         verifTourIa();
     }
 
@@ -145,6 +149,7 @@ public class Partie {
         redo.clear();
         initialiserPartie();
         tourSuivant();
+        changement = true;
         verifTourIa();
     }
 
@@ -260,6 +265,7 @@ public class Partie {
     public void lanceIa() {
         if(IaEnCours || isPartieTerminee() || actions.getActionsPossibles().isEmpty()) return;
         if (estSimulation) return;
+        changement = false;
 
         boolean estJack = (joueurCourant == Joueur.JACK);
 
@@ -276,6 +282,10 @@ public class Partie {
                 .thenAccept(iaCoup -> {
                     SwingUtilities.invokeLater(() -> {
                         IaEnCours = false;
+                        if(changement){ //si il y eu un changement de la partie 
+                            verifTourIa();
+                            return;
+                        }
                         if (iaCoup != null && iaCoup.action != null) {
                             jouerCoup(iaCoup);
                         }
@@ -464,14 +474,18 @@ public class Partie {
         if(undo.isEmpty()) return;
         redo.push(new Partie(this));
         Partie ancien = undo.pop();
+        changement = true;
         restaurer(ancien);
+        verifTourIa();
     }
 
     public void refaire(){
         if(redo.isEmpty()) return;
         undo.push(new Partie(this));
         Partie nouveau = redo.pop();
+        changement = true;
         restaurer(nouveau);
+        verifTourIa();
     }
 
     private void restaurer(Partie p){
@@ -509,5 +523,7 @@ public class Partie {
 
     public void fromGameSave(GameSave save) {
         PartieSaveMapper.fromGameSave(this, save);
+        changement = true;
+        verifTourIa();
     }
 }
