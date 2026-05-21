@@ -216,6 +216,8 @@ public class VueLobby extends JPanel {
                 boutonPret.setText("Je suis prêt !");
                 boutonPret.setBackground(Color.GREEN);
             }
+
+
         });
 
         positionnement.add(titre);
@@ -272,6 +274,7 @@ public class VueLobby extends JPanel {
         statutPret.setText("Joueurs prêts : " + nbPrets + "/2");
         if(nbPrets == 2) {
             statutPret.setForeground(Color.GREEN);
+            boutonPret.setEnabled(false);
         } else {
             statutPret.setForeground(Color.WHITE);
         }
@@ -328,9 +331,9 @@ public class VueLobby extends JPanel {
         });
     }
 
-    public void lancementPartie(){
+    public void lancementPartie(src.vue.VueJeu nouvellePartie) {
         ajouterMessageChat("Système", "Lancement de la partie dans :");
-
+        JFrame parent = this.parent;
         Timer timer = new Timer(1000, new ActionListener() {
             int compteur = 3;
 
@@ -342,8 +345,8 @@ public class VueLobby extends JPanel {
                 } else {
                     ajouterMessageChat("Système", "GO !");
                     ((Timer)e.getSource()).stop(); // On arrête le timer
-
-                    // TODO : lancer la partie
+                    parent.dispose();
+                    nouvellePartie.setVisible(true);
                 }
             }
         });

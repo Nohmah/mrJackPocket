@@ -1,9 +1,17 @@
 package src.reseau;
 
 public enum CommunicationLobbyCS {
+    // LOBBY
     INFORMATION_CLIENT,
     MESSAGE,
     BOUTON_PRET,
     BOUTON_CHOIX,
-    QUITTE
+    QUITTE,
+
+    // JEU
+    PIOCHE_ALIBI,
+    JOKER,
+    DETECTIVE,
+    ROTATION,
+    ECHANGE
 }

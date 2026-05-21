@@ -1,5 +1,8 @@
 package src.reseau;
 
+import src.modele.*;
+import src.vue.Gameplay;
+
 import java.net.*;
 import java.io.*;
 import java.util.concurrent.BlockingQueue;
@@ -22,12 +25,16 @@ public class Serveur {
     private ObjectOutputStream outC2;
     private ObjectInputStream inC2;
 
-    private BlockingQueue<MessageServeur> receptionRequeteClient;
+    private final BlockingQueue<MessageServeur> receptionRequeteClient;
 
     private int nombreJoueurPret = 0;
     private boolean joueur1pret;
     private boolean joueur2pret;
+    private boolean j1Jack;
+    private Joueur choixJ1;
 
+    private boolean enJeu = false;
+    private Partie partieServeur;
 
     public Serveur() {
         receptionRequeteClient = new LinkedBlockingQueue<>();
@@ -55,6 +62,11 @@ public class Serveur {
 
                 while (true) {
                     Socket nouvelleConnection = this.serveurSocket.accept();
+
+                    if(enJeu){
+                        nouvelleConnection.close();
+                        continue;
+                    }
 
                     if(this.pseudoClient2 == null){
                         this.clientSocket2 = nouvelleConnection;
@@ -119,7 +131,11 @@ public class Serveur {
             while (true) {
                 try {
                     MessageServeur messageServeur = this.receptionRequeteClient.take();
-                    gestionCommunicationVersClient(messageServeur);
+                    if(enJeu){
+                        gestionEcoute(messageServeur);
+                    }else{
+                        gestionCommunicationVersClientLobby(messageServeur);
+                    }
                 } catch (InterruptedException e) {
                     System.out.println("Arrêt de la file d'attente du serveur.");
                     break;
@@ -130,7 +146,7 @@ public class Serveur {
         threadConsommateurServeur.start();
     }
 
-    private void gestionCommunicationVersClient(MessageServeur messageServeur){
+    private void gestionCommunicationVersClientLobby(MessageServeur messageServeur){
         switch (messageServeur.getCodeClient()){
             case INFORMATION_CLIENT:
                 if(this.pseudoClient1 == null){
@@ -146,22 +162,32 @@ public class Serveur {
                 }
                 break;
             case MESSAGE:
-                informerClients(NOUVEAU_MESSAGE, messageServeur.getPseudo(), messageServeur.getMessage());
+                informerClients(NOUVEAU_MESSAGE, messageServeur.getPseudo(), messageServeur.getContenue());
                 break;
             case BOUTON_CHOIX:
-                informerClients(MISE_A_JOUR_CHOIX, messageServeur.getPseudo(), messageServeur.getMessage());
+                informerClients(MISE_A_JOUR_CHOIX, messageServeur.getPseudo(), messageServeur.getContenue());
+                this.j1Jack = Boolean.parseBoolean(messageServeur.getContenue().toString());
                 break;
             case BOUTON_PRET:
                 if (messageServeur.getPseudo().equals(this.pseudoClient1)) {
-                    this.joueur1pret = Boolean.parseBoolean(messageServeur.getMessage());
+                    this.joueur1pret = Boolean.parseBoolean(messageServeur.getContenue().toString());
                 } else if (messageServeur.getPseudo().equals(this.pseudoClient2)) {
-                    this.joueur2pret = Boolean.parseBoolean(messageServeur.getMessage());
+                    this.joueur2pret = Boolean.parseBoolean(messageServeur.getContenue().toString());
                 }
                 this.nombreJoueurPret = (this.joueur1pret ? 1 : 0) + (this.joueur2pret ? 1 : 0);
                 informerClients(MISE_A_JOUR_CONFIRMATION, messageServeur.getPseudo(), String.valueOf(this.nombreJoueurPret));
                 if(this.nombreJoueurPret == 2){
-                    informerClients(LANCEMENT_PARTIE, "","");
-                    //TODO Changer d'état le serveur pour mettre en mode Jeu partie en cours)
+                    this.enJeu = true;
+                    if(j1Jack){
+                        partieServeur = new Partie(Joueur.JACK,-1,-1);
+                        choixJ1 = Joueur.JACK;
+                    }else{
+                        partieServeur = new Partie(Joueur.ENQUETEUR,-1,-1);
+                        choixJ1 = Joueur.ENQUETEUR;
+                    }
+                    PartieSnapshot partieInitiale = PartieSaveMapper.toSnapshot(partieServeur);
+
+                    informerClients(LANCEMENT_PARTIE, "Systeme", partieInitiale);
                 }
 
                 break;
@@ -182,10 +208,66 @@ public class Serveur {
         }
     }
 
-    private void informerClients(CommunicationLobbySC codeServeur,String pseudo, String message){
-        MessageServeur messageServeur = new MessageServeur(codeServeur,pseudo, message);
+    private void gestionEcoute(MessageServeur messageServeur){
+        if(partieServeur.joueurCourant == choixJ1){
+            if(messageServeur.getPseudo().equals(this.pseudoClient1)){
+                System.out.println("[DEBUG] Client 1 à eu la main ! ");
+                gestionCommunicationVersClientJeu(messageServeur);
+            }
+        }else{
+            if(messageServeur.getPseudo().equals(this.pseudoClient2)){
+                System.out.println("[DEBUG] Client 2 à eu la main ! ");
+                gestionCommunicationVersClientJeu(messageServeur);
+            }
+        }
+    }
+
+
+    private void gestionCommunicationVersClientJeu(MessageServeur messageServeur){
+        Object contenueRecu[] = (Object[]) messageServeur.getContenue();
+        Detective.Type detectiveType;
+        switch (messageServeur.getCodeClient()){
+            case PIOCHE_ALIBI :
+                this.partieServeur.actions.alibi();
+                break;
+            case JOKER:
+                if(contenueRecu[0] != null) {
+                    detectiveType = (Detective.Type) contenueRecu[0];
+                    for (Detective d : this.partieServeur.detectives) {
+                        if (d.getType() == detectiveType) this.partieServeur.actions.joker(d);
+                    }
+                }else{
+                    this.partieServeur.actions.joker(null);
+                }
+                break;
+            case DETECTIVE:
+                detectiveType = (Detective.Type) contenueRecu[0];
+                for (Detective d : this.partieServeur.detectives) {
+                if (d.getType() == detectiveType) this.partieServeur.actions.deplacerDetective(d, (Integer) contenueRecu[1]);;
+                }
+
+                break;
+            case ROTATION:
+                this.partieServeur.actions.rotationQuartier((Integer) contenueRecu[0], (Integer) contenueRecu[1], (Integer) contenueRecu[2], (Integer) contenueRecu[3] );
+                break;
+            case ECHANGE:
+                this.partieServeur.actions.echange((Integer) contenueRecu[0], (Integer) contenueRecu[1], (Integer) contenueRecu[2], (Integer) contenueRecu[3]);
+                break;
+
+        }
+
+        PartieSnapshot partieEnCours = PartieSaveMapper.toSnapshot(partieServeur);
+        informerClients(NOUVEAU_PLATEAU, "Systeme", partieEnCours);
+
+    }
+
+
+    private void informerClients(CommunicationLobbySC codeServeur,String pseudo, Object contenu){
+        System.out.println("[DEBUG] Code serveur : "+ codeServeur);
+        MessageServeur messageServeur = new MessageServeur(codeServeur,pseudo, contenu);
         try {
             if (outC1 != null) {
+                System.out.println("[DEBUG] C1 message");
                 outC1.writeObject(messageServeur);
             }
             if (outC2 != null) {
@@ -207,11 +289,8 @@ public class Serveur {
             if (inC2 != null) inC2.close();
             if (outC2 != null) outC2.close();
             if (clientSocket2 != null) clientSocket2.close();
-            System.out.println("DEBUG FERMER");
             if (serveurSocket != null && !serveurSocket.isClosed()) {
-                System.out.println("DEBUG FERMER");
                 serveurSocket.close();
-                System.out.println("DEBUG FERMER");
             }
 
         } catch (IOException e) {

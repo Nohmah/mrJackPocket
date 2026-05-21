@@ -206,6 +206,9 @@ public class VueJeu extends JFrame {
         return vueMonde;
     }
 
+    /** Donne le médiateur */
+    public Gameplay getGameplay() { return gameplay; }
+
     // =========================================================================
     // Fond d'ecran — constantes exposees pour compatibilite avec Gameplay
     // =========================================================================

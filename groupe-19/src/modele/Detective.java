@@ -1,5 +1,7 @@
 package src.modele;
 
+import java.io.Serializable;
+
 /**
  * Représente et gère la position des (trois) détectives : Holmes, Watson et le chien Toby.
  * Les détectives se déplacent sur un circuit périphérique de 12 espaces
@@ -20,7 +22,7 @@ package src.modele;
 
 public class Detective {
 
-    public enum Type{
+    public enum Type implements Serializable {
         HOLMES("Holmes"),
         WATSON("Watson"),
         TOBY("Toby");

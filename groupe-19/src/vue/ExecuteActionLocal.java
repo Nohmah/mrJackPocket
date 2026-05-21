@@ -1,0 +1,37 @@
+package src.vue;
+
+import src.modele.Detective;
+import src.modele.Partie;
+
+public class ExecuteActionLocal implements ExecuteAction {
+
+    @Override
+    public void executePiocheAlibi(Gameplay gameplay) {
+        gameplay.partie.actions.alibi();
+        gameplay.refreshView();
+    }
+
+    @Override
+    public void executeJoker(Gameplay gameplay, Detective detective) {
+        gameplay.partie.actions.joker(detective);
+        gameplay.refreshView();
+    }
+
+    @Override
+    public void executeDetective(Gameplay gameplay, Detective detective, int pas) {
+        gameplay.partie.actions.deplacerDetective(detective, pas);
+        gameplay.refreshView();
+    }
+
+    @Override
+    public void executeRotationQuartier(Gameplay gameplay, int jetonIndex, int row, int col, int quarts) {
+        gameplay.partie.actions.rotationQuartier(jetonIndex, row, col, quarts);
+        gameplay.refreshView();
+    }
+
+    @Override
+    public void executeEchangeQuartier(Gameplay gameplay, int rowPremierChoix, int colPremierChoix, int row, int col) {
+        gameplay.partie.actions.echange(rowPremierChoix, colPremierChoix, row, col);
+        gameplay.refreshView();
+    }
+}
