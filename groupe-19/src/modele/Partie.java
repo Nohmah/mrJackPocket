@@ -47,7 +47,7 @@ public class Partie {
     //pour l'ia et le thread
     private Ia ia = new Ia();
     private ExecutorService executor = Executors.newSingleThreadExecutor();
-    private boolean IaEnCours = false;
+    public boolean IaEnCours = false;
     public boolean estSimulation = false;
     public int niveauJack;  // niveau de son IA (-1 = manuel, 0 = facile, 1 = moyen, 2 = difficile)
     public int niveauEnqueteur; // niveau de l'IA de l'enquêteur (-1 = manuel, 0 = facile, 1 = moyen, 2 = difficile)
