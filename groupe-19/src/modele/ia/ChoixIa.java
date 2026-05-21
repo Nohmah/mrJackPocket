@@ -14,11 +14,6 @@ public class ChoixIa {
         System.out.println("entre dans IA Random");
 
         Random r = new Random();
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            System.err.println("Erreur lors de la pause dans IA Random : ");
-        }
 
         List<Action> actionsPossibles = partie.actions.getActionsPossibles();
         Action actionsChoisis = actionsPossibles.get(r.nextInt(actionsPossibles.size()));

@@ -6,18 +6,18 @@ public class MessageServeur implements Serializable {
     private CommunicationLobbySC codeServeur = null;
     private CommunicationLobbyCS codeClient = null;
     private final String pseudo;
-    private final String message;
+    private final Object contenue;
 
-    public MessageServeur(CommunicationLobbySC codeServeur, String pseudo, String message) {
+    public MessageServeur(CommunicationLobbySC codeServeur, String pseudo, Object contenue) {
         this.codeServeur = codeServeur;
         this.pseudo = pseudo;
-        this.message = message;
+        this.contenue = contenue;
     }
 
-    public MessageServeur(CommunicationLobbyCS codeClient, String pseudo, String message) {
+    public MessageServeur(CommunicationLobbyCS codeClient, String pseudo, Object contenue) {
         this.codeClient = codeClient;
         this.pseudo = pseudo;
-        this.message = message;
+        this.contenue = contenue;
     }
 
     public CommunicationLobbySC getCodeServeur() {
@@ -27,9 +27,8 @@ public class MessageServeur implements Serializable {
     public String getPseudo() {
         return pseudo;
     }
-
-    public String getMessage() {
-        return message;
+    public Object getContenue() {
+        return contenue;
     }
 
 }

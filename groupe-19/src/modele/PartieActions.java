@@ -37,6 +37,7 @@ public class PartieActions {
 
     /** Action d'un jeton action. Déplace un détective de [pas] dans le sens horaire autour du District **/
     public void deplacerDetective(Detective detective, int pas) {
+        if (partie.isFreeze()) return;
         Action action;
         switch (detective.getType()) {
             case HOLMES -> action = Action.HOLMES;
@@ -59,6 +60,7 @@ public class PartieActions {
     /** Action d'un jeton action. Déplace un détective de 1 pas dans le sens horaire
      * ou si Jack, peut aussi ne rien faire **/
     public void joker(Detective detective) {
+        if (partie.isFreeze()) return;
         JetonAction jeton = getSiJetonDisponible(Action.JOKER);
         if (jeton==null){
             return;
@@ -76,6 +78,7 @@ public class PartieActions {
 
     /** Action d'un jeton action. Pivote un quartier de [quarts] quarts de tour **/
     public void rotationQuartier(int JetonIndex, int x, int y, int quarts) {
+        if (partie.isFreeze()) return;
         JetonAction jeton = partie.jetonsAction.get(JetonIndex);
         if (jeton.isJoue()){
             return;
@@ -94,6 +97,7 @@ public class PartieActions {
 
     /** Action d'un jeton action. Échange deux quartiers **/
     public void echange(int x1, int y1, int x2, int y2) {
+        if (partie.isFreeze()) return;
         JetonAction jeton = getSiJetonDisponible(Action.ECHANGE);
         if (jeton==null){
             return;
@@ -107,6 +111,7 @@ public class PartieActions {
 
     /** Action d'un jeton action. Pioche une carte alibi puis innocente si détective, ajoute les sabliers si Jack **/
     public void alibi() {
+        if (partie.isFreeze()) return;
         JetonAction jeton = getSiJetonDisponible(Action.ALIBI);
         if (jeton==null){
             return;

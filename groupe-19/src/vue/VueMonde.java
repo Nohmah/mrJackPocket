@@ -31,8 +31,6 @@ public class VueMonde extends JPanel {
     /** true si il ne devrait plus être possible de cliquer sur les boutons, car par exemple il y a une animation en cours
      * Il faut étendre cette variable partout où c'est nécessaire**/
     public boolean jeuVerrouille = false;
-    private JLabel centerMessage;
-    private JPanel centerMessagePanel;
     private JPanel alibiPanel;
     // =========================================================================
     // Constantes monde (proprietaires de VueMonde)
@@ -57,6 +55,8 @@ public class VueMonde extends JPanel {
             (WORLD_W - BOARD_SIZE) / 2.0 - 60,
             (WORLD_H - BOARD_SIZE) / 2.0
     );
+    private JLabel centerMessage;
+    private JPanel centerMessagePanel;
 
     public void showCenterMessage(String text) {
 //        if (centerMessagePanel != null) {
@@ -96,58 +96,147 @@ public class VueMonde extends JPanel {
 //        }};
     }
 
-    public void afficherCarteAlibi(Personnage personnage) {
+    // =========================================================================
+    // Overlay générique pour affichage d'image avec texte sous l'image
+    // =========================================================================
+
+    /**
+     * Affiche une image en plein écran (overlay) avec un texte optionnel en dessous,
+     * bloque toutes les actions (jeuVerrouille = true) pendant la durée spécifiée.
+     *
+     * @param nomImage        Nom de la sprite à afficher (ex: "VictoireJ").
+     * @param texteSousImage  Texte à afficher sous l'image (peut être null).
+     * @param dureeMs         Durée d'affichage en millisecondes.
+     */
+    private void afficherOverlayAvecImage(String nomImage, String texteSousImage, int dureeMs) {
+        // Nettoyer l'overlay précédent (alibiPanel) s'il existe
         if (alibiPanel != null) {
             uiOverlay.remove(alibiPanel);
+            alibiPanel = null;
         }
 
         jeuVerrouille = true;
 
-        String spriteName = personnage.image;
-        Camera.AddSprite(spriteName);
+        // Charger l'image dans le cache si nécessaire
+        Camera.AddSprite(nomImage);
 
-        alibiPanel = new JPanel() {
+        // Récupérer l'image
+        BufferedImage img = Camera.GetSpriteImage(nomImage);
+
+        // Panneau personnalisé pour l'image + texte
+        JPanel overlayPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                                    RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
-                BufferedImage img = Camera.GetSpriteImage(spriteName);
-                if (img == null) return;
+                // Fond semi-transparent
+                g2.setColor(new Color(0, 0, 0, 200));
+                g2.fillRect(0, 0, getWidth(), getHeight());
 
-                int panelW = getWidth();
-                int panelH = getHeight();
+                // Récupérer l'image (si elle a changé entre temps)
+                BufferedImage currentImg = Camera.GetSpriteImage(nomImage);
+                if (currentImg == null) {
+                    currentImg = img;
+                }
 
-                int drawW = img.getWidth();
-                int drawH = img.getHeight();
+                if (currentImg != null) {
+                    int imgW = currentImg.getWidth();
+                    int imgH = currentImg.getHeight();
+                    int x = (getWidth() - imgW) / 2;
+                    int y = (getHeight() - imgH) / 2;
 
-                int x = (panelW - drawW) / 2;
-                int y = (panelH - drawH) / 2;
-                g.setColor(new Color(0, 0, 0, 200));
-                g.fillRect(0, 0, getWidth(), getHeight());
-                g.drawImage(img, x, y, drawW, drawH, null);
+                    // Si du texte est présent, remonter légèrement l'image pour laisser la place
+                    if (texteSousImage != null && !texteSousImage.isEmpty()) {
+                        g2.setFont(new Font("SansSerif", Font.BOLD, 48));
+                        FontMetrics fm = g2.getFontMetrics();
+                        int textH = fm.getHeight();
+                        y = (getHeight() - imgH - textH - 30) / 2;
+                    }
+
+                    g2.drawImage(currentImg, x, y, imgW, imgH, null);
+
+                    // Afficher le texte sous l'image si demandé
+                    if (texteSousImage != null && !texteSousImage.isEmpty()) {
+                        g2.setFont(new Font("SansSerif", Font.BOLD, 48));
+                        g2.setColor(Color.WHITE);
+                        FontMetrics fm = g2.getFontMetrics();
+                        int textX = (getWidth() - fm.stringWidth(texteSousImage)) / 2;
+                        int textY = y + imgH + fm.getHeight() + 10;
+                        g2.drawString(texteSousImage, textX, textY);
+                    }
+                } else {
+                    // Fallback si l'image n'existe pas
+                    String fallback = (texteSousImage != null) ? texteSousImage : nomImage;
+                    g2.setFont(new Font("SansSerif", Font.BOLD, 48));
+                    g2.setColor(Color.WHITE);
+                    FontMetrics fm = g2.getFontMetrics();
+                    int textX = (getWidth() - fm.stringWidth(fallback)) / 2;
+                    int textY = (getHeight() - fm.getHeight()) / 2;
+                    g2.drawString(fallback, textX, textY);
+                }
             }
         };
 
-        alibiPanel.setOpaque(false);
-        alibiPanel.setBounds(0, 0, uiOverlay.getWidth(), uiOverlay.getHeight());
-        JPanel currentPanel = alibiPanel;
-        uiOverlay.add(alibiPanel, JLayeredPane.POPUP_LAYER);
+        overlayPanel.setOpaque(false);
+
+        // Obtenir les dimensions valides (uiOverlay peut avoir taille 0 au premier appel)
+        int w = uiOverlay.getWidth();
+        int h = uiOverlay.getHeight();
+
+        // Si uiOverlay n'a pas encore de taille, utiliser celle du layeredPane parent
+        if (w <= 0 || h <= 0) {
+            java.awt.Container parent = uiOverlay.getParent();
+            if (parent != null) {
+                w = parent.getWidth();
+                h = parent.getHeight();
+            }
+        }
+
+        // Fallback ultime : utiliser WORLD_W et WORLD_H
+        if (w <= 0 || h <= 0) {
+            w = WORLD_W;
+            h = WORLD_H;
+        }
+
+        overlayPanel.setBounds(0, 0, w, h);
+        uiOverlay.add(overlayPanel, JLayeredPane.POPUP_LAYER);
         uiOverlay.revalidate();
         uiOverlay.repaint();
 
-        // auto-suppression après 2 secondes
-        new javax.swing.Timer(2000, e -> {
-            uiOverlay.remove(currentPanel);
-            alibiPanel = null;
-
+        // Suppression automatique après la durée demandée
+        JPanel finalPanel = overlayPanel;
+        new javax.swing.Timer(dureeMs, e -> {
+            uiOverlay.remove(finalPanel);
             jeuVerrouille = false;
-
             uiOverlay.revalidate();
             uiOverlay.repaint();
         }) {{
             setRepeats(false);
             start();
         }};
+    }
+
+        // Méthode afficherCarteAlibi mise à jour
+    public void afficherCarteAlibi(Personnage personnage) {
+        String spriteName = personnage.image;
+        afficherOverlayAvecImage(spriteName, null, 2000);
+    }
+
+    // Méthode showGameOverScreen mise à jour
+    public void showGameOverScreen(String vainqueur) {
+        String imageName;
+        if (vainqueur != null && vainqueur.toLowerCase().contains("jack")) {
+            imageName = "VictoireJ";
+            String message = "Jack l'emporte";
+            afficherOverlayAvecImage(imageName, message, 3000);
+        } else {
+            imageName = "VictoireE";
+            String message = "Victoire de Sherlock Holmes";
+            afficherOverlayAvecImage(imageName, message, 3000);
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -233,6 +322,12 @@ public class VueMonde extends JPanel {
 
     private JLabel     sablierLabel = null;
     private JPanel sablierPanel = null;
+    // Panneau indiquant que l'IA réfléchit (haut-gauche)
+    private JPanel iaThinkingPanel = null;
+    private JLabel iaThinkingLabel = null;
+
+    //Label pour info bulle jeton action.
+    private JLabel actionTooltip;
 
     // =========================================================================
     // Letterbox / scale
@@ -310,7 +405,26 @@ public class VueMonde extends JPanel {
      * @param index Index 0-3, ou -1 pour annuler le survol.
      */
     public void setHoveredToken(int index) {
-        if (index == hoveredTokenIndex) return;
+        if (actionTooltip == null) return;
+
+        if (index < 0 || actionBallIsUsed[index]) {
+            actionTooltip.setVisible(false);
+        } else {
+            String sprite = actionBallCurrentSprite[index];
+            String text = getActionTooltipText(sprite);
+            if (text.isEmpty()) {
+                actionTooltip.setVisible(false);
+            } else {
+                actionTooltip.setText(text);
+                actionTooltip.setSize(actionTooltip.getPreferredSize());
+
+                Point p = getActionBallScreenPos(index);
+                int x = p.x + 20;
+                int y = p.y - 40;
+                actionTooltip.setLocation(x, y);
+                actionTooltip.setVisible(true);
+            }
+        }
         hoveredTokenIndex = index;
         Camera.Repaint();
     }
@@ -410,7 +524,34 @@ public class VueMonde extends JPanel {
         initPlayerRects();
         layeredPane.add(uiOverlay, JLayeredPane.PALETTE_LAYER);
 
+        actionTooltip = new JLabel("", SwingConstants.LEFT);
+        actionTooltip.setOpaque(true);
+        actionTooltip.setBackground(new Color( 0,0,0,100));
+        actionTooltip.setFont(new Font("SansSerif", Font.PLAIN,12));
+        actionTooltip.setForeground(new Color(255,240, 180));
+        actionTooltip.setBorder(BorderFactory.createEmptyBorder(6,8,6,8));
+        actionTooltip.setVisible(false);
+        uiOverlay.add(actionTooltip);
+
         initSablierLabel();
+        initIaThinking();
+    }
+
+    private void initIaThinking() {
+        iaThinkingPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        iaThinkingPanel.setOpaque(true);
+        iaThinkingPanel.setBackground(new Color(0, 0, 0, 160));
+        iaThinkingPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200, 120), 1));
+
+        iaThinkingLabel = new JLabel("IA en train de chercher un coup...");
+        iaThinkingLabel.setForeground(Color.WHITE);
+        iaThinkingLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+        iaThinkingPanel.add(iaThinkingLabel);
+
+        uiOverlay.add(iaThinkingPanel);
+        iaThinkingPanel.setPreferredSize(new Dimension(220, 28));
+        iaThinkingPanel.setBounds(10, 10, 220, 28);
+        iaThinkingPanel.setVisible(false);
     }
 
     private void initPlayerRects() {
@@ -631,6 +772,12 @@ public class VueMonde extends JPanel {
 
     /** Met en evidence l'indicateur de tour courant. */
     public void updateTurnIndicator(int turn) {
+        for(int i = 0; i < 8; i++){
+            boolean doitEtreFace = (i < turn - 1);
+            if(isTurnFacePile(i) == doitEtreFace){
+                switchTurnFace(i);
+            }
+        }
         for (int i = 0; i < turnIndicators.length; i++) {
             if (turnIndicators[i] == null) continue;
             turnIndicators[i].echelle = (i == turn - 1)
@@ -722,15 +869,6 @@ public class VueMonde extends JPanel {
         }
     }
 
-    public void showGameOverScreen(String vainqueur) {
-        gameOverLabel = new JLabel(vainqueur + " a gagne !", SwingConstants.CENTER);
-        gameOverLabel.setFont(new Font("SansSerif", Font.BOLD, 64));
-        gameOverLabel.setForeground(Color.RED);
-        gameOverLabel.setBounds(300, 350, 600, 100);
-        uiOverlay.add(gameOverLabel);
-        uiOverlay.revalidate();
-    }
-
     public void hideGameOverScreen() {
         if (gameOverLabel != null) {
             uiOverlay.remove(gameOverLabel);
@@ -741,6 +879,28 @@ public class VueMonde extends JPanel {
     /** Repeint la camera et l'overlay. */
     public void repaintWorld() {
         Camera.Repaint();
+        uiOverlay.repaint();
+    }
+
+    public void updateIaThinking(boolean IaEnCours){
+        if(IaEnCours) showIaThinking();
+        else hideIaThinking();
+    }
+    /** Affiche le panneau "IA en train de réfléchir". */
+    public void showIaThinking() {
+        if (iaThinkingPanel == null) return;
+        //repositionOverlayElements(uiOverlay.getWidth(), uiOverlay.getHeight());
+        iaThinkingPanel.setLocation(10, 10);
+        iaThinkingPanel.setVisible(true);
+        uiOverlay.revalidate();
+        uiOverlay.repaint();
+    }
+
+    /** Masque le panneau "IA en train de réfléchir". */
+    public void hideIaThinking() {
+        if (iaThinkingPanel == null) return;
+        iaThinkingPanel.setVisible(false);
+        uiOverlay.revalidate();
         uiOverlay.repaint();
     }
 
@@ -951,6 +1111,20 @@ public class VueMonde extends JPanel {
             int y = 10;
             sablierPanel.setBounds(x, y, panelW, panelH);
         }
+        // Positionner le panneau IA en haut à gauche
+        if (iaThinkingPanel != null) {
+            //Pour que la taille de la police + grande si grande fenetre
+            int fontSize = camH / 45;
+            iaThinkingLabel.setFont(new Font("SansSerif", Font.BOLD, fontSize));
+            iaThinkingPanel.revalidate();
+
+            Dimension preferred = iaThinkingPanel.getPreferredSize();
+            int w = camW / 4;
+            int h = camH / 18;
+            int x = 10;
+            int y = 10;
+            iaThinkingPanel.setBounds(x, y, w, h);
+        }
         uiOverlay.revalidate();
     }
 
@@ -967,13 +1141,8 @@ public class VueMonde extends JPanel {
         if (sprite == null) return;
 
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        Color jauneFeedback = new Color(255, 220, 0, 150);
-
         switch (sprite) {
-            case "action_rotation", "action_echange" -> {
-                setTuileSelected(-1,-1);
-                dessinerLisereBoard(g);
-            }
+            case "action_rotation", "action_echange" -> dessinerLisereBoard(g);
             case "action_holmes"  -> dessinerCibleDeplacement(g, detectivePosition[0],
                                         new Color(200, 40,  40,  130), 2,false);
             case "action_watson"  -> dessinerCibleDeplacement(g, detectivePosition[1],
@@ -1039,41 +1208,59 @@ public class VueMonde extends JPanel {
      * sauf celui qui est actuellement survolé (le feedback de survol prend le relais).
      */
     private void drawUnusedActionBorders(Graphics2D g) {
-        Color jaune = new Color(255, 220, 0, 150);
         Stroke ancienStroke = g.getStroke();
         Color  ancienneColor = g.getColor();
 
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setStroke(new java.awt.BasicStroke(3f));
+        boolean hasHover = hoveredTokenIndex >= 0;
+
+        //Si un jeton est hovered, on dessine un feedforward statique et on désactive le clignotement des autres.
+        if(hasHover && hoveredTokenIndex < actionBalls.length && !actionBallIsUsed[hoveredTokenIndex]){
+            drawActionTokenBorder(g,hoveredTokenIndex, new Color(255,220,0,150));
+            g.setColor(ancienneColor);
+            g.setStroke(ancienStroke);
+            return;
+        }
+        //Si pas de jeton hovered, fait clignoté les jetons non utilisés.
+        float pulse = (float) ((Math.sin(clignotePhase) + 1.0) / 2.0);
+        int alpha = 80 + Math.round(140 * pulse);
+        Color jaune = new Color(255, 220, 0, alpha);
         g.setColor(jaune);
 
         for (int i = 0; i < actionBalls.length; i++) {
-            // Liseré visible uniquement si : jeton non utilisé ET non survolé
-            if (actionBallIsUsed[i]) continue;
-            if (i == hoveredTokenIndex) continue;
+            if(!actionBallIsUsed[i]) drawActionTokenBorder(g, i, jaune);
+        }
+        g.setStroke(ancienStroke);
+        g.setColor(ancienneColor);
+    }
 
-            Composant2D ball = actionBalls[i];
-            if (ball == null) continue;
+    /**
+     * Dessine les rayons
+     * */
+    private void drawActionTokenBorder(Graphics2D g, int index, Color color){
+        // Liseré visible uniquement si jeton non utilisé
+        if(index < 0 || index >= actionBalls.length) return;
 
-            // Rayon du cercle en espace monde (min des demi-dimensions * échelle)
-            double rx = (ball.taille.x * ball.echelle.x) / 2.0;
-            double ry = (ball.taille.y * ball.echelle.y) / 2.0;
-            double r  = Math.min(rx, ry);
+        Composant2D ball = actionBalls[index];
+        if (ball == null) return;
 
-            // Centre du jeton → coordonnées écran
-            Vector2 screenCenter = ball.position.Sub(Camera.positionHG).Mult(Camera.zoom);
-            double  screenR      = r * Camera.zoom.x;
+        // Rayon du cercle en espace monde (min des demi-dimensions * échelle)
+        double rx = (ball.taille.x * ball.echelle.x) / 2.0;
+        double ry = (ball.taille.y * ball.echelle.y) / 2.0;
+        double r  = Math.min(rx, ry);
 
-            g.drawOval(
+        // Centre du jeton → coordonnées écran
+        Vector2 screenCenter = ball.position.Sub(Camera.positionHG).Mult(Camera.zoom);
+        double  screenR      = r * Camera.zoom.x;
+
+        g.setColor(color);
+        g.drawOval(
                 (int) Math.round(screenCenter.x - screenR),
                 (int) Math.round(screenCenter.y - screenR),
                 (int) Math.round(screenR * 2),
                 (int) Math.round(screenR * 2)
-            );
-        }
-
-        g.setStroke(ancienStroke);
-        g.setColor(ancienneColor);
+        );
     }
 
     /**
@@ -1143,4 +1330,23 @@ public class VueMonde extends JPanel {
                 (int) Math.round(radius * 2), (int) Math.round(radius * 2));
     }
 
+    private String getActionTooltipText(String action){
+        return switch (action){
+            case "action_holmes"   -> "Déplacer Holmes (1 ou 2 pas).";
+            case "action_watson"   -> "Déplacer Watson (1 ou 2 pas).";
+            case "action_toby"     -> "Déplacer Toby (1 ou 2 pas).";
+            case "action_joker"    -> "Déplacer un des détective (0 ou 1 pas).";
+            case "action_rotation" -> "Pivoter un quartier de 90°.";
+            case "action_echange"  -> "Échanger deux quartiers.";
+            case "action_alibi"    -> "Piocher une carte alibi.";
+            default -> "";
+        };
+    }
+
+    private Point getActionBallScreenPos(int index){
+        Composant2D ball = actionBalls[index];
+        if (ball == null) return new Point(0, 0);
+        Vector2 screenCenter = ball.position.Sub(Camera.positionHG).Mult(Camera.zoom);
+        return new Point((int) Math.round(screenCenter.x), (int) Math.round(screenCenter.y));
+    }
 }

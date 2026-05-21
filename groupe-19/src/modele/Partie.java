@@ -4,6 +4,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.CompletableFuture;
 import javax.swing.*;
+
+
 import src.modele.ia.*;
 
 /**
@@ -45,14 +47,21 @@ public class Partie {
     //pour l'ia et le thread
     private Ia ia = new Ia();
     private ExecutorService executor = Executors.newSingleThreadExecutor();
-    private boolean IaEnCours = false;
+    public boolean IaEnCours = false;
     public boolean estSimulation = false;
-    public int niveauJack;  // niveau de son IA (-1 = manuel, 0 = random, 1 = facile, 2 = moyen)
-    public int niveauEnqueteur; // niveau de l'IA de l'enquêteur (-1 = manuel, 0 = random, 1 = facile, 2 = moyen)
+    public int niveauJack;  // niveau de son IA (-1 = manuel, 0 = facile, 1 = moyen, 2 = difficile)
+    public int niveauEnqueteur; // niveau de l'IA de l'enquêteur (-1 = manuel, 0 = facile, 1 = moyen, 2 = difficile)
+    public boolean changement; //si il y a eu un changement avec les undo / redo pour annuler le coup de l'ia
 
     //Pour l'historique
     Deque<Partie> undo = new ArrayDeque<>();
     Deque<Partie> redo = new ArrayDeque<>();
+
+    private boolean freeze = false;
+
+    public boolean isFreeze() { return freeze; }
+    public void setFreeze(boolean freeze) { this.freeze = freeze; }
+    public void toggleFreeze() { this.freeze = !this.freeze; }
 
     public src.modele.ia.laboratoire_genetique.ProfilGenetique adnJack = null;
     public src.modele.ia.laboratoire_genetique.ProfilGenetique adnInspecteur = null;
@@ -71,6 +80,7 @@ public class Partie {
         suspects = new ArrayList<>();
         initialiserPartie();
         tourSuivant();
+        changement = true;
         verifTourIa();
     }
 
@@ -135,6 +145,7 @@ public class Partie {
 
     /** Réinitialise la partie **/
     public void reset() {
+        if (freeze) return;
         gagnant = null;
         coursePoursuiteActive = false;
         numeroTour = 0;
@@ -149,6 +160,7 @@ public class Partie {
         redo.clear();
         initialiserPartie();
         tourSuivant();
+        changement = true;
         verifTourIa();
     }
 
@@ -158,6 +170,7 @@ public class Partie {
      * Point d'entrée unique depuis Gameplay — remplace la logique dispersée dans endTurn().
      */
     public void terminerTour() {
+        if (freeze) return;
         appelATemoin();
         // appelATemoin() appelle déjà verifFinDePartie() puis tourSuivant() si la partie continue.
         // Gameplay lit ensuite isPartieTerminee() et numeroTour pour décider de la suite.
@@ -165,6 +178,7 @@ public class Partie {
 
     /** Réalise l'appel à témoin (deuxième étape du jeu) et vérifie si la partie est terminée **/
     public void appelATemoin(){
+        if (freeze) return;
         HashSet<Personnage> personnagesVisibles = new HashSet<>();
         for (Detective d : detectives) {
             personnagesVisibles.addAll(district.personnagesVisiblesParDetective(d));
@@ -192,11 +206,13 @@ public class Partie {
 
     /** Change [joueurCourant] pour l'autre joueur **/
     public void changerJoueur() {
+        if (freeze) return;
         joueurCourant = (joueurCourant == Joueur.JACK) ? Joueur.ENQUETEUR : Joueur.JACK;
     }
 
     /** Réalise le changement de joueur après un certain nombre de jetons Actions utilisés **/
     public void apresAction(){
+        if (freeze) return;
         totalActionsJouees++;
         switch(totalActionsJouees){
             case 1, 3:
@@ -225,6 +241,7 @@ public class Partie {
     /** Prépare le tour suivant : incrémente [numeroTour], flag les tuiles comme n'ayant pas pivoté,
      * lance ou retourne les jetons Actions et définit le joueur qui va commencer le tour **/
     public void tourSuivant(){
+        if (freeze) return;
         if(isPartieTerminee()) return;
         numeroTour++;
         totalActionsJouees = 0;
@@ -262,8 +279,10 @@ public class Partie {
     }
 
     public void lanceIa() {
+        if (freeze) return;
         if(IaEnCours || isPartieTerminee() || actions.getActionsPossibles().isEmpty()) return;
         if (estSimulation) return;
+        changement = false;
 
         boolean estJack = (joueurCourant == Joueur.JACK);
 
@@ -280,6 +299,10 @@ public class Partie {
                 .thenAccept(iaCoup -> {
                     SwingUtilities.invokeLater(() -> {
                         IaEnCours = false;
+                        if(changement){ //si il y eu un changement de la partie
+                            verifTourIa();
+                            return;
+                        }
                         if (iaCoup != null && iaCoup.action != null) {
                             jouerCoup(iaCoup);
                         }
@@ -307,6 +330,7 @@ public class Partie {
     }
 
     public void jouerCoup(CoupIa coupIa) {
+        if (freeze) return;
         switch (coupIa.action) {
             case HOLMES:
                 actions.deplacerDetective(detectives.get(0), coupIa.para1 + 1);
@@ -349,6 +373,7 @@ public class Partie {
 
     /** Vérifie si la partie est terminée **/
     public void verifFinDePartie(){
+        if (freeze) return;
         if(gagnant != null) return;
         if(coursePoursuiteActive){
             verifFinCoursePoursuite();
@@ -379,6 +404,7 @@ public class Partie {
 
     /** Affecte à [gagnant] le joueur - Jack ou Enquêteur - qui a gagné **/
     private void declarerGagnant(Joueur vainqueur) {
+        if (freeze) return;
         this.gagnant = vainqueur;
         if (!this.estSimulation) {
             if (this.gagnant == Joueur.ENQUETEUR){
@@ -392,6 +418,7 @@ public class Partie {
 
     /** Vérifie si la course poursuite est terminée **/
     public void verifFinCoursePoursuite(){
+        if (freeze) return;
         if(jackVisibleCeTour){
             if(!estSimulation) System.out.println("Fin de la course poursuite.");
             declarerGagnant(Joueur.ENQUETEUR);
@@ -460,27 +487,44 @@ public class Partie {
      *
      */
 
+    private boolean estTourHumain(){
+        return (joueurCourant == Joueur.JACK && niveauJack == -1) ||
+                (joueurCourant == Joueur.ENQUETEUR && niveauEnqueteur == -1);
+    }
+
     public void saveEtat() {
         if(estSimulation) return;
-        undo.push(new Partie(this));
-        redo.clear();
+        if(estTourHumain()){
+            undo.push(new Partie(this));
+            redo.clear();
+        }
     }
 
     public void annuler(){
+        if (freeze) return;
         if(undo.isEmpty()) return;
+        boolean joueurCourantEstIa = (joueurCourant == Joueur.JACK && niveauJack != -1)
+                || (joueurCourant == Joueur.ENQUETEUR && niveauEnqueteur != -1);
+        if(joueurCourantEstIa) return;
         redo.push(new Partie(this));
         Partie ancien = undo.pop();
+        changement = true;
         restaurer(ancien);
+        verifTourIa();
     }
 
     public void refaire(){
+        if (freeze) return;
         if(redo.isEmpty()) return;
         undo.push(new Partie(this));
         Partie nouveau = redo.pop();
+        changement = true;
         restaurer(nouveau);
+        verifTourIa();
     }
 
     private void restaurer(Partie p){
+        if (freeze) return;
         this.district = p.district;
         this.detectives = p.detectives;
         this.suspects = p.suspects;
@@ -499,6 +543,8 @@ public class Partie {
         this.joueurChoisi = p.joueurChoisi;
         this.niveauEnqueteur = p.niveauEnqueteur;
         this.niveauJack = p.niveauJack;
+
+        if (!estSimulation) verifTourIa();
     }
 
     public PartieSnapshot toSnapshot() {
@@ -506,6 +552,7 @@ public class Partie {
     }
 
     public void fromSnapshot(PartieSnapshot snap){
+        if (freeze) return;
         PartieSaveMapper.fromSnapshot(this, snap);
     }
 
@@ -514,6 +561,9 @@ public class Partie {
     }
 
     public void fromGameSave(GameSave save) {
+        if (freeze) return;
         PartieSaveMapper.fromGameSave(this, save);
+        changement = true;
+        verifTourIa();
     }
 }

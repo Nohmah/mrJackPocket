@@ -18,6 +18,10 @@ public class Gameplay {
     private final IHMControler controler;
     public Partie partie;
 
+    /** Détermine qui execute l'action, par défaut (jeu en local) directement au modèle **/
+    private ExecuteAction executeAction;
+
+
     // -------------------------------------------------------------------------
     // États temporaires d'interaction — encapsulés dans des classes dédiées
     // -------------------------------------------------------------------------
@@ -39,6 +43,7 @@ public class Gameplay {
         this.vue = vue;
         this.partie = partie;
         this.controler = new IHMControler(this);
+        this.executeAction = new ExecuteActionLocal();
         vue.registerControler(controler);
         // Listener pour mettre à jour les jetons Temps à droite
         partie.setTourChangeListener(() -> {
@@ -120,6 +125,14 @@ public class Gameplay {
         }
     }
 
+    /**
+     ** Change la responsabilité d'exécution, pour le jeu en réseau, c'est le serveur qui détient le modèle
+     ** Par conséquent, il faut que le réseau puisse changer cette responsabilité.
+     **/
+    public void setExecuteAction(ExecuteAction executeAction) {
+        this.executeAction = executeAction;
+    }
+
     private void initGame() {
         refreshView();
         vue.updateTurnIndicator(partie.numeroTour);
@@ -137,7 +150,9 @@ public class Gameplay {
         vue.updateTurnIndicator(partie.numeroTour);
 
         if (isIa) {
-            SwingUtilities.invokeLater(controler::joueIa);
+            if (!partie.isFreeze()) {
+                SwingUtilities.invokeLater(controler::joueIa);
+            }
         }
     }
 
@@ -146,7 +161,7 @@ public class Gameplay {
     // -------------------------------------------------------------------------
 
     /** Rafraîchit tous les composants visuels depuis l'état courant du modèle. */
-    private void refreshView() {
+    public void refreshView() {
         vue.updateBackground(partie.joueurCourant, partie.coursePoursuiteActive);
         vue.updateDistrictView(partie.district);
         vue.updateJetons(partie.jetonsAction);
@@ -163,11 +178,18 @@ public class Gameplay {
         System.out.println("Test : mode course poursuite activé (fond violet)");
     }
 
+    public void refreshFromSnap(PartieSnapshot partieSnap){
+        System.out.println("[DEBUG] refreshFromSnap");
+        this.partie.fromSnapshot(partieSnap);
+        refreshView();
+    }
+
     // -------------------------------------------------------------------------
     // Cycle de jeu
     // -------------------------------------------------------------------------
 
     public void resetGame() {
+        if (partie.isFreeze()) return;
         partie.reset();
         vue.hideGameOverScreen();
         resetAllTurnIndicators();
@@ -201,6 +223,7 @@ public class Gameplay {
     // -------------------------------------------------------------------------
 
     public void onActionBallClicked(IHMControler.ActionIntent intent) {
+        if (partie.isFreeze()) return;
         String actionName = intent.actionName();
         int ballIndex = intent.ballIndex();
 
@@ -208,6 +231,9 @@ public class Gameplay {
 
         // L'utilisateur a cliqué : on efface le survol
         vue.getMonde().setHoveredToken(-1);
+
+        //reset les states des actions echange et rotation au cas où le joueur change d'action.
+        resetTileState();
 
         switch (actionName) {
             case "action_holmes"   -> demanderDeplacementEtDeplacer(Detective.Type.HOLMES);
@@ -217,8 +243,7 @@ public class Gameplay {
             case "action_rotation" -> startRotationMode(ballIndex);
             case "action_echange"  -> startEchange();
             case "action_alibi"    -> {
-                partie.actions.alibi();
-                refreshView();
+                executeAction.executePiocheAlibi(this);
                 vue.updateSabliers(partie.sabliersDeJack, 6);
             }
             default -> System.out.println("Action inconnue : " + actionName);
@@ -248,9 +273,7 @@ public class Gameplay {
         }
 
         int pas = (choix == 0) ? 1 : 2;
-
-        partie.actions.deplacerDetective(detective, pas);
-        refreshView();
+        executeAction.executeDetective(this,detective,pas);
     }
 
     private void gererJoker() {
@@ -269,8 +292,7 @@ public class Gameplay {
                 default -> null;
             };
             if (det != null) {
-                partie.actions.joker(det);
-                refreshView();
+                executeAction.executeJoker(this, det);
             }
         } else {
             String[] options = {"Holmes", "Watson", "Toby", "Ne rien déplacer"};
@@ -286,8 +308,7 @@ public class Gameplay {
                 case 2 -> trouverDetective(Detective.Type.TOBY);
                 default -> null;
             };
-            partie.actions.joker(det); // null = ne rien faire, géré dans PartieActions
-            refreshView();
+            executeAction.executeJoker(this, det); // null = ne rien faire, géré dans PartieActions
         }
     }
 
@@ -303,24 +324,28 @@ public class Gameplay {
     // -------------------------------------------------------------------------
 
     public void startEchange() {
+        rotationState = null;
+        rotationMode = false;
         echangeState = new EchangeState();
         System.out.println("Action échange : cliquez sur la première tuile");
     }
 
     public void startRotationMode(int jetonIndex) {
+        echangeState = null;
+        vue.getMonde().setTuileSelected(-1,-1);
         rotationState = new RotationState(jetonIndex);
         System.out.println("Mode rotation actif. Cliquez sur une tuile, recliquez pour accumuler, cliquez ailleurs pour confirmer.");
     }
 
     public void exitRotationMode() {
         if (rotationState != null && rotationState.hasTarget()) {
-            partie.actions.rotationQuartier(
+            executeAction.executeRotationQuartier(
+                    this,
                 rotationState.jetonIndex,
                 rotationState.row,
                 rotationState.col,
                 rotationState.quarts
             );
-            refreshView();
         }
         rotationState = null;
         rotationMode = false;
@@ -328,7 +353,15 @@ public class Gameplay {
     }
 
     public void clicHorsDistrict() {
+        if (partie.isFreeze()) return;
         if (rotationMode) exitRotationMode();
+    }
+
+    private void resetTileState(){
+        vue.getMonde().setTuileSelected(-1,-1);
+        rotationMode = false;
+        rotationState = null;
+        echangeState = null;
     }
 
     // -------------------------------------------------------------------------
@@ -361,6 +394,7 @@ public class Gameplay {
     }
 
     public void onCellHovered(int row, int col) {
+        if (partie.isFreeze()) return;
         if (echangeState != null) {
             if (!echangeState.hasFirstTile()) {
                 echangeState.setFirstTile(row, col);
@@ -372,7 +406,7 @@ public class Gameplay {
                 refreshView();
             } else {
                 System.out.println("Échange — deuxième tuile : (" + row + "," + col + ")");
-                partie.actions.echange(echangeState.row, echangeState.col, row, col);
+                executeAction.executeEchangeQuartier(this,echangeState.row, echangeState.col, row, col);
                 echangeState = null;
                 vue.getMonde().setTuileSelected(-1,-1);
                 refreshView();
@@ -388,7 +422,6 @@ public class Gameplay {
                 vue.rotateTile(row, col, 90);
                 System.out.println("Rotation — quart supplémentaire (" + rotationState.quarts + " total)");
             } else {
-                vue.getMonde().setTuileSelected(-1,-1);
                 exitRotationMode();
             }
         }
@@ -419,7 +452,7 @@ public class Gameplay {
 
         boolean hasTarget() { return row != -1; }
 
-        void setTarget(int r, int c) { row = r; col = c; quarts = 1; vue.getMonde().setTuileSelected(r,c); }
+        void setTarget(int r, int c) { row = r; col = c; quarts = 1; }
 
         boolean isSameTile(int r, int c) { return row == r && col == c; }
 
@@ -428,7 +461,7 @@ public class Gameplay {
 
     /**
      * Convertit un niveau d'IA en texte lisible pour l'affichage.
-     * 
+     *
      * @param niveau -1 = Humain, 0 = IA Random, 1 = IA Facile, 2 = IA Moyenne
      * @return une chaîne comme "Humain", "IA Random", "IA Facile" ou "IA Moyenne"
      */
@@ -446,23 +479,23 @@ public class Gameplay {
 
     /**
      * Met à jour l'affichage des deux rectangles dans VueMonde.
-     * 
+     *
      * Index 0 = Enquêteur (toujours en bleu)
      * Index 1 = Mr. Jack (toujours en rouge)
-     * 
+     *
      * Le texte sous le nom (Humain / IA Random / IA Facile / IA Moyenne)
      * change en fonction de la configuration de la partie.
      */
     private void updatePlayerRectangles() {
         VueMonde monde = vue.getMonde();
-        
+
         // ----- Enquêteur (index 0, toujours en bleu) -----
         String enqueteurNom = "Enqueteur";
         String enqueteurType = getTypeTexte(partie.niveauEnqueteur);
         monde.setPlayerName(0, enqueteurNom);
         monde.setPlayerType(0, enqueteurType);
         monde.updateRectColor(0, new Color(40, 80, 180, 200));  // Bleu personnalisé
-        
+
         // ----- Mr. Jack (index 1, toujours en rouge) -----
         String jackNom = "Mr. Jack";
         String jackType = getTypeTexte(partie.niveauJack);

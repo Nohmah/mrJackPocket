@@ -1,5 +1,10 @@
 package src.reseau;
 
+import src.modele.Joueur;
+import src.modele.Partie;
+import src.modele.PartieSaveMapper;
+import src.modele.PartieSnapshot;
+import src.vue.VueJeu;
 import src.vue.menus.VueLobby;
 
 import javax.swing.*;
@@ -12,6 +17,8 @@ import static src.reseau.CommunicationLobbyCS.*;
 
 public class Client {
 
+    private static final int PORT_SERVEUR = 1201;
+
     private final String pseudoClient;
     private final Boolean estHote;
     private Socket serveurSocket;
@@ -21,6 +28,9 @@ public class Client {
     private final BlockingQueue<MessageServeur> receptionRequeteServeur;
 
     private VueLobby vueLobby;
+    private VueJeu vueJeu;
+
+    private boolean enJeu = false;
 
     public Client(String pseudoClient, Boolean estHote, String serveur) {
         this.pseudoClient = pseudoClient;
@@ -37,16 +47,19 @@ public class Client {
     public void setVueLobby(VueLobby vueLobby){
         this.vueLobby = vueLobby;
         informerServeur(INFORMATION_CLIENT,null);
+    }
 
+    public void setVueJeu(VueJeu vueJeu){
+        this.vueJeu = vueJeu;
     }
 
     private void rejoindreServeur(String serveur){
         try {
-            this.serveurSocket = new Socket(serveur, 1201);
+            this.serveurSocket = new Socket(serveur, PORT_SERVEUR);
             this.out = new ObjectOutputStream(this.serveurSocket.getOutputStream());
             this.in = new ObjectInputStream(this.serveurSocket.getInputStream());
         } catch (IOException e) {
-           throw new RuntimeException(e);
+            System.out.println("[CLIENT] rejoindreServeur(), la connexion a serveur n'a pas pu être établit !");
         }
     }
 
@@ -58,17 +71,28 @@ public class Client {
                     MessageServeur messageRecu = (MessageServeur) this.in.readObject();
                     this.receptionRequeteServeur.put(messageRecu);
 
-                } catch (ClassNotFoundException | InterruptedException | IOException e) {
-                    System.out.println("Le Serveur s'est arrêté ou la connexion est perdue.");
-                    this.vueLobby.ajouterMessageChat("System","L'hôte s'est déconnecté, vous allez être rediriger vers le menu automatiquement dans 5 seconds !");
-                    try {
-                        Thread.sleep(5000);
-                    } catch (InterruptedException ex) {
-                        throw new RuntimeException(ex);
+                }  catch (IOException e) {
+                    System.out.println("[CLIENT] receptionRequeteServeur(), le serveur s'est arrêté sans prévenir !");
+                    fermerConnexion();
+
+                    if(this.vueLobby != null) {
+                        SwingUtilities.invokeLater(() -> {
+                            this.vueLobby.ajouterMessageChat("System", "L'hôte s'est déconnecté, redirection dans 5 secondes !");
+                            javax.swing.Timer timer = new javax.swing.Timer(5000, event -> {
+                                if (!estHote) {
+                                    this.vueLobby.hoteEstDeconnecter();
+                                }
+                            });
+                            timer.setRepeats(false);
+                            timer.start();
+                        });
                     }
-                    if(!estHote){
-                        this.vueLobby.hoteEstDeconnecter();
-                    }
+                    break;
+                } catch (ClassNotFoundException e){
+                    System.out.println("[CLIENT] receptionRequeteServeur(), le cast n'a pas fonctionnait correctement !");
+                    break;
+                } catch (InterruptedException e){
+                    System.out.println("[CLIENT] receptionRequeteServeur() a été interromptue !");
                     break;
                 }
             }
@@ -81,75 +105,143 @@ public class Client {
             while (true) {
                 try {
                     MessageServeur messageServeur = this.receptionRequeteServeur.take();
-                    gestionCommunicationVersVue(messageServeur);
+                    if(enJeu){
+                        gestionCommunicationVersVueJeu(messageServeur);
+                    }else {
+                        gestionCommunicationVersVueLobby(messageServeur);
+                    }
                 } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    System.out.println("[CLIENT] consommerMessagesDeLaQueue() a rencontré une erreur dans la consommation de la Queue 'receptionRequeteServeur' !");
+                    break;
                 }
+
+
             }
         });
 
         threadConsommateurClient.start();
     }
 
-    private void gestionCommunicationVersVue(MessageServeur messageServeur) {
+    private void gestionCommunicationVersVueLobby(MessageServeur messageServeur) {
         if(this.vueLobby == null){
             return;
         }
         SwingUtilities.invokeLater(()-> {
             switch (messageServeur.getCodeServeur()) {
                 case NOUVEAU_MESSAGE:
-                    this.vueLobby.ajouterMessageChat(messageServeur.getPseudo(), messageServeur.getMessage());
+                    receptionRequeteNOUVEAU_MESSAGE(messageServeur);
                     break;
                 case MISE_A_JOUR_CONFIRMATION:
-                    this.vueLobby.mettreAJourCompteurPrets(Integer.parseInt(messageServeur.getMessage()));
-                    if(Integer.parseInt(messageServeur.getMessage()) == 2){
-                        this.vueLobby.lancementPartie();
-                        //TODO Changer d'état comme le serveur
-                    }
+                    receptionRequeteMISE_A_JOUR_CONFIRMATION(messageServeur);
                     break;
                 case MISE_A_JOUR_CHOIX:
-                    this.vueLobby.mettreAJourRoles(Boolean.parseBoolean(messageServeur.getMessage()));
+                    receptionRequeteMISE_A_JOUR_CHOIX(messageServeur);
                     break;
                 case MISE_A_JOUR_INFORMATIONS_JOUEURS:
-                    if (estHote) {
-                        if(!messageServeur.getMessage().isEmpty()){
-                            this.vueLobby.setJoueur2Deconnecte(messageServeur.getMessage());
-                            break;
-                        }
-                        this.vueLobby.setJoueur2Connecte(pseudoClient, messageServeur.getPseudo());
-                    } else {
-                        this.vueLobby.setJoueur2Connecte(messageServeur.getPseudo(), pseudoClient);
-                    }
+                    receptionRequeteMISE_A_JOUR_INFORMATIONS_JOUEURS(messageServeur);
                     break;
                 case HOTE_QUITTE:
-                    System.out.println("L'Hôte a quitté le lobby !");
-                    try {
-                        this.in.close();
-                        this.out.close();
-                        serveurSocket.close();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                    receptionRequeteHOTE_QUITTE();
                     break;
                 case LANCEMENT_PARTIE:
+                    receptionRequeteLANCEMENT_PARTIE(messageServeur);
+                    break;
+                case ERREUR_PSEUDO:
+                    receptionRequeteERREUR_PSEUDO(messageServeur);
                     break;
                 default:
-                    throw new RuntimeException("Erreur serveur !");
+                    System.out.println("[CLIENT] gestionCommunicationVersVueLobby() a rencontré une erreur dans le switch avec le code : " + messageServeur.getCodeServeur() + " !");
             }
         });
     }
 
-    private void informerServeur(CommunicationLobbyCS codePOurServeur, String message) {
+    private void receptionRequeteNOUVEAU_MESSAGE(MessageServeur messageServeur) {
+        this.vueLobby.ajouterMessageChat(messageServeur.getPseudo(), messageServeur.getContenue().toString());
+    }
+     private void receptionRequeteMISE_A_JOUR_CONFIRMATION(MessageServeur messageServeur) {
+         this.vueLobby.mettreAJourCompteurPrets(Integer.parseInt(messageServeur.getContenue().toString()));
+     }
 
-        MessageServeur messageServeur = new MessageServeur(codePOurServeur, this.pseudoClient,message);
+    private void receptionRequeteMISE_A_JOUR_CHOIX(MessageServeur messageServeur) {
+        this.vueLobby.mettreAJourRoles(Boolean.parseBoolean(messageServeur.getContenue().toString()));
+    }
+
+    private void receptionRequeteMISE_A_JOUR_INFORMATIONS_JOUEURS(MessageServeur messageServeur) {
+        if (estHote) {
+            if(!messageServeur.getContenue().toString().isEmpty()){
+                this.vueLobby.setJoueur2Deconnecte(messageServeur.getContenue().toString());
+                return;
+            }
+            this.vueLobby.setJoueur2Connecte(pseudoClient, messageServeur.getPseudo());
+        } else {
+            this.vueLobby.setJoueur2Connecte(messageServeur.getPseudo(), pseudoClient);
+        }
+    }
+
+    private void receptionRequeteHOTE_QUITTE() {
+        System.out.println("[CLIENT] L'hôte a quitté le lobby !");
+        fermerConnexion();
+    }
+
+    private void receptionRequeteLANCEMENT_PARTIE(MessageServeur messageServeur) {
+        PartieSnapshot versionServeur = (PartieSnapshot) messageServeur.getContenue();
+        Partie partieClient = new Partie(Joueur.JACK, -1, -1);
+        PartieSaveMapper.fromSnapshot(partieClient,versionServeur);
+        this.vueLobby.lancementPartie(partieClient);
+        this.enJeu = true;
+    }
+
+    private void receptionRequeteERREUR_PSEUDO(MessageServeur messageServeur) {
+        System.out.println(messageServeur.getContenue().toString());
+        fermerConnexion();
+    }
+
+
+    private void gestionCommunicationVersVueJeu(MessageServeur messageServeur) {
+        if(vueJeu==null){
+            return;
+        }
+        SwingUtilities.invokeLater(()-> {
+            switch (messageServeur.getCodeServeur()) {
+                case NOUVEAU_PLATEAU:
+                    receptionRequeteNOUVEAU_PLATEAU(messageServeur);
+                    break;
+                case ACTION_IMPOSSIBLE:
+                    break;
+                default:
+                    System.out.println("[CLIENT] gestionCommunicationVersVueJeu() a rencontré une erreur dans le switch avec le code : " + messageServeur.getCodeServeur() + " !");
+            }
+        });
+    }
+
+    private void receptionRequeteNOUVEAU_PLATEAU(MessageServeur messageServeur) {
+        this.vueJeu.getGameplay().refreshFromSnap((PartieSnapshot) messageServeur.getContenue());
+    }
+
+
+    private void informerServeur(CommunicationLobbyCS codePOurServeur, Object contenue) {
+
+        MessageServeur messageServeur = new MessageServeur(codePOurServeur, this.pseudoClient,contenue);
 
         try {
             out.writeObject(messageServeur);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.out.println("[CLIENT] informerServeur(), le message n'a pas pu être envoyé !");
         }
     }
 
+    private void fermerConnexion() {
+        try {
+            if (in != null) in.close();
+            if (out != null) out.close();
+            if (serveurSocket != null && !serveurSocket.isClosed()) serveurSocket.close();
+        } catch (IOException e) {
+            System.out.println("[CLIENT] fermerConnexion(), erreur lors de la fermeture de la connexion.");
+        }
+    }
+
+
+    // Méthodes pour le lobby
     public void boutonPretAppuyer(Boolean etatBouton){
         informerServeur(BOUTON_PRET, etatBouton.toString());
     }
@@ -164,6 +256,28 @@ public class Client {
 
     public void joueurQuitte(){
         informerServeur(QUITTE, null);
+    }
+
+
+    // Méthodes pour le jeu
+    public void clientPiocheAlibi(Object contenue){
+        informerServeur(PIOCHE_ALIBI,contenue);
+    }
+
+    public void clientJoueJoker(Object contenue){
+        informerServeur(JOKER,contenue);
+    }
+
+    public void clientDeplaceDetective(Object contenue){
+        informerServeur(DETECTIVE,contenue);
+    }
+
+    public void clientTourneQuartier(Object contenue){
+        informerServeur(ROTATION,contenue);
+    }
+
+    public void clientEchangeQuartier(Object contenue){
+        informerServeur(ECHANGE,contenue);
     }
 
 }

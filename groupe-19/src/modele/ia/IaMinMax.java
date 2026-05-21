@@ -20,16 +20,7 @@ public class IaMinMax{
 
     // ---- plus simple pour appeler MinMax
     public static CoupIa choisirActionMinMax(Partie partie, boolean estJack, int profondeur){
-        //System.out.println("entre dans IA choisirActionMINMAX");
-
-        if(profondeur < 6){ // petite attente pour que les ia trop rapides ne se fassent pas instantanement
-            try {
-                //Thread.sleep((6 - profondeur) * 500 );
-                Thread.sleep(0);
-            } catch (InterruptedException e) {
-                System.err.println("Erreur lors de la pause dans choisirActionMinMax : ");
-            }
-        }   
+        //System.out.println("entre dans IA choisirActionMINMAX"); 
 
         CoupIa coup = MinMax(partie, estJack, profondeur, 0, -8000, 8000).coup ;
 
@@ -48,6 +39,7 @@ public class IaMinMax{
         double scoreMax = modeMax ? -8000 : 8000;
         CoupIa meilleurCoup = null;
 
+        if(partie.changement) return new resultatMinMax(scoreMax, null);
         // Verification de si la partie n'est pas déjà terminé 
         if(partie.isPartieTerminee()){
             if(estJack){

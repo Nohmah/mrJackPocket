@@ -26,7 +26,8 @@ public class VueRegles extends JPanel {
         scroll.setOpaque(false);
         scroll.setBorder(null);
         scroll.setViewportBorder(null);
-        scroll.getViewport().setOpaque(false);
+        scroll.getViewport().setOpaque(true);
+        scroll.getViewport().setBackground(Color.BLACK);
 
         JPanel centre = new JPanel(new BorderLayout());
         centre.setOpaque(false);
