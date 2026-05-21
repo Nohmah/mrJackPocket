@@ -150,7 +150,9 @@ public class Gameplay {
         vue.updateTurnIndicator(partie.numeroTour);
 
         if (isIa) {
-            SwingUtilities.invokeLater(controler::joueIa);
+            if (!partie.isFreeze()) {
+                SwingUtilities.invokeLater(controler::joueIa);
+            }
         }
     }
 
@@ -187,6 +189,7 @@ public class Gameplay {
     // -------------------------------------------------------------------------
 
     public void resetGame() {
+        if (partie.isFreeze()) return;
         partie.reset();
         vue.hideGameOverScreen();
         resetAllTurnIndicators();
@@ -220,6 +223,7 @@ public class Gameplay {
     // -------------------------------------------------------------------------
 
     public void onActionBallClicked(IHMControler.ActionIntent intent) {
+        if (partie.isFreeze()) return;
         String actionName = intent.actionName();
         int ballIndex = intent.ballIndex();
 
@@ -349,6 +353,7 @@ public class Gameplay {
     }
 
     public void clicHorsDistrict() {
+        if (partie.isFreeze()) return;
         if (rotationMode) exitRotationMode();
     }
 
@@ -389,6 +394,7 @@ public class Gameplay {
     }
 
     public void onCellHovered(int row, int col) {
+        if (partie.isFreeze()) return;
         if (echangeState != null) {
             if (!echangeState.hasFirstTile()) {
                 echangeState.setFirstTile(row, col);

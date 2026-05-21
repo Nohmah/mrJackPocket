@@ -111,6 +111,7 @@ public class IHMControler implements MouseListener, MouseMotionListener, KeyList
 
     @Override
     public void mouseClicked(MouseEvent e) {
+        if (gameplay.partie.isFreeze()) return;
         Vector2 world = screenToWorld(new Vector2(e.getX(), e.getY()));
 
         // Calcul des limites du plateau (3 tuiles de TILE_SIZE chacune)
@@ -155,6 +156,7 @@ public class IHMControler implements MouseListener, MouseMotionListener, KeyList
 
     @Override
     public void mouseExited(MouseEvent e) {
+        if (gameplay.partie.isFreeze()) return;
         gameplay.onTokenHovered(-1);
     }
 
@@ -164,6 +166,7 @@ public class IHMControler implements MouseListener, MouseMotionListener, KeyList
 
     @Override
     public void mouseMoved(MouseEvent e) {
+        if (gameplay.partie.isFreeze()) return;
         if (hoverProbe == null) return;
         int index = hoverProbe.ballAt(e.getX(), e.getY());
         gameplay.onTokenHovered(index);
@@ -178,6 +181,7 @@ public class IHMControler implements MouseListener, MouseMotionListener, KeyList
 
     @Override
     public void keyPressed(KeyEvent e) {
+        if (gameplay.partie.isFreeze()) return;
         switch (e.getKeyCode()) {
             case KeyEvent.VK_Z -> { if (e.isControlDown()) undo(); }
             case KeyEvent.VK_Y -> { if (e.isControlDown()) redo(); }
