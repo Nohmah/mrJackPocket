@@ -20,7 +20,6 @@ public class MessageServeur implements Serializable {
         this.contenue = contenue;
     }
 
-
     public CommunicationLobbySC getCodeServeur() {
         return codeServeur;
     }

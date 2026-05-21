@@ -8,6 +8,7 @@ public enum CommunicationLobbySC {
     MISE_A_JOUR_INFORMATIONS_JOUEURS,
     HOTE_QUITTE,
     LANCEMENT_PARTIE,
+    ERREUR_PSEUDO,
 
     // JEU
     NOUVEAU_PLATEAU,

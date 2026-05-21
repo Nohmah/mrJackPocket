@@ -146,7 +146,6 @@ public class Client {
                     }
                     break;
                 case LANCEMENT_PARTIE:
-                    System.out.println("[DEBUG] Confirmation rentrage dans ce case");
                     PartieSnapshot versionServeur = (PartieSnapshot) messageServeur.getContenue();
                     partieClient = new Partie(Joueur.JACK, -1 ,-1);
                     PartieSaveMapper.fromSnapshot(partieClient,versionServeur);
@@ -157,6 +156,16 @@ public class Client {
                     vueJeu.getGameplay().setExecuteAction(liaisons);
                     this.enJeu = true;
                     break;
+                case ERREUR_PSEUDO:
+                    System.out.println(messageServeur.getContenue().toString());;
+                    try {
+                        this.out.close();
+                        this.in.close();
+                        this.serveurSocket.close();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    break;
                 default:
                     throw new RuntimeException("Erreur serveur !");
             }
@@ -165,13 +174,11 @@ public class Client {
 
     private void gestionCommunicationVersVueJeu(MessageServeur messageServeur) {
         if(vueJeu==null){
-            System.out.println("[DEBUG] VueJeu est null !");
             return;
         }
         SwingUtilities.invokeLater(()-> {
             switch (messageServeur.getCodeServeur()) {
                 case NOUVEAU_PLATEAU:
-                    System.out.println("[DEBUG] Nouveau plateau arrivé !");
                     this.vueJeu.getGameplay().refreshFromSnap((PartieSnapshot) messageServeur.getContenue());
                     break;
                 case ACTION_IMPOSSIBLE:
