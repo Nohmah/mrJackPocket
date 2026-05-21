@@ -3,9 +3,7 @@ package src.reseau;
 import src.modele.Detective;
 import src.vue.ExecuteAction;
 import src.vue.Gameplay;
-import src.reseau.Client;
 
-//TODO Mettre à jour dans Gameplay et client/serveur pour enlever gampelay
 public class ExecuteActionSocket implements ExecuteAction {
     private Client client;
 

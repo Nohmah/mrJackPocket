@@ -1,7 +1,6 @@
 package src.reseau;
 
 import src.modele.*;
-import src.vue.Gameplay;
 
 import java.net.*;
 import java.io.*;
@@ -243,7 +242,7 @@ public class Serveur {
             case DETECTIVE:
                 detectiveType = (Detective.Type) contenueRecu[0];
                 for (Detective d : this.partieServeur.detectives) {
-                if (d.getType() == detectiveType) this.partieServeur.actions.deplacerDetective(d, (Integer) contenueRecu[1]);;
+                if (d.getType() == detectiveType) this.partieServeur.actions.deplacerDetective(d, (Integer) contenueRecu[1]);
                 }
 
                 break;

@@ -3,7 +3,6 @@ package src.vue;
 import src.modele.*;
 import javax.swing.*;
 import java.awt.Color;
-import java.io.Serializable;
 
 /**
  * Gameplay — Médiateur (Mediator).

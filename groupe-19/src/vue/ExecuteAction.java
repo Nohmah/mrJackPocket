@@ -1,7 +1,6 @@
 package src.vue;
 
 import src.modele.Detective;
-import src.modele.Partie;
 
 public interface ExecuteAction {
     void executePiocheAlibi(Gameplay gameplay);
