@@ -326,7 +326,7 @@ public class VueLobby extends JPanel {
 
     }
 
-    public void hoteEstDeconnecter(){
+    public void revenirMenuPrincipal(){
         SwingUtilities.invokeLater(() -> {
             this.parent.setContentPane(this.panel);
             this.parent.revalidate();

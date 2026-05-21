@@ -80,7 +80,7 @@ public class Client {
                             this.vueLobby.ajouterMessageChat("System", "L'hôte s'est déconnecté, redirection dans 5 secondes !");
                             javax.swing.Timer timer = new javax.swing.Timer(5000, event -> {
                                 if (!estHote) {
-                                    this.vueLobby.hoteEstDeconnecter();
+                                    this.vueLobby.revenirMenuPrincipal();
                                 }
                             });
                             timer.setRepeats(false);
