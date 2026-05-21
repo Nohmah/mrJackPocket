@@ -432,8 +432,16 @@ public class VueJeu extends JFrame {
     // =========================================================================
 
     private void onReglesPressed() {
-        //gameplay.activerCoursePoursuiteTest();
-        //vueMonde.setPlayerType(1, "IA diabolique");
+        /*for (Detective d : gameplay.partie.detectives) {
+            d.setPosition(0);  // 0 correspond à la case 1 (car position 0-based)
+            }
+       
+        vueMonde.replaceOuterBall(1,1);
+        vueMonde.replaceOuterBall(1,2);
+        vueMonde.replaceOuterBall(1,3);
+        
+         gameplay.activerCoursePoursuiteTest();
+         */
         if (panneauRegles != null && panneauRegles.isShowing()) {
             fermerPanneauRegles();
             return;
