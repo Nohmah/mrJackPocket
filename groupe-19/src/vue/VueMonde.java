@@ -323,6 +323,9 @@ public class VueMonde extends JPanel {
     private JLabel     sablierLabel = null;
     private JPanel sablierPanel = null;
 
+    //Label pour info bulle jeton action.
+    private JLabel actionTooltip;
+
     // =========================================================================
     // Letterbox / scale
     // =========================================================================
@@ -399,7 +402,26 @@ public class VueMonde extends JPanel {
      * @param index Index 0-3, ou -1 pour annuler le survol.
      */
     public void setHoveredToken(int index) {
-        if (index == hoveredTokenIndex) return;
+        if (actionTooltip == null) return;
+
+        if (index < 0 || actionBallIsUsed[index]) {
+            actionTooltip.setVisible(false);
+        } else {
+            String sprite = actionBallCurrentSprite[index];
+            String text = getActionTooltipText(sprite);
+            if (text.isEmpty()) {
+                actionTooltip.setVisible(false);
+            } else {
+                actionTooltip.setText(text);
+                actionTooltip.setSize(actionTooltip.getPreferredSize());
+
+                Point p = getActionBallScreenPos(index);
+                int x = p.x + 20;
+                int y = p.y - 40;
+                actionTooltip.setLocation(x, y);
+                actionTooltip.setVisible(true);
+            }
+        }
         hoveredTokenIndex = index;
         Camera.Repaint();
     }
@@ -498,6 +520,15 @@ public class VueMonde extends JPanel {
         uiOverlay.setBounds(0, 0, WORLD_W, WORLD_H);
         initPlayerRects();
         layeredPane.add(uiOverlay, JLayeredPane.PALETTE_LAYER);
+
+        actionTooltip = new JLabel("", SwingConstants.LEFT);
+        actionTooltip.setOpaque(true);
+        actionTooltip.setBackground(new Color( 0,0,0,100));
+        actionTooltip.setFont(new Font("SansSerif", Font.PLAIN,12));
+        actionTooltip.setForeground(new Color(255,240, 180));
+        actionTooltip.setBorder(BorderFactory.createEmptyBorder(6,8,6,8));
+        actionTooltip.setVisible(false);
+        uiOverlay.add(actionTooltip);
 
         initSablierLabel();
     }
@@ -1120,41 +1151,59 @@ public class VueMonde extends JPanel {
      * sauf celui qui est actuellement survolé (le feedback de survol prend le relais).
      */
     private void drawUnusedActionBorders(Graphics2D g) {
-        Color jaune = new Color(255, 220, 0, 150);
         Stroke ancienStroke = g.getStroke();
         Color  ancienneColor = g.getColor();
 
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setStroke(new java.awt.BasicStroke(3f));
+        boolean hasHover = hoveredTokenIndex >= 0;
+
+        //Si un jeton est hovered, on dessine un feedforward statique et on désactive le clignotement des autres.
+        if(hasHover && hoveredTokenIndex < actionBalls.length && !actionBallIsUsed[hoveredTokenIndex]){
+            drawActionTokenBorder(g,hoveredTokenIndex, new Color(255,220,0,150));
+            g.setColor(ancienneColor);
+            g.setStroke(ancienStroke);
+            return;
+        }
+        //Si pas de jeton hovered, fait clignoté les jetons non utilisés.
+        float pulse = (float) ((Math.sin(clignotePhase) + 1.0) / 2.0);
+        int alpha = 80 + Math.round(140 * pulse);
+        Color jaune = new Color(255, 220, 0, alpha);
         g.setColor(jaune);
 
         for (int i = 0; i < actionBalls.length; i++) {
-            // Liseré visible uniquement si : jeton non utilisé ET non survolé
-            if (actionBallIsUsed[i]) continue;
-            if (i == hoveredTokenIndex) continue;
+            if(!actionBallIsUsed[i]) drawActionTokenBorder(g, i, jaune);
+        }
+        g.setStroke(ancienStroke);
+        g.setColor(ancienneColor);
+    }
 
-            Composant2D ball = actionBalls[i];
-            if (ball == null) continue;
+    /**
+     * Dessine les rayons
+     * */
+    private void drawActionTokenBorder(Graphics2D g, int index, Color color){
+        // Liseré visible uniquement si jeton non utilisé
+        if(index < 0 || index >= actionBalls.length) return;
 
-            // Rayon du cercle en espace monde (min des demi-dimensions * échelle)
-            double rx = (ball.taille.x * ball.echelle.x) / 2.0;
-            double ry = (ball.taille.y * ball.echelle.y) / 2.0;
-            double r  = Math.min(rx, ry);
+        Composant2D ball = actionBalls[index];
+        if (ball == null) return;
 
-            // Centre du jeton → coordonnées écran
-            Vector2 screenCenter = ball.position.Sub(Camera.positionHG).Mult(Camera.zoom);
-            double  screenR      = r * Camera.zoom.x;
+        // Rayon du cercle en espace monde (min des demi-dimensions * échelle)
+        double rx = (ball.taille.x * ball.echelle.x) / 2.0;
+        double ry = (ball.taille.y * ball.echelle.y) / 2.0;
+        double r  = Math.min(rx, ry);
 
-            g.drawOval(
+        // Centre du jeton → coordonnées écran
+        Vector2 screenCenter = ball.position.Sub(Camera.positionHG).Mult(Camera.zoom);
+        double  screenR      = r * Camera.zoom.x;
+
+        g.setColor(color);
+        g.drawOval(
                 (int) Math.round(screenCenter.x - screenR),
                 (int) Math.round(screenCenter.y - screenR),
                 (int) Math.round(screenR * 2),
                 (int) Math.round(screenR * 2)
-            );
-        }
-
-        g.setStroke(ancienStroke);
-        g.setColor(ancienneColor);
+        );
     }
 
     /**
@@ -1224,4 +1273,23 @@ public class VueMonde extends JPanel {
                 (int) Math.round(radius * 2), (int) Math.round(radius * 2));
     }
 
+    private String getActionTooltipText(String action){
+        return switch (action){
+            case "action_holmes"   -> "Déplacer Holmes (1 ou 2 pas).";
+            case "action_watson"   -> "Déplacer Watson (1 ou 2 pas).";
+            case "action_toby"     -> "Déplacer Toby (1 ou 2 pas).";
+            case "action_joker"    -> "Déplacer un des détective (0 ou 1 pas).";
+            case "action_rotation" -> "Pivoter un quartier de 90°.";
+            case "action_echange"  -> "Échanger deux quartiers.";
+            case "action_alibi"    -> "Piocher une carte alibi.";
+            default -> "";
+        };
+    }
+
+    private Point getActionBallScreenPos(int index){
+        Composant2D ball = actionBalls[index];
+        if (ball == null) return new Point(0, 0);
+        Vector2 screenCenter = ball.position.Sub(Camera.positionHG).Mult(Camera.zoom);
+        return new Point((int) Math.round(screenCenter.x), (int) Math.round(screenCenter.y));
+    }
 }
