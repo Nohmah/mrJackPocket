@@ -23,27 +23,33 @@ public class Ia {
 
     public CoupIa choisirAction(Partie partie, boolean estJack){
         //System.out.println("Choix de l'action de l'ia avec difficulte : " + difficulte);
+        CoupIa coup;
+        int tempsMin = 4000; //temps minimum de l'ia avant quelle joue son coup (en ms)
+        long debut = System.currentTimeMillis();
         switch (difficulte){
             case 0:
-                return ChoixIa.choisirActionFacile(partie, estJack);
+                coup = ChoixIa.choisirActionFacile(partie, estJack);
+                break;
             case 1:
-                return ChoixIa.choisirActionMoyen(partie, estJack);
+                coup = ChoixIa.choisirActionMoyen(partie, estJack);
+                break;
             case 2:
-                return ChoixIa.choisirActionDifficile(partie, estJack);
-            case 4:
-                if (!estJack) {
-                    return ChoixIa.choisirActionFacile(partie, estJack);
-                } else {
-                    return ChoixIa.choisirActionMoyen(partie, estJack);
-                }
-            case 5:
-                if (!estJack) {
-                    return ChoixIa.choisirActionMoyen(partie, estJack);
-                } else {
-                    return ChoixIa.choisirActionFacile(partie, estJack);
-                }
+                coup = ChoixIa.choisirActionDifficile(partie, estJack);
+                break;
             default:
-                return ChoixIa.choisirActionRandom(partie, estJack);
+                coup = ChoixIa.choisirActionRandom(partie, estJack);
+                break;
         }
+
+        long duree = System.currentTimeMillis() - debut;
+        if(duree < tempsMin){
+            try {
+                Thread.sleep(tempsMin - duree);
+            } catch (InterruptedException e) {
+                System.err.println("Erreur lors de la pause dans choisirAction (ia.java) : ");
+            }
+        }
+
+        return coup;
     }
 }
