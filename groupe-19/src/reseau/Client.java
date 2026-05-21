@@ -32,6 +32,8 @@ public class Client {
 
     private boolean enJeu = false;
 
+    private boolean deconnexionForce = false;
+
     public Client(String pseudoClient, Boolean estHote, String serveur) {
         this.pseudoClient = pseudoClient;
         this.estHote = estHote;
@@ -72,20 +74,22 @@ public class Client {
                     this.receptionRequeteServeur.put(messageRecu);
 
                 }  catch (IOException e) {
-                    System.out.println("[CLIENT] receptionRequeteServeur(), le serveur s'est arrêté sans prévenir !");
-                    fermerConnexion();
+                    if(!this.deconnexionForce) {
+                        System.out.println("[CLIENT] receptionRequeteServeur(), le serveur s'est arrêté sans prévenir !");
+                        fermerConnexion();
 
-                    if(this.vueLobby != null) {
-                        SwingUtilities.invokeLater(() -> {
-                            this.vueLobby.ajouterMessageChat("System", "L'hôte s'est déconnecté, redirection dans 5 secondes !");
-                            javax.swing.Timer timer = new javax.swing.Timer(5000, event -> {
-                                if (!estHote) {
-                                    this.vueLobby.revenirMenuPrincipal();
-                                }
+                        if (this.vueLobby != null) {
+                            SwingUtilities.invokeLater(() -> {
+                                this.vueLobby.ajouterMessageChat("System", "L'hôte s'est déconnecté, redirection dans 5 secondes !");
+                                javax.swing.Timer timer = new javax.swing.Timer(5000, event -> {
+                                    if (!estHote) {
+                                        this.vueLobby.revenirMenuPrincipal();
+                                    }
+                                });
+                                timer.setRepeats(false);
+                                timer.start();
                             });
-                            timer.setRepeats(false);
-                            timer.start();
-                        });
+                        }
                     }
                     break;
                 } catch (ClassNotFoundException e){
@@ -192,7 +196,10 @@ public class Client {
     }
 
     private void receptionRequeteERREUR_PSEUDO(MessageServeur messageServeur) {
-        System.out.println(messageServeur.getContenue().toString());
+        JOptionPane.showMessageDialog(vueLobby,messageServeur.getContenue().toString());
+        this.vueLobby.revenirMenuPrincipal();
+        this.vueLobby = null;
+        this.deconnexionForce = true;
         fermerConnexion();
     }
 

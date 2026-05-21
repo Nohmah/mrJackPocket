@@ -161,9 +161,12 @@ public class Serveur {
                     this.receptionRequeteClient.put(messageRecu);
 
                 } catch (IOException e) {
-                    System.out.println("[SERVEUR] lireRequeteClient2(), le Client s'est déconnecté sans prévenir !");
-                    this.pseudoClient2 = null;
-                    informerClients(MISE_A_JOUR_INFORMATIONS_JOUEURS, "Système", "Le Joueur 2 a crashé/quitté le jeu.");
+
+                    if(this.pseudoClient2 != null){
+                        this.pseudoClient2 = null;
+                        informerClients(MISE_A_JOUR_INFORMATIONS_JOUEURS, "Système", "Le Joueur 2 a crashé/quitté le jeu.");
+                        System.out.println("[SERVEUR] lireRequeteClient2(), le Client s'est déconnecté sans prévenir !");
+                    }
                     break;
                 } catch (ClassNotFoundException e){
                     System.out.println("[SERVEUR] lireRequeteClient2(), le cast n'a pas fonctionnait correctement !");
@@ -271,6 +274,7 @@ public class Serveur {
                 } catch (IOException e) {
                     System.out.println("[SERVEUR] receptionInformationClient() a rencontré une erreur dans l'envoie d'erreur du pseudonyme identique au deuxième Client !");
                 }
+                return;
             }
             this.pseudoClient2 = messageServeur.getPseudo();
             try {
