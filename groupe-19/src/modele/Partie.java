@@ -54,6 +54,10 @@ public class Partie {
     Deque<Partie> undo = new ArrayDeque<>();
     Deque<Partie> redo = new ArrayDeque<>();
 
+    public src.modele.ia.laboratoire_genetique.ProfilGenetique adnJack = null;
+    public src.modele.ia.laboratoire_genetique.ProfilGenetique adnInspecteur = null;
+
+
 
     /** Constructeur **/
     public Partie(Joueur joueurChoisi, int niveauJack, int niveauEnqueteur){
@@ -414,6 +418,8 @@ public class Partie {
     // Constructeur de copie pour l'IA
     public Partie(Partie p) {
         this.estSimulation = true;
+        this.adnJack = p.adnJack;
+        this.adnInspecteur = p.adnInspecteur;
         this.district = new District(p.district);
         this.actions = new PartieActions(this);
 

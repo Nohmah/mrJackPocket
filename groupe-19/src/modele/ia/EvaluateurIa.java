@@ -6,7 +6,12 @@ public class EvaluateurIa {
 
     public static double jeSuisEnqueteur(Partie partie) {
         DataPartie data = new DataPartie(partie);
-        double[] poids = PoidsIa.getPoidsEnqueteur(partie.numeroTour);
+        double[] poids;
+        if (partie.adnInspecteur != null) {
+            poids = partie.adnInspecteur.getPoids(partie.numeroTour);
+        } else {
+            poids = PoidsIa.getPoidsEnqueteur(partie.numeroTour);
+        }
 
         double score = 0.0;
         score += poids[0] * ParametresEvaluateur.qualiteDuSplit(data, partie);
@@ -20,7 +25,12 @@ public class EvaluateurIa {
     public static double jeSuisJack(Partie partie) {
         DataPartie data = new DataPartie(partie);
         data.visibiliteJack(partie);
-        double[] poids = PoidsIa.getPoidsJack(partie.numeroTour);
+        double[] poids;
+        if (partie.adnJack != null) {
+            poids = partie.adnJack.getPoids(partie.numeroTour);
+        } else {
+            poids = PoidsIa.getPoidsJack(partie.numeroTour);
+        }
 
         double score = 0.0;
         score += poids[0] * ParametresEvaluateur.visibilite(data);
