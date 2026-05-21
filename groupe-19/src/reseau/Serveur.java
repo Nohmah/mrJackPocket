@@ -11,7 +11,7 @@ import static src.reseau.CommunicationLobbySC.*;
 
 public class Serveur {
 
-    private static final int PORTSERVEUR = 1201;
+    private static final int PORT_SERVEUR = 1201;
     
     private String pseudoClient1 = null;
     private String pseudoClient2 = null;
@@ -47,7 +47,7 @@ public class Serveur {
 
     private void initialisationServeur() {
         try {
-            this.serveurSocket = new ServerSocket(PORTSERVEUR);
+            this.serveurSocket = new ServerSocket(PORT_SERVEUR);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

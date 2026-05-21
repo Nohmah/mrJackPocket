@@ -1,7 +1,10 @@
 package src.vue.menus;
 
+
 import src.reseau.Client;
+import src.reseau.ExecuteActionSocket;
 import src.utils.utils;
+import src.vue.VueJeu;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -331,12 +334,12 @@ public class VueLobby extends JPanel {
         });
     }
 
-    public void lancementPartie(src.vue.VueJeu nouvellePartie) {
+    public void lancementPartie(src.modele.Partie partie) {
         ajouterMessageChat("Système", "Lancement de la partie dans :");
         JFrame parent = this.parent;
+        Client client = this.client;
         Timer timer = new Timer(1000, new ActionListener() {
             int compteur = 3;
-
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
                 if (compteur > 0) {
@@ -344,9 +347,15 @@ public class VueLobby extends JPanel {
                     compteur--;
                 } else {
                     ajouterMessageChat("Système", "GO !");
-                    ((Timer)e.getSource()).stop(); // On arrête le timer
+                    ((Timer)e.getSource()).stop();
+
+                    VueJeu vueJeu = new VueJeu(partie);
+                    client.setVueJeu(vueJeu);
+                    vueJeu.getGameplay().setExecuteAction(new ExecuteActionSocket(client));
+
+                    vueJeu.setVisible(true);
                     parent.dispose();
-                    nouvellePartie.setVisible(true);
+
                 }
             }
         });
