@@ -260,6 +260,8 @@ public class VueJeu extends JFrame {
         }
         vueMonde.updateJetons(gameplay.partie.jetonsAction);
         vueMonde.updateDetectivesView(gameplay.partie.detectives);
+        vueMonde.updateIaThinking(gameplay.partie.IaEnCours);
+
         vueMonde.repaintWorld();
     }
 
@@ -441,7 +443,7 @@ public class VueJeu extends JFrame {
         vueMonde.replaceOuterBall(1,2);
         vueMonde.replaceOuterBall(1,3);
         
-        gameplay.activerCoursePoursuiteTest();*/
+         gameplay.activerCoursePoursuiteTest();*/
         if (panneauRegles != null && panneauRegles.isShowing()) {
             fermerPanneauRegles();
             return;

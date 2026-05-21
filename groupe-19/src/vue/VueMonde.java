@@ -322,6 +322,9 @@ public class VueMonde extends JPanel {
 
     private JLabel     sablierLabel = null;
     private JPanel sablierPanel = null;
+    // Panneau indiquant que l'IA réfléchit (haut-gauche)
+    private JPanel iaThinkingPanel = null;
+    private JLabel iaThinkingLabel = null;
 
     // =========================================================================
     // Letterbox / scale
@@ -500,6 +503,24 @@ public class VueMonde extends JPanel {
         layeredPane.add(uiOverlay, JLayeredPane.PALETTE_LAYER);
 
         initSablierLabel();
+        initIaThinking();
+    }
+
+    private void initIaThinking() {
+        iaThinkingPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        iaThinkingPanel.setOpaque(true);
+        iaThinkingPanel.setBackground(new Color(0, 0, 0, 160));
+        iaThinkingPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200, 120), 1));
+
+        iaThinkingLabel = new JLabel("IA en train de chercher un coup...");
+        iaThinkingLabel.setForeground(Color.WHITE);
+        iaThinkingLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+        iaThinkingPanel.add(iaThinkingLabel);
+
+        uiOverlay.add(iaThinkingPanel);
+        iaThinkingPanel.setPreferredSize(new Dimension(220, 28));
+        iaThinkingPanel.setBounds(10, 10, 220, 28);
+        iaThinkingPanel.setVisible(false);
     }
 
     private void initPlayerRects() {
@@ -830,6 +851,28 @@ public class VueMonde extends JPanel {
         uiOverlay.repaint();
     }
 
+    public void updateIaThinking(boolean IaEnCours){
+        if(IaEnCours) showIaThinking();
+        else hideIaThinking();
+    }
+    /** Affiche le panneau "IA en train de réfléchir". */
+    public void showIaThinking() {
+        if (iaThinkingPanel == null) return;
+        //repositionOverlayElements(uiOverlay.getWidth(), uiOverlay.getHeight());
+        iaThinkingPanel.setLocation(10, 10);
+        iaThinkingPanel.setVisible(true);
+        uiOverlay.revalidate();
+        uiOverlay.repaint();
+    }
+
+    /** Masque le panneau "IA en train de réfléchir". */
+    public void hideIaThinking() {
+        if (iaThinkingPanel == null) return;
+        iaThinkingPanel.setVisible(false);
+        uiOverlay.revalidate();
+        uiOverlay.repaint();
+    }
+
     // =========================================================================
     // Manipulation des tuiles
     // =========================================================================
@@ -1036,6 +1079,20 @@ public class VueMonde extends JPanel {
             int x = camW - panelW - 10;
             int y = 10;
             sablierPanel.setBounds(x, y, panelW, panelH);
+        }
+        // Positionner le panneau IA en haut à gauche
+        if (iaThinkingPanel != null) {
+            //Pour que la taille de la police + grande si grande fenetre
+            int fontSize = camH / 45;
+            iaThinkingLabel.setFont(new Font("SansSerif", Font.BOLD, fontSize));
+            iaThinkingPanel.revalidate();
+
+            Dimension preferred = iaThinkingPanel.getPreferredSize();
+            int w = camW / 4;
+            int h = camH / 18;
+            int x = 10;
+            int y = 10;
+            iaThinkingPanel.setBounds(x, y, w, h);
         }
         uiOverlay.revalidate();
     }
