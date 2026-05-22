@@ -1,9 +1,6 @@
 package src.reseau;
 
-import src.modele.Joueur;
-import src.modele.Partie;
-import src.modele.PartieSaveMapper;
-import src.modele.PartieSnapshot;
+import src.modele.*;
 import src.vue.VueJeu;
 import src.vue.menus.VueLobby;
 

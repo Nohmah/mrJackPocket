@@ -8,7 +8,7 @@ import src.modele.ia.IaMinMax;
 import src.modele.ia.CoupIa;
 
 public class Arene {
-    private int profondeurMinMax = 3;
+    private int profondeurMinMax = 2;
 
     public void evaluerPool(PoolProfils poolMutant, PoolProfils poolAdverse) {
         System.out.print("Evaluation en cours : ");
@@ -48,6 +48,7 @@ public class Arene {
             }
             int security = 0;
             while (!p.isPartieTerminee() && security < 100) {
+                p.changement = false;
                 CoupIa coup = IaMinMax.choisirActionMinMax(p, p.joueurCourant == Joueur.JACK, profondeurMinMax);
                 if (coup != null) {
                     p.jouerCoup(coup);

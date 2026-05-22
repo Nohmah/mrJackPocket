@@ -17,6 +17,7 @@ public class PartieSnapshot implements Serializable {
     public List<Boolean> jetonsFaceRecto;         // faceRectoVisible de chaque jeton
     public List<CarteAlibi> cartesAlibiRestantes;
 
+    public CarteAlibi derniereCarteAlibiPiochee;
 
     public int numeroTour;
     public int totalActionsJouees;

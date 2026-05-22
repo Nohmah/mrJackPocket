@@ -254,7 +254,6 @@ public class Serveur {
                 choixJ1 = Joueur.ENQUETEUR;
             }
             PartieSnapshot partieInitiale = PartieSaveMapper.toSnapshot(partieServeur);
-
             informerClients(LANCEMENT_PARTIE, "Systeme", partieInitiale);
         }
     }

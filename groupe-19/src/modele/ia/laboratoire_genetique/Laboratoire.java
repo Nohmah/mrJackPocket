@@ -40,7 +40,7 @@ public class Laboratoire {
         for (ProfilGenetique p : pool.listeProfils) somme += p.score;
         double moyenne = somme / 100.0;
         String data = role + ";Cycle" + c + ";Gen" + g + ";MaxScore:" + meilleur.score + ";Moyenne:" + moyenne + ";Poids:" + Arrays.toString(meilleur.poidsDebut);
-        System.out.println(data);
+        //System.out.println(data);
         try (FileWriter fw = new FileWriter("stats_genetiques.csv", true);
              BufferedWriter bw = new BufferedWriter(fw);
              PrintWriter out = new PrintWriter(bw)) {

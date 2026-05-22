@@ -44,6 +44,8 @@ public final class PartieSaveMapper {
             snap.cartesAlibiRestantes.add(c);
         }
 
+        snap.derniereCarteAlibiPiochee = partie.derniereCarteAlibiPiochee;
+
         snap.numeroTour = partie.numeroTour;
         snap.coursePoursuiteActive = partie.coursePoursuiteActive;
         snap.gagnant = partie.gagnant;
@@ -82,6 +84,8 @@ public final class PartieSaveMapper {
 
         partie.cartesAlibiPioche.clear();
         partie.cartesAlibiPioche.addAll(snap.cartesAlibiRestantes);
+
+        partie.derniereCarteAlibiPiochee = snap.derniereCarteAlibiPiochee;
 
         partie.numeroTour = snap.numeroTour;
         partie.coursePoursuiteActive = snap.coursePoursuiteActive;
