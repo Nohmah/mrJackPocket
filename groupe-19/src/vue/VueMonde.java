@@ -379,6 +379,33 @@ public class VueMonde extends JPanel {
     }
 
     /**
+     * Active l'assombrissement global en exemptant les tuiles visibles et les détectives.
+     * @param masqueTuiles tableau 3×3 — true = tuile visible (exemptée du dimming)
+     */
+    public void appliquerAssombrissement(boolean[][] masqueTuiles) {
+        java.util.List<Composant2D> composantsAExempter = new java.util.ArrayList<>();
+
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 3; col++) {
+                if (masqueTuiles[row][col] && tileComponents[row][col] != null) {
+                    composantsAExempter.add(tileComponents[row][col]);
+                }
+            }
+        }
+
+        for (Composant2D det : detectiveComponents) {
+            if (det != null) composantsAExempter.add(det);
+        }
+
+        Camera.ActiverDimming(composantsAExempter);
+    }
+
+    /** Désactive l'assombrissement global. */
+    public void retirerAssombrissement() {
+        Camera.DesactiverDimming();
+    }
+
+    /**
      * Retourne l'index (0-3) de la boule d'action sous les coordonnees ecran
      * donnees, ou -1 si aucune boule n'est touchee.
      * Methode intentionnellement publique pour IHMControler.

@@ -186,6 +186,23 @@ public class Partie {
         // Gameplay lit ensuite isPartieTerminee() et numeroTour pour décider de la suite.
     }
 
+    /** Retourne un masque 3×3 indiquant quelles tuiles sont visibles par au moins un détective. **/
+    public boolean[][] getMasqueTuilesVisibles() {
+        boolean[][] masque = new boolean[3][3];
+        for (Detective d : detectives) {
+            for (Personnage p : district.personnagesVisiblesParDetective(d)) {
+                for (int row = 0; row < 3; row++) {
+                    for (int col = 0; col < 3; col++) {
+                        if (district.get(row, col).getPersonnage() == p) {
+                            masque[row][col] = true;
+                        }
+                    }
+                }
+            }
+        }
+        return masque;
+    }
+
     /** Réalise l'appel à témoin (deuxième étape du jeu) et vérifie si la partie est terminée **/
     public void appelATemoin(){
         if (freeze) return;
@@ -225,7 +242,7 @@ public class Partie {
         totalActionsJouees++;
         switch(totalActionsJouees){
             case 1, 3:
-                if(!estSimulation) System.out.println("Le joueur change. Le joueur est maintenant" +
+                if(!estSimulation) System.out.println("Le joueur change. Le joueur est maintenant " +
                         ((joueurCourant == Joueur.JACK) ? Joueur.ENQUETEUR : Joueur.JACK));
                 changerJoueur();
                 if (joueurCourant == Joueur.ENQUETEUR) {
@@ -233,18 +250,23 @@ public class Partie {
                 } else {
                     fireTourJackEvent();
                 }
+                // On vérifie si l'IA doit jouer au milieu du tour
+                if (!isPartieTerminee()) verifTourIa(); 
                 break;
+                
             case 4:
                 if(!estSimulation){
                     // On informe que c'est au tour de l'appel à témoin
                     fireAppelTemoinEvent();
-                    firePreAppelTemoinEvent();
+                    firePreAppelTemoinEvent(); // Déclenche le gel/Timer dans Gameplay
                 }
+                // IMPORTANT : Pas de verifTourIa() ici, c'est le Timer qui s'en chargera dans 3 secondes !
                 break;
+                
             default:
+                if (!isPartieTerminee()) verifTourIa();
                 break;
         }
-        if (!isPartieTerminee()) verifTourIa();
     }
 
     /** Prépare le tour suivant : incrémente [numeroTour], flag les tuiles comme n'ayant pas pivoté,

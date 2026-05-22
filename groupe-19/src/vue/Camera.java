@@ -26,7 +26,11 @@ public class Camera extends JComponent {
     public static List<String> spriteNames;
     public static List<Image> sprites;
     public static int nbreSprites;
-    private static int backgroundSpriteId = -1; 
+    private static int backgroundSpriteId = -1;
+
+    // --- Dimming (assombrissement pendant le gel pré-appel à témoin) ---
+    public static boolean dimmingActive = false;
+    public static List<Composant2D> exemptComponents = new ArrayList<>();
 
     //Pour les calculs de temps entre chaque redessinement, utilisés dans paintComponent
     //Cela servira à avoir des animations consistantes
@@ -151,6 +155,26 @@ public class Camera extends JComponent {
                 }
             }
         }
+        // --- Dimming : calque noir semi-transparent par-dessus tout ---
+        if (dimmingActive) {
+            drawable.setColor(new Color(0, 0, 0, 180));
+            drawable.fillRect(0, 0, getWidth(), getHeight());
+
+            // Redessiner par-dessus les composants exemptés
+            for (Composant2D comp : exemptComponents) {
+                if (comp == null) continue;
+                if (comp.spriteId < 0 || comp.spriteId >= sprites.size()) continue;
+                Vector2 screenPos    = comp.CoinHG().Sub(Camera.positionHG).Mult(Camera.zoom);
+                Vector2 screenTaille = comp.TailleRel().Mult(Camera.zoom);
+                drawable.drawImage(
+                    sprites.get(comp.spriteId),
+                    (int) screenPos.x,    (int) screenPos.y,
+                    (int) screenTaille.x, (int) screenTaille.y,
+                    null
+                );
+            }
+        }
+
         Camera.debut = System.currentTimeMillis();
     }
 
@@ -266,6 +290,18 @@ public class Camera extends JComponent {
     // -------------------------------------------------------------------------
     // API publique : ajout de composants et sprites
     // -------------------------------------------------------------------------
+
+    public static void ActiverDimming(List<Composant2D> composantsAExempter) {
+        dimmingActive = true;
+        exemptComponents = new ArrayList<>(composantsAExempter);
+        Camera.Repaint();
+    }
+
+    public static void DesactiverDimming() {
+        dimmingActive = false;
+        exemptComponents.clear();
+        Camera.Repaint();
+    }
 
     // Vous ne devriez pas avoir à utiliser ces fonctions
     // Elles servent à ajouter des composants à la liste de dessinage

@@ -101,21 +101,43 @@ public class Gameplay {
 
 
 
-            // NOUVEAU : gel avant appel à témoin
         partie.setPreAppelTemoinListener(() -> {
             if (partie.isPartieTerminee()) return;
 
+            // Geler les interactions utilisateur pendant l'assombrissement
             partie.setFreeze(true);
             System.out.println("Appel à témoin dans 3 secondes...");
 
-            new javax.swing.Timer(3000, e -> {
-                partie.appelATemoin();
-                if (!partie.isPartieTerminee()) {
-                    partie.tourSuivant();
+            boolean[][] masque = partie.getMasqueTuilesVisibles();
+            vue.getMonde().appliquerAssombrissement(masque);
+            refreshView();
+
+            javax.swing.Timer timer = new javax.swing.Timer(2000, e -> {
+                try {
+                    System.out.println("Fin des 2 secondes : exécution de l'appel à témoin...");
+                    vue.getMonde().retirerAssombrissement();
+
+                    // Dégeler pour permettre l'exécution des méthodes internes
+                    partie.setFreeze(false);
+
+                    partie.appelATemoin();
+                    if (!partie.isPartieTerminee()) {
+                        partie.tourSuivant();
+                    }
+                } catch (Exception ex) {
+                    System.err.println("ERREUR dans l'appel à témoin :");
+                    ex.printStackTrace();
+                } finally {
+                    // S'assurer que le jeu est dégelé
+                    partie.setFreeze(false);
+                    refreshView();
+                    if (!partie.isPartieTerminee()) {
+                        partie.verifTourIa();
+                    }
                 }
-                partie.setFreeze(false);
-                refreshView();
-            }).start();
+            });
+            timer.setRepeats(false);
+            timer.start();
         });
     }
 
