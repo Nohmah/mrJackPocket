@@ -21,6 +21,7 @@ public class VueOptions extends JPanel {
         // bouton retour
         JButton retour = BoutonsMenu.creerBouton("Boutonretour",
                 () -> {
+                    ((VueMenuPrincipal) menu).resetBoutonsSurvoles();
                     parent.setContentPane(menu);
                     parent.revalidate();
                     parent.repaint();

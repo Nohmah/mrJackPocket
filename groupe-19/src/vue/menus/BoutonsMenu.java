@@ -71,6 +71,12 @@ public class BoutonsMenu extends JButton {
         return bouton;
     }
 
+    /** Méthode pour set les boutons comme non survolés **/
+    public void resetSurvole() {
+        estSurvolee = false;
+        repaint();
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
 

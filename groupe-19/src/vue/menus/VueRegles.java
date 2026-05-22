@@ -46,6 +46,7 @@ public class VueRegles extends JPanel {
         JButton retour = BoutonsMenu.creerBouton(
                 "Boutonretour",
                 () -> {
+                    ((VueMenuPrincipal) retourVers).resetBoutonsSurvoles();
                     parent.setContentPane(retourVers);
                     parent.revalidate();
                     parent.repaint();

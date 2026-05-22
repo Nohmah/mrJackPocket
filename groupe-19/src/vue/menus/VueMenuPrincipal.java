@@ -5,10 +5,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.image.BufferedImage;
 
 public class VueMenuPrincipal extends JPanel {
-
+    JPanel panneauDroitBoutons;
     /** Constructeur **/
     public VueMenuPrincipal(JFrame parent) {
         setLayout(new BorderLayout());
@@ -36,7 +35,7 @@ public class VueMenuPrincipal extends JPanel {
         panelGaucheVide.setOpaque(false);
         panelGlobal.add(panelGaucheVide);
 
-        JPanel panneauDroitBoutons = new JPanel();
+        panneauDroitBoutons = new JPanel();
         panneauDroitBoutons.setLayout(new BoxLayout(panneauDroitBoutons, BoxLayout.Y_AXIS));
         panneauDroitBoutons.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
         // 10 pour que les boutons ne collent pas au bord de la fenêtre à droite
@@ -99,5 +98,19 @@ public class VueMenuPrincipal extends JPanel {
         panneauDroitBoutons.add(Box.createVerticalStrut(50));
         panneauDroitBoutons.add(quitter);
         panneauDroitBoutons.add(Box.createVerticalGlue());
+    }
+
+    public void resetBoutonsSurvoles() {
+        resetBoutonsSurvolesRecursif(panneauDroitBoutons);
+    }
+
+    private void resetBoutonsSurvolesRecursif(Container container) {
+        for (Component comp : container.getComponents()) {
+            if (comp instanceof BoutonsMenu) {
+                ((BoutonsMenu) comp).resetSurvole();
+            } else if (comp instanceof Container) {
+                resetBoutonsSurvolesRecursif((Container) comp);
+            }
+        }
     }
 }

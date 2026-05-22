@@ -7,9 +7,11 @@ package src.utils;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Scanner;
 
 public class utils {
 
@@ -39,4 +41,21 @@ public class utils {
         }
         return new Dimension(fl, fh);
     }
+
+    public static String lirePseudoSauvegarde() {
+        File fichier = new File("pseudo.txt");
+
+        if (fichier.exists()) {
+            try (Scanner sc = new Scanner(fichier)) {
+                if (sc.hasNextLine()) {
+                    String ligne = sc.nextLine().trim();
+                    return ligne.split("\\s")[0]; // jusqu'au premier espace
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return "";
+    }
+
 }
