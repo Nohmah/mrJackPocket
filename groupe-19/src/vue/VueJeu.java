@@ -260,7 +260,7 @@ public class VueJeu extends JFrame {
         }
         vueMonde.updateJetons(gameplay.partie.jetonsAction);
         vueMonde.updateDetectivesView(gameplay.partie.detectives);
-        vueMonde.updateIaThinking(gameplay.partie.IaEnCours);
+        vueMonde.updateThinking(gameplay.enReflexion(), gameplay.partie.IaEnCours);
 
         vueMonde.repaintWorld();
     }

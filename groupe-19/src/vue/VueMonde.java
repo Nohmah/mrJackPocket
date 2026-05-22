@@ -322,12 +322,20 @@ public class VueMonde extends JPanel {
 
     private JLabel     sablierLabel = null;
     private JPanel sablierPanel = null;
-    // Panneau indiquant que l'IA réfléchit (haut-gauche)
-    private JPanel iaThinkingPanel = null;
-    private JLabel iaThinkingLabel = null;
+    // Panneau indiquant que l'IA réfléchit (haut-gauche) ou joueur en réseau
+    private JPanel thinkingPanel = null;
+    private JLabel thinkingLabel = null;
 
     //Label pour info bulle jeton action.
     private JLabel actionTooltip;
+
+    // =========================================================================
+    // Comportement du panneau de reflexion
+    // =========================================================================
+
+    // Tant que le jeu n'est pas en réseau, c'est l'IA qui réfléchit par défaut
+
+    private boolean iaIsThinking = true;
 
     // =========================================================================
     // Letterbox / scale
@@ -561,25 +569,26 @@ public class VueMonde extends JPanel {
         uiOverlay.add(actionTooltip);
 
         initSablierLabel();
-        initIaThinking();
+        initThinking();
     }
 
-    private void initIaThinking() {
-        iaThinkingPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
-        iaThinkingPanel.setOpaque(true);
-        iaThinkingPanel.setBackground(new Color(0, 0, 0, 160));
-        iaThinkingPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200, 120), 1));
+    private void initThinking(){
+        thinkingPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        thinkingPanel.setOpaque(true);
+        thinkingPanel.setBackground(new Color(0, 0, 0, 160));
+        thinkingPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200, 120), 1));
 
-        iaThinkingLabel = new JLabel("IA en train de chercher un coup...");
-        iaThinkingLabel.setForeground(Color.WHITE);
-        iaThinkingLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
-        iaThinkingPanel.add(iaThinkingLabel);
+        thinkingLabel = new JLabel("");
+        thinkingLabel.setForeground(Color.WHITE);
+        thinkingLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+        thinkingPanel.add(thinkingLabel);
 
-        uiOverlay.add(iaThinkingPanel);
-        iaThinkingPanel.setPreferredSize(new Dimension(220, 28));
-        iaThinkingPanel.setBounds(10, 10, 220, 28);
-        iaThinkingPanel.setVisible(false);
+        uiOverlay.add(thinkingPanel);
+        thinkingPanel.setPreferredSize(new Dimension(320, 28));
+        thinkingPanel.setBounds(10, 10, 220, 28);
+        thinkingPanel.setVisible(false);
     }
+
 
     private void initPlayerRects() {
         String[] labels = { "", "" };
@@ -909,24 +918,30 @@ public class VueMonde extends JPanel {
         uiOverlay.repaint();
     }
 
-    public void updateIaThinking(boolean IaEnCours){
-        if(IaEnCours) showIaThinking();
-        else hideIaThinking();
+    public void updateThinking(boolean enReflexion, boolean iaEnJeo){
+        this.iaIsThinking = iaEnJeo;
+        if(iaIsThinking){
+            thinkingLabel.setText("IA en train de chercher un coup...");
+        }else{
+            thinkingLabel.setText("Votre adversaire est entrain de réfléchir...");
+        }
+        if(enReflexion) showThinking();
+        else hideThinking();
     }
     /** Affiche le panneau "IA en train de réfléchir". */
-    public void showIaThinking() {
-        if (iaThinkingPanel == null) return;
+    public void showThinking() {
+        if (thinkingPanel == null) return;
         //repositionOverlayElements(uiOverlay.getWidth(), uiOverlay.getHeight());
-        iaThinkingPanel.setLocation(10, 10);
-        iaThinkingPanel.setVisible(true);
+        thinkingPanel.setLocation(10, 10);
+        thinkingPanel.setVisible(true);
         uiOverlay.revalidate();
         uiOverlay.repaint();
     }
 
     /** Masque le panneau "IA en train de réfléchir". */
-    public void hideIaThinking() {
-        if (iaThinkingPanel == null) return;
-        iaThinkingPanel.setVisible(false);
+    public void hideThinking() {
+        if (thinkingPanel == null) return;
+        thinkingPanel.setVisible(false);
         uiOverlay.revalidate();
         uiOverlay.repaint();
     }
@@ -1138,19 +1153,19 @@ public class VueMonde extends JPanel {
             int y = 10;
             sablierPanel.setBounds(x, y, panelW, panelH);
         }
-        // Positionner le panneau IA en haut à gauche
-        if (iaThinkingPanel != null) {
+        // Positionner le panneau IA/Joueur réseau en haut à gauche
+        if (thinkingPanel != null) {
             //Pour que la taille de la police + grande si grande fenetre
             int fontSize = camH / 45;
-            iaThinkingLabel.setFont(new Font("SansSerif", Font.BOLD, fontSize));
-            iaThinkingPanel.revalidate();
+            thinkingLabel.setFont(new Font("SansSerif", Font.BOLD, fontSize));
+            thinkingPanel.revalidate();
 
-            Dimension preferred = iaThinkingPanel.getPreferredSize();
+            Dimension preferred = thinkingPanel.getPreferredSize();
             int w = camW / 4;
             int h = camH / 18;
             int x = 10;
             int y = 10;
-            iaThinkingPanel.setBounds(x, y, w, h);
+            thinkingPanel.setBounds(x, y, w, h);
         }
         uiOverlay.revalidate();
     }

@@ -76,7 +76,7 @@ public class Partie {
     public src.modele.ia.laboratoire_genetique.ProfilGenetique adnJack = null;
     public src.modele.ia.laboratoire_genetique.ProfilGenetique adnInspecteur = null;
 
-
+    private boolean isSolo = true;
 
     /** Constructeur **/
     public Partie(Joueur joueurChoisi, int niveauJack, int niveauEnqueteur){
@@ -596,5 +596,13 @@ public class Partie {
         PartieSaveMapper.fromGameSave(this, save);
         changement = true;
         verifTourIa();
+    }
+
+
+    public void setIsSolo(boolean isSolo) {
+        this.isSolo = isSolo;
+    }
+    public boolean getIsSolo() {
+        return isSolo;
     }
 }

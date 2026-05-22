@@ -59,6 +59,8 @@ public final class PartieSaveMapper {
         snap.IAChoisi = partie.IAChoisi;
         snap.joueurChoisi = partie.joueurChoisi;
         snap.difficulteIAChoisi = partie.difficulteIAChoisi;
+
+        snap.isSolo = partie.getIsSolo();
         return snap;
     }
 
@@ -100,6 +102,8 @@ public final class PartieSaveMapper {
         partie.IAChoisi = snap.IAChoisi;
         partie.joueurChoisi = snap.joueurChoisi;
         partie.difficulteIAChoisi = snap.difficulteIAChoisi;
+
+        partie.setIsSolo(snap.isSolo);
     }
 
     public static GameSave toGameSave(Partie partie) {

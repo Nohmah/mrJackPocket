@@ -32,4 +32,6 @@ public class PartieSnapshot implements Serializable {
     public Joueur joueurChoisi;
     public boolean IAChoisi;
     public String difficulteIAChoisi;
+
+    public boolean isSolo;
 }

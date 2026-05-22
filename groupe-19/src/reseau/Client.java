@@ -28,12 +28,14 @@ public class Client {
     private VueJeu vueJeu;
 
     private boolean enJeu = false;
-
     private boolean deconnexionForce = false;
+
+    private boolean jeSuisJack;
 
     public Client(String pseudoClient, Boolean estHote, String serveur) {
         this.pseudoClient = pseudoClient;
         this.estHote = estHote;
+        this.jeSuisJack = estHote;
         receptionRequeteServeur = new LinkedBlockingQueue<>();
 
         rejoindreServeur(serveur);
@@ -188,6 +190,12 @@ public class Client {
         PartieSnapshot versionServeur = (PartieSnapshot) messageServeur.getContenue();
         Partie partieClient = new Partie(Joueur.JACK, -1, -1);
         PartieSaveMapper.fromSnapshot(partieClient,versionServeur);
+        System.out.println("[DEBUG] Client : jesuisjack : "+ jeSuisJack);
+        if(jeSuisJack){
+            partieClient.joueurChoisi = Joueur.JACK;
+        }else{
+            partieClient.joueurChoisi = Joueur.ENQUETEUR;
+        }
         this.vueLobby.lancementPartie(partieClient);
         this.enJeu = true;
     }
@@ -219,7 +227,13 @@ public class Client {
     }
 
     private void receptionRequeteNOUVEAU_PLATEAU(MessageServeur messageServeur) {
-        this.vueJeu.getGameplay().refreshFromSnap((PartieSnapshot) messageServeur.getContenue());
+        PartieSnapshot partieClient = (PartieSnapshot) messageServeur.getContenue();
+        if(jeSuisJack){
+            partieClient.joueurChoisi = Joueur.JACK;
+        }else{
+            partieClient.joueurChoisi = Joueur.ENQUETEUR;
+        }
+        this.vueJeu.getGameplay().refreshFromSnap(partieClient);
     }
 
 
@@ -254,7 +268,12 @@ public class Client {
         informerServeur(MESSAGE, message);
     }
 
-    public void nouveauChoix(Boolean veutEtreJack){
+    public void nouveauChoix(Boolean veutEtreJack) {
+        if (estHote) {
+            this.jeSuisJack = veutEtreJack;
+        } else{
+            this.jeSuisJack = !veutEtreJack;
+        }
         informerServeur(BOUTON_CHOIX,veutEtreJack.toString());
     }
 

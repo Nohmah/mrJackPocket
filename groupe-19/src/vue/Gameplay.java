@@ -225,6 +225,12 @@ public class Gameplay {
         refreshView();
     }
 
+    public boolean enReflexion(){
+        if(partie.IaEnCours){return true;}
+        if(partie.getIsSolo()){return false;}
+        return partie.joueurCourant == partie.joueurChoisi;
+    }
+
     // -------------------------------------------------------------------------
     // Cycle de jeu
     // -------------------------------------------------------------------------

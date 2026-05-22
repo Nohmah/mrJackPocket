@@ -247,12 +247,12 @@ public class Serveur {
         if(this.nombreJoueurPret == 2){
             this.enJeu = true;
             if(j1Jack){
-                partieServeur = new Partie(Joueur.JACK,-1,-1);
                 choixJ1 = Joueur.JACK;
             }else{
-                partieServeur = new Partie(Joueur.ENQUETEUR,-1,-1);
                 choixJ1 = Joueur.ENQUETEUR;
             }
+            partieServeur = new Partie(Joueur.JACK,-1,-1);
+            partieServeur.setIsSolo(false);
             PartieSnapshot partieInitiale = PartieSaveMapper.toSnapshot(partieServeur);
             informerClients(LANCEMENT_PARTIE, "Systeme", partieInitiale);
         }
@@ -320,6 +320,9 @@ public class Serveur {
         }
 
         PartieSnapshot partieEnCours = PartieSaveMapper.toSnapshot(partieServeur);
+
+        //TODO si dernier jeton alors envoyer plusieurs fois le plateau pour jolie ihm + pendant ce temps mettre les joueurs == courant pour ne pas avoir le message pendant animation jolie
+        // TODO dans gameplay si non ensolo et que joueur chosit n'est pas jack alors n'affiche pas
         informerClients(NOUVEAU_PLATEAU, "Systeme", partieEnCours);
 
     }
