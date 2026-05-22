@@ -63,6 +63,16 @@ public class Partie {
     public void setFreeze(boolean freeze) { this.freeze = freeze; }
     public void toggleFreeze() { this.freeze = !this.freeze; }
 
+    private transient Runnable preAppelTemoinListener;
+
+    public void setPreAppelTemoinListener(Runnable listener) {
+        this.preAppelTemoinListener = listener;
+    }
+
+    private void firePreAppelTemoinEvent() {
+        if (preAppelTemoinListener != null) preAppelTemoinListener.run();
+    }
+
     public src.modele.ia.laboratoire_genetique.ProfilGenetique adnJack = null;
     public src.modele.ia.laboratoire_genetique.ProfilGenetique adnInspecteur = null;
 
@@ -201,7 +211,6 @@ public class Partie {
             district.innocenter(p);
         }
         verifFinDePartie();
-        if(!isPartieTerminee()) tourSuivant();
     }
 
     /** Change [joueurCourant] pour l'autre joueur **/
@@ -229,7 +238,7 @@ public class Partie {
                 if(!estSimulation){
                     // On informe que c'est au tour de l'appel à témoin
                     fireAppelTemoinEvent();
-                    appelATemoin();
+                    firePreAppelTemoinEvent();
                 }
                 break;
             default:

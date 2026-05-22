@@ -98,6 +98,25 @@ public class Gameplay {
             });
 
         });
+
+
+
+            // NOUVEAU : gel avant appel à témoin
+        partie.setPreAppelTemoinListener(() -> {
+            if (partie.isPartieTerminee()) return;
+
+            partie.setFreeze(true);
+            System.out.println("Appel à témoin dans 3 secondes...");
+
+            new javax.swing.Timer(3000, e -> {
+                partie.appelATemoin();
+                if (!partie.isPartieTerminee()) {
+                    partie.tourSuivant();
+                }
+                partie.setFreeze(false);
+                refreshView();
+            }).start();
+        });
     }
 
     private void afficherIdentiteJack(Runnable onFinished) {
