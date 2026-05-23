@@ -112,7 +112,7 @@ public class Gameplay {
             vue.getMonde().appliquerAssombrissement(masque);
             refreshView();
 
-            javax.swing.Timer timer = new javax.swing.Timer(2000, e -> {
+            javax.swing.Timer timer = new javax.swing.Timer(2500, e -> {
                 try {
                     System.out.println("Fin des 2 secondes : exécution de l'appel à témoin...");
                     vue.getMonde().retirerAssombrissement();
