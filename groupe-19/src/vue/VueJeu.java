@@ -4,7 +4,11 @@ import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.List;
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import src.modele.*;
 import src.utils.SaveManager;
@@ -40,6 +44,8 @@ public class VueJeu extends JPanel {
     private static final int WINDOW_H   = 800;
     /** Largeur en pixels de la bande laterale Swing. */
     private static final int STRIP_W_PX = 100;
+    /** Cote des boutons carres (largeur dispo moins marge). 90 × 90 px. */
+    private static final int BTN_SIZE   = 55;
     private static final int FPS        = 60;
 
     // =========================================================================
@@ -291,7 +297,7 @@ public class VueJeu extends JPanel {
         leftStrip.setBackground(new Color(30, 30, 40));
         leftStrip.setBorder(BorderFactory.createEmptyBorder(20, 5, 10, 5));
 
-        JButton retour = makeStripButton("Retour");
+        JButton retour = makeStripButton("Retour", "Retour.png");
         retour.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
             stopGameLoop();
@@ -301,17 +307,17 @@ public class VueJeu extends JPanel {
             parent.repaint();
         });
 
-        JButton newGame = makeStripButton("Nv. Partie");
+        JButton newGame = makeStripButton("Nv. Partie", "Niv.Partie.png");
         newGame.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
             if (gameplay != null) gameplay.resetGame(); });
 
-        JButton ia      = makeStripButton("IA");
+        JButton ia      = makeStripButton("IA", "IA.png");
         ia.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
             if (gameplay != null) gameplay.partie.lanceIa(); });
 
-        JButton annuler = makeStripButton("Annuler");
+        JButton annuler = makeStripButton("Annuler", "Annuler.png");
         annuler.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
             if (gameplay != null) {
@@ -320,7 +326,7 @@ public class VueJeu extends JPanel {
             }
         });
 
-        JButton visibleBtn = makeStripButton("Visible");
+        JButton visibleBtn = makeStripButton("Visible", "Visible.png");
         visibleBtn.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;  // Évite les clics pendant freeze
             if (gameplay != null) {
@@ -329,7 +335,7 @@ public class VueJeu extends JPanel {
         });
         leftStrip.add(visibleBtn);
 
-        JButton refaire = makeStripButton("Refaire");
+        JButton refaire = makeStripButton("Refaire", "Refaire.png");
         refaire.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
             if (gameplay != null) {
@@ -338,7 +344,7 @@ public class VueJeu extends JPanel {
             }
         });
 
-        JButton save = makeStripButton("Save");
+        JButton save = makeStripButton("Save", "Save.png");
         save.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
             if (gameplay != null) {
@@ -350,7 +356,7 @@ public class VueJeu extends JPanel {
             }
         });
 
-        JButton load = makeStripButton("Load");
+        JButton load = makeStripButton("Load", "Load.png");
         load.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
             if (gameplay != null) {
@@ -364,26 +370,26 @@ public class VueJeu extends JPanel {
             }
         });
 
-        JButton regles  = makeStripButton("Regles");
+        JButton regles  = makeStripButton("Regles", "ReglesB.png");
         regles.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
             onReglesPressed();
         });
 
         leftStrip.add(retour);
-        leftStrip.add(Box.createVerticalStrut(8));
+        leftStrip.add(Box.createVerticalStrut(4));
         leftStrip.add(newGame);
-        leftStrip.add(Box.createVerticalStrut(8));
+        leftStrip.add(Box.createVerticalStrut(4));
         leftStrip.add(ia);
-        leftStrip.add(Box.createVerticalStrut(8));
+        leftStrip.add(Box.createVerticalStrut(4));
         leftStrip.add(annuler);
-        leftStrip.add(Box.createVerticalStrut(8));
+        leftStrip.add(Box.createVerticalStrut(4));
         leftStrip.add(refaire);
-        leftStrip.add(Box.createVerticalStrut(8));
+        leftStrip.add(Box.createVerticalStrut(4));
         leftStrip.add(save);
-        leftStrip.add(Box.createVerticalStrut(8));
+        leftStrip.add(Box.createVerticalStrut(4));
         leftStrip.add(load);
-        leftStrip.add(Box.createVerticalStrut(8));
+        leftStrip.add(Box.createVerticalStrut(4));
         leftStrip.add(regles);
         leftStrip.add(Box.createVerticalGlue());
 
@@ -427,20 +433,77 @@ public class VueJeu extends JPanel {
     }
 
     // =========================================================================
-    // Bouton helper
+    // Boutons helpers — chargement icones et creation des boutons de bande
     // =========================================================================
 
-    private JButton makeStripButton(String label) {
-        JButton btn = new JButton("<html><center>" + label + "</center></html>");
-        btn.setFont(new Font("SansSerif", Font.BOLD, 10));
-        btn.setForeground(Color.WHITE);
-        btn.setBackground(new Color(50, 50, 60));
-        btn.setBorder(BorderFactory.createLineBorder(new Color(100, 100, 120), 1));
+    /**
+     * Charge une image depuis res/Images/ et la redimensionne aux dimensions cibles.
+     * Suit exactement le meme modele que Camera.AddSprite().
+     *
+     * @param fileName nom du fichier PNG (ex : "Retour.png")
+     * @param width    largeur cible en pixels
+     * @param height   hauteur cible en pixels
+     * @return un ImageIcon redimensionne, ou null si le fichier est introuvable
+     */
+    private ImageIcon loadIcon(String fileName, int width, int height) {
+        File f = new File("res/Images/" + fileName);
+        if (!f.exists()) {
+            System.err.println("VueJeu.loadIcon — fichier introuvable : res/Images/" + fileName);
+            return null;
+        }
+        try {
+            InputStream in = new FileInputStream(f);
+            BufferedImage raw = ImageIO.read(in);
+            if (raw == null) {
+                System.err.println("VueJeu.loadIcon — ImageIO n'a pas pu lire : " + fileName);
+                return null;
+            }
+            Image scaled = raw.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+            return new ImageIcon(scaled);
+        } catch (Exception ex) {
+            System.err.println("VueJeu.loadIcon — exception sur " + fileName + " : " + ex.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Cree un bouton de la bande laterale.
+     * Tente d'afficher l'icone PNG ; bascule sur le texte HTML si elle est indisponible.
+     *
+     * @param label    texte de secours (aussi utilise comme tooltip quand l'icone est presente)
+     * @param pngFile  nom du fichier PNG a charger depuis res/Images/
+     */
+    private JButton makeStripButton(String label, String pngFile) {
+        int btnW = BTN_SIZE;
+        int btnH = BTN_SIZE;
+
+        JButton btn = new JButton();
         btn.setFocusable(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        btn.setMaximumSize(new Dimension(STRIP_W_PX - 10, 38));
-        btn.setPreferredSize(new Dimension(STRIP_W_PX - 10, 38));
+        Dimension square = new Dimension(btnW, btnH);
+        btn.setPreferredSize(square);
+        btn.setMinimumSize(square);
+        btn.setMaximumSize(square);
+
+        ImageIcon icon = loadIcon(pngFile, btnW, btnH);
+        if (icon != null) {
+            // Mode image : icone + tooltip textuel
+            btn.setIcon(icon);
+            btn.setText("");
+            btn.setToolTipText(label);
+            btn.setBorderPainted(false);
+            btn.setContentAreaFilled(false);
+            btn.setOpaque(false);
+        } else {
+            // Mode secours : texte HTML avec style original
+            btn.setText("<html><center>" + label + "</center></html>");
+            btn.setFont(new Font("SansSerif", Font.BOLD, 10));
+            btn.setForeground(Color.WHITE);
+            btn.setBackground(new Color(50, 50, 60));
+            btn.setBorder(BorderFactory.createLineBorder(new Color(100, 100, 120), 1));
+            btn.setOpaque(true);
+        }
         return btn;
     }
 
