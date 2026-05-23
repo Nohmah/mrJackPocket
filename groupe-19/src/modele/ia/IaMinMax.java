@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+
 public class IaMinMax{
     
     public static class resultatMinMax { // classe pour stocker le résultat du MinMax
@@ -67,6 +68,7 @@ public class IaMinMax{
             }
             if(estJack){//si on est jack on peut juste continuer normalement
                 partie.appelATemoin();
+                partie.tourSuivant();
                 //System.out.println("Mise a jour des jetons : nb actions possibles :" + partie.actions.getActionsPossibles().size());
                 return MinMax(partie, estJack, profondeur, 0, alpha, beta);
             }
