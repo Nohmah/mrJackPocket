@@ -141,6 +141,41 @@ public class Gameplay {
         });
     }
 
+    public void afficherVisibiliteTemporaire() {
+        if (partie.isFreeze() || partie.isPartieTerminee()) return;
+
+        // Vérifier si le joueur actuel est une IA
+        boolean estIa = (partie.joueurCourant == Joueur.JACK && partie.niveauJack != -1)
+                    || (partie.joueurCourant == Joueur.ENQUETEUR && partie.niveauEnqueteur != -1);
+        if (estIa) {
+            System.out.println("Visible : pas autorisé pendant le tour d'une IA");
+            return;
+        }
+
+        // Geler l'interface
+        partie.setFreeze(true);
+        System.out.println("Affichage temporaire de la visibilité (1.5s)...");
+
+        // Calculer et appliquer l'assombrissement
+        boolean[][] masque = partie.getMasqueTuilesVisibles();
+        vue.getMonde().appliquerAssombrissement(masque);
+        refreshView();
+
+        // Timer pour enlever l'assombrissement après 1,5 secondes
+        javax.swing.Timer timer = new javax.swing.Timer(1500, e -> {
+            try {
+                vue.getMonde().retirerAssombrissement();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            } finally {
+                partie.setFreeze(false);
+                refreshView();
+            }
+        });
+        timer.setRepeats(false);
+        timer.start();
+    }
+
     private void afficherIdentiteJack(Runnable onFinished) {
         // n'affiche correctement l'identité de jack que si une seule carte alibi a été piochée
 

@@ -320,6 +320,15 @@ public class VueJeu extends JPanel {
             }
         });
 
+        JButton visibleBtn = makeStripButton("Visible");
+        visibleBtn.addActionListener(e -> {
+            if (vueMonde.jeuVerrouille) return;  // Évite les clics pendant freeze
+            if (gameplay != null) {
+                gameplay.afficherVisibiliteTemporaire();
+            }
+        });
+        leftStrip.add(visibleBtn);
+
         JButton refaire = makeStripButton("Refaire");
         refaire.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
