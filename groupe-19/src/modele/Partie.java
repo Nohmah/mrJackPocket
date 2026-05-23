@@ -51,6 +51,8 @@ public class Partie {
     public boolean estSimulation = false;
     public int niveauJack;  // niveau de son IA (-1 = manuel, 0 = facile, 1 = moyen, 2 = difficile)
     public int niveauEnqueteur; // niveau de l'IA de l'enquêteur (-1 = manuel, 0 = facile, 1 = moyen, 2 = difficile)
+    public String pseudoEnqueteur;
+    public String pseudoJack;
     public boolean changement; //si il y a eu un changement avec les undo / redo pour annuler le coup de l'ia
 
     //Pour l'historique
@@ -79,10 +81,12 @@ public class Partie {
     private boolean isSolo = true;
 
     /** Constructeur **/
-    public Partie(Joueur joueurChoisi, int niveauJack, int niveauEnqueteur){
+    public Partie(Joueur joueurChoisi, int niveauJack, int niveauEnqueteur, String pseudoEnqueteur, String pseudoJack){
         this.joueurChoisi = joueurChoisi;
         this.niveauJack = niveauJack;
         this.niveauEnqueteur = niveauEnqueteur;
+        this.pseudoEnqueteur = pseudoEnqueteur;
+        this.pseudoJack = pseudoJack;
         actions = new PartieActions(this);
         jetonsAction = new ArrayList<>();
         cartesAlibiPioche = new ArrayList<>();
@@ -93,6 +97,11 @@ public class Partie {
         changement = true;
         verifTourIa();
     }
+
+    public String getPseudoEnqueteur() { return pseudoEnqueteur; }
+    public String getPseudoJack() { return pseudoJack; }
+    public void setPseudoEnqueteur(String pseudo) { this.pseudoEnqueteur = pseudo; }
+    public void setPseudoJack(String pseudo) { this.pseudoJack = pseudo; }
 
     public void setTourChangeListener(Runnable listener) {
         this.tourChangeListener = listener;

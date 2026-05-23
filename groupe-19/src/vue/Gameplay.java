@@ -572,14 +572,14 @@ public class Gameplay {
         VueMonde monde = vue.getMonde();
 
         // ----- Enquêteur (index 0, toujours en bleu) -----
-        String enqueteurNom = "Enqueteur";
+        String enqueteurNom = partie.pseudoEnqueteur;
         String enqueteurType = getTypeTexte(partie.niveauEnqueteur);
         monde.setPlayerName(0, enqueteurNom);
         monde.setPlayerType(0, enqueteurType);
         monde.updateRectColor(0, new Color(40, 80, 180, 200));  // Bleu personnalisé
 
         // ----- Mr. Jack (index 1, toujours en rouge) -----
-        String jackNom = "Mr. Jack";
+        String jackNom = partie.pseudoJack;
         String jackType = getTypeTexte(partie.niveauJack);
         monde.setPlayerName(1, jackNom);
         monde.setPlayerType(1, jackType);

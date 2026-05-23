@@ -188,7 +188,7 @@ public class Client {
 
     private void receptionRequeteLANCEMENT_PARTIE(MessageServeur messageServeur) {
         PartieSnapshot versionServeur = (PartieSnapshot) messageServeur.getContenue();
-        Partie partieClient = new Partie(Joueur.JACK, -1, -1);
+        Partie partieClient = new Partie(Joueur.JACK, -1, -1, "ENQUETEUR", "JACK");
         PartieSaveMapper.fromSnapshot(partieClient,versionServeur);
         System.out.println("[DEBUG] Client : jesuisjack : "+ jeSuisJack);
         if(jeSuisJack){

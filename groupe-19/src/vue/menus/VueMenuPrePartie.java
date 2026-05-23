@@ -19,6 +19,8 @@ public class VueMenuPrePartie extends JPanel {
     private int difficulteIA_DROITE = 0;
     private String message;
     private String pseudo;
+    private String pseudoGauche = "";
+    private String pseudoDroite = "";
     private String serveur;
     private boolean iaEnqueteur = false;
     private boolean iaJack = false;
@@ -83,7 +85,10 @@ public class VueMenuPrePartie extends JPanel {
                     } else {
                         joueurChoisi = Joueur.ENQUETEUR;
                     }
-                    Partie partie = new Partie(joueurChoisi, niveauJack, niveauEnqueteur);
+                    String pseudoEnqueteur = pseudoGaucheValide ? pseudoGauche : "Enquêteur";
+                    String pseudoJack = pseudoDroiteValide ? pseudoDroite : "Mr. Jack";
+                    Partie partie = new Partie(joueurChoisi, niveauJack, niveauEnqueteur,
+                            pseudoEnqueteur, pseudoJack);
                     VueJeu jeu = new VueJeu(parent, (VueMenuPrincipal) retourVers, partie);
                     parent.setContentPane(jeu);
                     parent.revalidate();
@@ -192,8 +197,10 @@ public class VueMenuPrePartie extends JPanel {
             System.out.println("[DEBUG] reception pseudo : "+pseudo);
             if(!this.pseudo.isEmpty()){
                 if(role.equals("gauche")) {
+                    pseudoGauche = this.pseudo;
                     pseudoGaucheValide = true;
                 } else {
+                    pseudoDroite = this.pseudo;
                     pseudoDroiteValide = true;
                 }
 

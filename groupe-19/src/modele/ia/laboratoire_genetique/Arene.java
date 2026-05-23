@@ -38,7 +38,7 @@ public class Arene {
         System.setOut(fluxSilencieux);
         System.setErr(fluxSilencieux);
         try {
-            Partie p = new Partie(Joueur.ENQUETEUR, -1, -1);
+            Partie p = new Partie(Joueur.ENQUETEUR, -1, -1, "ENQUETEUR", "JACK");
             if (mutant.role == Joueur.JACK) {
                 p.adnJack = mutant;
                 p.adnInspecteur = adv;

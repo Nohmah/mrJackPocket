@@ -246,12 +246,17 @@ public class Serveur {
         informerClients(MISE_A_JOUR_CONFIRMATION, messageServeur.getPseudo(), String.valueOf(this.nombreJoueurPret));
         if(this.nombreJoueurPret == 2){
             this.enJeu = true;
+            String pseudoJack, pseudoEnqueteur;
             if(j1Jack){
                 choixJ1 = Joueur.JACK;
+                pseudoJack = pseudoClient1;
+                pseudoEnqueteur = pseudoClient2;
             }else{
                 choixJ1 = Joueur.ENQUETEUR;
+                pseudoJack = pseudoClient2;
+                pseudoEnqueteur = pseudoClient1;
             }
-            partieServeur = new Partie(Joueur.JACK,-1,-1);
+            partieServeur = new Partie(Joueur.JACK, -1, -1, pseudoEnqueteur, pseudoJack);
             partieServeur.setIsSolo(false);
             PartieSnapshot partieInitiale = PartieSaveMapper.toSnapshot(partieServeur);
             informerClients(LANCEMENT_PARTIE, "Systeme", partieInitiale);

@@ -17,7 +17,7 @@ public class MrJackPocket {
             int nbVictoiresJack = 0;
             int nbVictoiresEnqueteur = 0;
             for(int i = 0; i < 1000; i++){
-                partie = new Partie(null, 2, 2);
+                partie = new Partie(null, 2, 2, "ENQUETEUR", "JACK");
                 System.out.println("\nDébut de la partie " + (i+1));
                 while (!partie.isPartieTerminee()){
                     try {
