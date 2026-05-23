@@ -84,9 +84,10 @@ public class VueMenuPrePartie extends JPanel {
                         joueurChoisi = Joueur.ENQUETEUR;
                     }
                     Partie partie = new Partie(joueurChoisi, niveauJack, niveauEnqueteur);
-                    VueJeu jeu = new VueJeu(partie);
-                    jeu.setVisible(true);
-                    SwingUtilities.getWindowAncestor(this).dispose();
+                    VueJeu jeu = new VueJeu(parent, (VueMenuPrincipal) retourVers, partie);
+                    parent.setContentPane(jeu);
+                    parent.revalidate();
+                    parent.repaint();
                 });
 
                 // suite colonne gauche

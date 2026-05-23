@@ -349,13 +349,15 @@ public class VueLobby extends JPanel {
                     ajouterMessageChat("Système", "GO !");
                     ((Timer)e.getSource()).stop();
 
-                    VueJeu vueJeu = new VueJeu(partie);
+                    VueMenuPrincipal menuPrincipal = (VueMenuPrincipal) panel;
+
+                    VueJeu vueJeu = new VueJeu(parent, menuPrincipal, partie);
                     client.setVueJeu(vueJeu);
                     vueJeu.getGameplay().setExecuteAction(new ExecuteActionSocket(client));
 
-                    vueJeu.setVisible(true);
-                    parent.dispose();
-
+                    parent.setContentPane(vueJeu);
+                    parent.revalidate();
+                    parent.repaint();
                 }
             }
         });

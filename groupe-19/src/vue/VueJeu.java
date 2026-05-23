@@ -8,6 +8,7 @@ import java.util.List;
 import javax.swing.*;
 import src.modele.*;
 import src.utils.SaveManager;
+import src.vue.menus.VueMenuPrincipal;
 
 /**
  * VueJeu — Fenetre principale du jeu (1200×800).
@@ -28,8 +29,10 @@ import src.utils.SaveManager;
  *   ├─ WEST  : leftStrip (JPanel BoxLayout Y, largeur fixe STRIP_W_PX)
  *   └─ CENTER: vueMonde  (VueMonde — JPanel contenant le JLayeredPane)
  */
-public class VueJeu extends JFrame {
-
+public class VueJeu extends JPanel {
+    private final JFrame parent;
+    private final VueMenuPrincipal menuPrincipal;
+    private boolean partieEnCours = true;
     // =========================================================================
     // Constantes fenetre
     // =========================================================================
@@ -66,8 +69,9 @@ public class VueJeu extends JFrame {
     // Constructeur
     // =========================================================================
 
-    public VueJeu(Partie partie) {
-        super("Mr. Jack Pocket");
+    public VueJeu(JFrame parent, VueMenuPrincipal menuPrincipal, Partie partie) {
+        this.parent = parent;
+        this.menuPrincipal = menuPrincipal;
 
         // 1. Creer le panneau monde AVANT d'initialiser la fenetre
         vueMonde = new VueMonde();
@@ -83,8 +87,6 @@ public class VueJeu extends JFrame {
         initLeftStrip();
         initCenterPane();
         initResizeListener();
-
-        setVisible(true);
 
         // 4. Creer le mediateur (necessite que la vue soit prete)
         this.gameplay = new Gameplay(this, partie);
@@ -236,7 +238,7 @@ public class VueJeu extends JFrame {
 
     private void startTicker() {
         int timeSleep = 1000 / FPS;
-        while (true) {
+        while (partieEnCours) {
             try {
                 Thread.sleep(timeSleep);
                 tick();
@@ -270,12 +272,8 @@ public class VueJeu extends JFrame {
     // =========================================================================
 
     private void initFrame() {
-        setSize(WINDOW_W, WINDOW_H);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setResizable(true);
-        getContentPane().setLayout(new BorderLayout());
-        getContentPane().setBackground(Color.BLACK); // bandes letterbox
-        setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
+        setBackground(Color.BLACK);
     }
 
     // -------------------------------------------------------------------------
@@ -293,10 +291,14 @@ public class VueJeu extends JFrame {
         leftStrip.setBackground(new Color(30, 30, 40));
         leftStrip.setBorder(BorderFactory.createEmptyBorder(20, 5, 10, 5));
 
-        JButton retour  = makeStripButton("Retour");
+        JButton retour = makeStripButton("Retour");
         retour.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
-            System.out.println("VueJeu — Retour (non implemente)");
+            stopGameLoop();
+            menuPrincipal.resetBoutonsSurvoles();
+            parent.setContentPane(menuPrincipal);
+            parent.revalidate();
+            parent.repaint();
         });
 
         JButton newGame = makeStripButton("Nv. Partie");
@@ -376,7 +378,11 @@ public class VueJeu extends JFrame {
         leftStrip.add(regles);
         leftStrip.add(Box.createVerticalGlue());
 
-        getContentPane().add(leftStrip, BorderLayout.WEST);
+        add(leftStrip, BorderLayout.WEST);
+    }
+
+    public void stopGameLoop() {
+        partieEnCours = false;
     }
 
     // -------------------------------------------------------------------------
@@ -384,7 +390,7 @@ public class VueJeu extends JFrame {
     // -------------------------------------------------------------------------
 
     private void initCenterPane() {
-        getContentPane().add(vueMonde, BorderLayout.CENTER);
+        add(vueMonde, BorderLayout.CENTER);
     }
 
     // -------------------------------------------------------------------------

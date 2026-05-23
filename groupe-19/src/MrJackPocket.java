@@ -9,7 +9,6 @@ import javax.swing.*;
 import java.awt.*;
 
 public class MrJackPocket {
-    public static boolean menu = true;
     public static boolean simulePartieIa = false;
     public static void main(String[] args) {
         // Simulation de parties entre IA
@@ -41,22 +40,16 @@ public class MrJackPocket {
         // Lancement du menu principal classique
         else {
             SwingUtilities.invokeLater(() -> {
-                if (menu){
-                    SwingUtilities.invokeLater(() -> {
-                        JFrame frame = new JFrame("Mr. Jack Pocket");
-                        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                        frame.setSize(1080, 720);
-                        frame.setMinimumSize(new Dimension(1080, 720));
-                        frame.setLocationRelativeTo(null);
-                        VueMenuPrincipal menu = new VueMenuPrincipal(frame);
-                        frame.setContentPane(menu);
-                        frame.setVisible(true);
-                    });
-                } else {
-                    Partie partie = new Partie(Joueur.ENQUETEUR, -1, -1);//lance par defaut une partie humain contre humain en ayant choisi l'enqueteur
-                    VueJeu jeu = new VueJeu(partie);
-                    jeu.setVisible(true);
-                }
+                SwingUtilities.invokeLater(() -> {
+                    JFrame frame = new JFrame("Mr. Jack Pocket");
+                    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                    frame.setSize(1080, 720);
+                    frame.setMinimumSize(new Dimension(1080, 720));
+                    frame.setLocationRelativeTo(null);
+                    VueMenuPrincipal menu = new VueMenuPrincipal(frame);
+                    frame.setContentPane(menu);
+                    frame.setVisible(true);
+                });
             });
         }
     }
