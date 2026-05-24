@@ -248,7 +248,7 @@ public class VueJeu extends JPanel {
         while (partieEnCours) {
             try {
                 Thread.sleep(timeSleep);
-                tick();
+                refreshBoardComponents();
             } catch (InterruptedException e) {
                 System.err.println("Ticker interrompu");
                 return;
@@ -256,21 +256,16 @@ public class VueJeu extends JPanel {
         }
     }
 
-    private void tick() {
-        refreshBoardComponents();
-    }
-
     /** Rafraichit toutes les vues a chaque frame. */
     public void refreshBoardComponents() {
-        vueMonde.updateTurnIndicator(gameplay.partie.numeroTour);
-        vueMonde.updateBackground(gameplay.partie.joueurCourant, gameplay.partie.coursePoursuiteActive); //BRICOLAGE + ajout BG Violet
+        updateTurnIndicator(gameplay.partie.numeroTour);
+        updateBackground(gameplay.partie.joueurCourant, gameplay.partie.coursePoursuiteActive);
         if (!gameplay.rotationMode) {
-            vueMonde.updateDistrictView(gameplay.partie.district);
+            updateDistrictView(gameplay.partie.district);
         }
-        vueMonde.updateJetons(gameplay.partie.jetonsAction);
-        vueMonde.updateDetectivesView(gameplay.partie.detectives);
+        updateJetons(gameplay.partie.jetonsAction);
+        updateDetectivesView(gameplay.partie.detectives);
         vueMonde.updateThinking(gameplay.enReflexion(), gameplay.partie.IaEnCours);
-
         vueMonde.repaintWorld();
     }
 
@@ -298,8 +293,29 @@ public class VueJeu extends JPanel {
         leftStrip.setBackground(new Color(30, 30, 40));
         leftStrip.setBorder(BorderFactory.createEmptyBorder(20, 5, 10, 5));
 
-        JButton retour = makeStripButton("Retour", "Retour.png");
-        retour.addActionListener(e -> {
+        JButton[] boutons = {
+            makeRetourButton(),
+            makeNewGameButton(),
+            makeIaButton(),
+            makeAnnulerButton(),
+            makeVisibleButton(),
+            makeRefaireButton(),
+            makeSaveButton(),
+            makeLoadButton(),
+            makeReglesButton()
+        };
+
+        for (JButton btn : boutons) {
+            leftStrip.add(btn);
+            leftStrip.add(Box.createVerticalStrut(4));
+        }
+        leftStrip.add(Box.createVerticalGlue());
+        add(leftStrip, BorderLayout.WEST);
+    }
+
+    private JButton makeRetourButton() {
+        JButton btn = makeStripButton("Retour", "Retour.png");
+        btn.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
             stopGameLoop();
             menuPrincipal.resetBoutonsSurvoles();
@@ -307,46 +323,63 @@ public class VueJeu extends JPanel {
             parent.revalidate();
             parent.repaint();
         });
+        return btn;
+    }
 
-        JButton newGame = makeStripButton("Nv. Partie", "Niv.Partie.png");
-        newGame.addActionListener(e -> {
+    private JButton makeNewGameButton() {
+        JButton btn = makeStripButton("Nv. Partie", "Niv.Partie.png");
+        btn.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
-            if (gameplay != null) gameplay.resetGame(); });
+            if (gameplay != null) gameplay.resetGame();
+        });
+        return btn;
+    }
 
-        JButton ia      = makeStripButton("IA", "IA.png");
-        ia.addActionListener(e -> {
+    private JButton makeIaButton() {
+        JButton btn = makeStripButton("IA", "IA.png");
+        btn.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
-            if (gameplay != null) gameplay.partie.lanceIa(); });
+            if (gameplay != null) gameplay.partie.lanceIa();
+        });
+        return btn;
+    }
 
-        JButton annuler = makeStripButton("Annuler", "Annuler.png");
-        annuler.addActionListener(e -> {
+    private JButton makeAnnulerButton() {
+        JButton btn = makeStripButton("Annuler", "Annuler.png");
+        btn.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
             if (gameplay != null) {
                 gameplay.partie.annuler();
                 refreshBoardComponents();
             }
         });
+        return btn;
+    }
 
-        JButton visibleBtn = makeStripButton("Visible", "Visible.png");
-        visibleBtn.addActionListener(e -> {
-            if (vueMonde.jeuVerrouille) return;  // Évite les clics pendant freeze
-            if (gameplay != null) {
-                gameplay.afficherVisibiliteTemporaire();
-            }
+    private JButton makeVisibleButton() {
+        JButton btn = makeStripButton("Visible", "Visible.png");
+        btn.addActionListener(e -> {
+            if (vueMonde.jeuVerrouille) return;
+            if (gameplay != null) gameplay.afficherVisibiliteTemporaire();
         });
-        leftStrip.add(visibleBtn);
+        return btn;
+    }
 
-        JButton refaire = makeStripButton("Refaire", "Refaire.png");
-        refaire.addActionListener(e -> {
+    private JButton makeRefaireButton() {
+        JButton btn = makeStripButton("Refaire", "Refaire.png");
+        btn.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
             if (gameplay != null) {
                 gameplay.partie.refaire();
                 refreshBoardComponents();
             }
         });
+        return btn;
+    }
 
-        JButton save = makeStripButton("Save", "Save.png");
-        save.addActionListener(e -> {
+    private JButton makeSaveButton() {
+        JButton btn = makeStripButton("Save", "Save.png");
+        btn.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
             if (gameplay != null) {
                 try {
@@ -356,9 +389,12 @@ public class VueJeu extends JPanel {
                 }
             }
         });
+        return btn;
+    }
 
-        JButton load = makeStripButton("Load", "Load.png");
-        load.addActionListener(e -> {
+    private JButton makeLoadButton() {
+        JButton btn = makeStripButton("Load", "Load.png");
+        btn.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
             if (gameplay != null) {
                 try {
@@ -370,31 +406,16 @@ public class VueJeu extends JPanel {
                 }
             }
         });
+        return btn;
+    }
 
-        JButton regles  = makeStripButton("Regles", "ReglesB.png");
-        regles.addActionListener(e -> {
+    private JButton makeReglesButton() {
+        JButton btn = makeStripButton("Regles", "ReglesB.png");
+        btn.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
             onReglesPressed();
         });
-
-        leftStrip.add(retour);
-        leftStrip.add(Box.createVerticalStrut(4));
-        leftStrip.add(newGame);
-        leftStrip.add(Box.createVerticalStrut(4));
-        leftStrip.add(ia);
-        leftStrip.add(Box.createVerticalStrut(4));
-        leftStrip.add(annuler);
-        leftStrip.add(Box.createVerticalStrut(4));
-        leftStrip.add(refaire);
-        leftStrip.add(Box.createVerticalStrut(4));
-        leftStrip.add(save);
-        leftStrip.add(Box.createVerticalStrut(4));
-        leftStrip.add(load);
-        leftStrip.add(Box.createVerticalStrut(4));
-        leftStrip.add(regles);
-        leftStrip.add(Box.createVerticalGlue());
-
-        add(leftStrip, BorderLayout.WEST);
+        return btn;
     }
 
     public void stopGameLoop() {
@@ -526,15 +547,6 @@ public class VueJeu extends JPanel {
 
     private void onReglesPressed() {
         gameplay.partie.toggleFreeze();
-        /*for (Detective d : gameplay.partie.detectives) {
-            d.setPosition(0);  // 0 correspond à la case 1 (car position 0-based)
-            }
-       
-        vueMonde.replaceOuterBall(1,1);
-        vueMonde.replaceOuterBall(1,2);
-        vueMonde.replaceOuterBall(1,3);
-        
-         gameplay.activerCoursePoursuiteTest();*/
         if (panneauRegles != null && panneauRegles.isShowing()) {
             fermerPanneauRegles();
             return;
