@@ -318,6 +318,7 @@ public class VueJeu extends JPanel {
         btn.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
             stopGameLoop();
+            gameplay.partie.kill();
             menuPrincipal.resetBoutonsSurvoles();
             parent.setContentPane(menuPrincipal);
             parent.revalidate();

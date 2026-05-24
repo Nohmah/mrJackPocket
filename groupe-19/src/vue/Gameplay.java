@@ -305,7 +305,8 @@ public class Gameplay {
     // -------------------------------------------------------------------------
 
     public void onActionBallClicked(IHMControler.ActionIntent intent) {
-        if (partie.isFreeze()) return;
+        // On refuse les clics sur les jetons actions sous certaines conditions
+        if (partie.isFreeze() || partie.IaEnCours) return;
         String actionName = intent.actionName();
         int ballIndex = intent.ballIndex();
 

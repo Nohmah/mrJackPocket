@@ -520,6 +520,11 @@ public class Partie {
         this.redo = new ArrayDeque<>();
     }
 
+    public void kill() {
+        IaEnCours = false;
+        gagnant = Joueur.ENQUETEUR;
+    }
+
     /**
      *
      *
