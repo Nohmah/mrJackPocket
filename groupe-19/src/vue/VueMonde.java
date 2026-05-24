@@ -31,7 +31,8 @@ public class VueMonde extends JPanel {
     /** true si il ne devrait plus être possible de cliquer sur les boutons, car par exemple il y a une animation en cours
      * Il faut étendre cette variable partout où c'est nécessaire**/
     public boolean jeuVerrouille = false;
-    private JPanel alibiPanel;
+    private JLabel centerMessage;
+    private JPanel centerMessagePanel;
     // =========================================================================
     // Constantes monde (proprietaires de VueMonde)
     // =========================================================================
@@ -55,8 +56,6 @@ public class VueMonde extends JPanel {
             (WORLD_W - BOARD_SIZE) / 2.0 - 60,
             (WORLD_H - BOARD_SIZE) / 2.0
     );
-    private JLabel centerMessage;
-    private JPanel centerMessagePanel;
     private JPanel currentOverlayPanel = null;
 
     public void showCenterMessage(String text) {
@@ -791,7 +790,7 @@ public class VueMonde extends JPanel {
      * Met à jour uniquement les deux rectangles joueurs selon le joueur courant.
      * Le joueur actif a un rectangle coloré, l'inactif devient gris.
      */
-    public void updatePlayerRectangles(Joueur joueurCourant) {
+    private void updatePlayerRectangles(Joueur joueurCourant) {
         if (joueurCourant == Joueur.JACK) {
             updateRectColor(0, Color.GRAY);
             updateRectColor(1, new Color(180, 40, 40, 200));
@@ -799,14 +798,6 @@ public class VueMonde extends JPanel {
             updateRectColor(1, Color.GRAY);
             updateRectColor(0, new Color(40, 80, 180, 200));
         }
-    }
-
-    /**
-     * Ancienne méthode maintenue pour compatibilité.
-     * Appelle la nouvelle méthode avec coursePoursuiteActive = false.
-     */
-    public void updateBackground(Joueur joueurCourant) {
-        updateBackground(joueurCourant, false);
     }
 
     /**
