@@ -283,9 +283,21 @@ public class VueMonde extends JPanel {
     private final Composant2D[]    turnIndicators     = new Composant2D[8];
     private final Composant2D[]    outerBalls         = new Composant2D[12];
 
-    // Noms et types des joueurs pour modification dynamique
-    private final JLabel[] playerNameLabels = new JLabel[2];
-    private final JLabel[] playerTypeLabels = new JLabel[2];
+    // =========================================================================
+    // État des rectangles joueurs (rendu vectoriel dans la Camera)
+    // =========================================================================
+
+    /** Noms affichés dans les rectangles joueurs (index 0 = Enquêteur, 1 = Jack). */
+    private final String[] playerNames = { "", "" };
+
+    /** Types affichés sous les noms (ex: "Humain", "IA Facile"). */
+    private final String[] playerTypes = { "", "" };
+
+    /** Couleurs des rectangles joueurs (gérées par updatePlayerRectangles). */
+    private final Color[] playerColors = {
+        new Color(40,  80, 180, 200),   // Enquêteur (bleu)
+        new Color(180, 40,  40, 200)    // Jack (rouge)
+    };
 
     /** Cache de sprites tournes (cle = "nom_angle"). */
     private final Map<String, Integer> rotatedSpriteCache = new HashMap<>();
@@ -299,7 +311,6 @@ public class VueMonde extends JPanel {
 
     /** Calque transparent pour les indicateurs joueurs et le panneau de regles. */
     private JPanel     uiOverlay;
-    private JPanel[]   playerRects   = new JPanel[2];
     private JLabel     gameOverLabel = null;
 
     private JLabel     sablierLabel = null;
@@ -480,6 +491,7 @@ public class VueMonde extends JPanel {
                 super.paintComponent(g);
                 paintHoverOverlay((Graphics2D) g);
                 paintSelectedOverlay((Graphics2D) g);
+                paintPlayerRects((Graphics2D) g);
             }
         };
         cam.setBounds(0, 0, WORLD_W, WORLD_H);
@@ -538,7 +550,6 @@ public class VueMonde extends JPanel {
         uiOverlay = new JPanel(null);
         uiOverlay.setOpaque(false);
         uiOverlay.setBounds(0, 0, WORLD_W, WORLD_H);
-        initPlayerRects();
         layeredPane.add(uiOverlay, JLayeredPane.PALETTE_LAYER);
 
         actionTooltip = new JLabel("", SwingConstants.LEFT);
@@ -571,35 +582,6 @@ public class VueMonde extends JPanel {
         thinkingPanel.setVisible(false);
     }
 
-
-    private void initPlayerRects() {
-        String[] labels = { "", "" };
-        String[] types  = { "", "" };   // ou "IA" selon config
-        Color[]  colors = { new Color(180,40,40,200), new Color(40,80,180,200) };
-        int rectW = 200, rectH = 50;
-        for (int p = 0; p < 2; p++) {
-            JPanel rect = new JPanel(new BorderLayout());
-            rect.setBackground(colors[p]);
-            rect.setBorder(BorderFactory.createLineBorder(Color.WHITE, 2));
-
-            JLabel nameLabel = new JLabel(labels[p], SwingConstants.CENTER);
-            nameLabel.setForeground(Color.WHITE);
-            nameLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
-            playerNameLabels[p] = nameLabel;
-
-            JLabel typeLabel = new JLabel(types[p], SwingConstants.CENTER);
-            typeLabel.setForeground(new Color(220,220,220));
-            typeLabel.setFont(new Font("SansSerif", Font.PLAIN, 11));
-            playerTypeLabels[p] = typeLabel;
-
-            rect.add(nameLabel, BorderLayout.CENTER);
-            rect.add(typeLabel, BorderLayout.SOUTH);
-            playerRects[p] = rect;
-            uiOverlay.add(rect);
-            rect.setSize(rectW, rectH);
-            positionnerRectangle(rect, p);
-        }
-    }
 
     private void initSablierLabel() {
         // Panneau personnalisé pour l'icône T0
@@ -864,26 +846,22 @@ public class VueMonde extends JPanel {
         actionBallCurrentSprite[ballIndex] = sprite;
     }
 
-    /** Modifie la couleur du rectangle d'indicateur d'un joueur. */
+    /** Modifie la couleur du rectangle vectoriel d'un joueur. */
     public void updateRectColor(int player, Color color) {
-        if (player < 0 || player >= 2 || playerRects[player] == null) return;
-        playerRects[player].setBackground(color);
-        playerRects[player].repaint();
+        if (player < 0 || player >= 2) return;
+        playerColors[player] = color;
+        // Pas de repaint forcé : le cycle de rendu Camera s'en charge.
     }
 
     public void setPlayerName(int player, String newName) {
-    if (player >= 0 && player < 2 && playerNameLabels[player] != null) {
-        playerNameLabels[player].setText(newName);
-        playerRects[player].revalidate();
-        playerRects[player].repaint();
-    }
+        if (player >= 0 && player < 2) {
+            playerNames[player] = (newName != null) ? newName : "";
+        }
     }
 
     public void setPlayerType(int player, String newType) {
-        if (player >= 0 && player < 2 && playerTypeLabels[player] != null) {
-            playerTypeLabels[player].setText(newType);
-            playerRects[player].revalidate();
-            playerRects[player].repaint();
+        if (player >= 0 && player < 2) {
+            playerTypes[player] = (newType != null) ? newType : "";
         }
     }
 
@@ -1108,14 +1086,6 @@ public class VueMonde extends JPanel {
     // Positionnement overlay
     // =========================================================================
 
-    private void positionnerRectangle(JPanel rect, int playerIndex) {
-        java.awt.Container parent = rect.getParent();
-        if (parent == null) return;
-        int x = (parent.getWidth() - rect.getWidth()) / 2;
-        int y = (playerIndex == 0) ? 0 : parent.getHeight() - rect.getHeight();
-        rect.setLocation(x, y);
-    }
-
     /**
      * Repositionne les elements de l'uiOverlay apres un resize.
      * Appele depuis applyLetterbox().
@@ -1123,11 +1093,6 @@ public class VueMonde extends JPanel {
     public void repositionOverlayElements(int camW, int camH) {
         if (uiOverlay == null) return;
         uiOverlay.setSize(camW, camH);
-
-        // Repositionner les rectangles joueurs
-        for (int p = 0; p < 2; p++) {
-            if (playerRects[p] != null) positionnerRectangle(playerRects[p], p);
-        }
 
         // Repositionner le panneau des sabliers
         if (sablierPanel != null) {
@@ -1156,6 +1121,106 @@ public class VueMonde extends JPanel {
         }
 
         uiOverlay.revalidate();
+    }
+
+    // =========================================================================
+    // Rendu vectoriel des rectangles joueurs — intégré dans la boucle Camera
+    // =========================================================================
+
+    /**
+     * Coordonnées fixes en espace monde pour les deux rectangles joueurs.
+     * Index 0 = Enquêteur (au-dessus du plateau), Index 1 = Jack (en dessous).
+     */
+    private static final double PLAYER_RECT_W_WORLD = 200.0;
+    private static final double PLAYER_RECT_H_WORLD =  55.0;
+
+    /** Centre X des deux rectangles : milieu horizontal du plateau. */
+    private static final double PLAYER_RECT_CX =
+            BOARD_ORIGIN.x + BOARD_SIZE / 2.0;
+
+    /** Centre Y du rectangle Enquêteur (au-dessus du plateau, marge 10 px). */
+    private static final double PLAYER_RECT_CY_TOP =
+            BOARD_ORIGIN.y - PLAYER_RECT_H_WORLD / 2.0 - 110.0;
+
+    /** Centre Y du rectangle Jack (en dessous du plateau, marge 10 px). */
+    private static final double PLAYER_RECT_CY_BOT =
+            BOARD_ORIGIN.y + BOARD_SIZE + PLAYER_RECT_H_WORLD / 2.0 + 110.0;
+
+    /**
+     * Dessine les deux rectangles joueurs directement dans l'espace caméra.
+     * Doit être appelé depuis paintComponent() de la Camera après tous les
+     * autres calques.
+     *
+     * @param g Contexte graphique 2D de la Camera (coordonnées écran).
+     */
+    void paintPlayerRects(Graphics2D g) {
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,  RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+        double[] worldCY = { PLAYER_RECT_CY_TOP, PLAYER_RECT_CY_BOT };
+
+        for (int p = 0; p < 2; p++) {
+            // ---- Transformation monde → écran --------------------------------
+            double worldX = PLAYER_RECT_CX - PLAYER_RECT_W_WORLD / 2.0;
+            double worldY = worldCY[p]      - PLAYER_RECT_H_WORLD / 2.0;
+
+            double sx = (worldX - Camera.positionHG.x) * Camera.zoom.x;
+            double sy = (worldY - Camera.positionHG.y) * Camera.zoom.y;
+            double sw = PLAYER_RECT_W_WORLD * Camera.zoom.x;
+            double sh = PLAYER_RECT_H_WORLD * Camera.zoom.y;
+
+            int rx = (int) Math.round(sx);
+            int ry = (int) Math.round(sy);
+            int rw = (int) Math.round(sw);
+            int rh = (int) Math.round(sh);
+            int arc = (int) Math.round(14 * Camera.zoom.x);
+
+            // ---- Fond semi-transparent avec coins arrondis -------------------
+            Color baseColor = playerColors[p];
+            g.setColor(baseColor);
+            g.fillRoundRect(rx, ry, rw, rh, arc, arc);
+
+            // ---- Bordure contrastée -----------------------------------------
+            g.setColor(new Color(255, 255, 255, 200));
+            g.setStroke(new BasicStroke((float) Math.max(1.0, 2.0 * Camera.zoom.x)));
+            g.drawRoundRect(rx, ry, rw, rh, arc, arc);
+            g.setStroke(new BasicStroke(1f));
+
+            // ---- Textes (nom + type) centrés ---------------------------------
+            float baseFontSize = (float) (13.0 * Camera.zoom.x);
+            float smallFontSize = (float) Math.max(8.0, 10.0 * Camera.zoom.x);
+
+            Font nameFont = new Font("SansSerif", Font.BOLD,  Math.max(8, (int) baseFontSize));
+            Font typeFont = new Font("SansSerif", Font.PLAIN, Math.max(7, (int) smallFontSize));
+
+            String name = playerNames[p];
+            String type = playerTypes[p];
+            boolean hasType = type != null && !type.isEmpty();
+
+            // Mesures pour centrage vertical
+            FontMetrics fmName = g.getFontMetrics(nameFont);
+            FontMetrics fmType = hasType ? g.getFontMetrics(typeFont) : null;
+
+            int totalTextH = fmName.getAscent() + fmName.getDescent()
+                           + (hasType ? (int)(2 * Camera.zoom.y) + fmType.getAscent() + fmType.getDescent() : 0);
+
+            int textStartY = ry + (rh - totalTextH) / 2 + fmName.getAscent();
+
+            // Nom
+            g.setFont(nameFont);
+            g.setColor(Color.WHITE);
+            int nameX = rx + (rw - fmName.stringWidth(name)) / 2;
+            g.drawString(name, nameX, textStartY);
+
+            // Type
+            if (hasType) {
+                g.setFont(typeFont);
+                g.setColor(new Color(220, 220, 220, 220));
+                int typeY = textStartY + fmName.getDescent() + (int)(2 * Camera.zoom.y) + fmType.getAscent();
+                int typeX = rx + (rw - fmType.stringWidth(type)) / 2;
+                g.drawString(type, typeX, typeY);
+            }
+        }
     }
 
     // =========================================================================
@@ -1192,26 +1257,7 @@ public class VueMonde extends JPanel {
         if(selectedRow >= 0) dessinerTuileFeedback(g, selectedRow, selectedCol, new Color(255, 220, 0, 150));
 
     }
-
-        /**
-     * Détermine la direction du demi-cercle en fonction de l'index de position (0 à 11).
-     * @param positionIndex Index de la position du détective (0-based)
-     * @return 0 = droite, 1 = bas, 2 = gauche, 3 = haut
-     */
-    private int getDirection(int positionIndex) {
-        if (positionIndex >= 0 && positionIndex <= 2) {
-            return 0; // droite (positions 1, 2, 3)
-        } else if (positionIndex >= 3 && positionIndex <= 5) {
-            return 1; // bas (positions 4, 5, 6)
-        } else if (positionIndex >= 6 && positionIndex <= 8) {
-            return 2; // gauche (positions 7, 8, 9)
-        } else if (positionIndex >= 9 && positionIndex <= 11) {
-            return 3; // haut (positions 10, 11, 12)
-        }
-        return 0; // Valeur par défaut
-    }
-
-
+    
     /**
      * Surligne les tuiles selectionnées avant échange.
      * */
