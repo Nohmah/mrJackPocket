@@ -496,6 +496,10 @@ public class Gameplay {
             }
         } else if (rotationState != null) {
             if (!rotationState.hasTarget()) {
+                if(partie.district.get(row,col).getAPivote()){
+                    vue.getVueMonde().showInfoMessage("Tuile déja bougée");
+                    return;
+                }
                 rotationState.setTarget(row, col);
                 rotationMode = true;
                 vue.rotateTile(row, col, 90);

@@ -2,6 +2,7 @@ package src.vue;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.sql.Time;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -738,5 +739,39 @@ public class VueMonde extends JPanel {
         g2.drawRenderedImage(img, at);
         g2.dispose();
         return rot;
+    }
+
+    /**
+     *
+     * Fait apparaitre un pop up pour indiquer un message à l'écran
+     * @param message : texte à afficher à l'écran
+     */
+    public void showInfoMessage(String message){
+        if(uiOverlay == null) return;
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setOpaque(false);
+        panel.setBounds(0,0,uiOverlay.getWidth(), uiOverlay.getHeight());
+
+        JLabel label = new JLabel(message, SwingConstants.CENTER);
+        label.setFont(new Font("SansSerif", Font.BOLD, 22));
+        label.setForeground(Color.WHITE);
+        label.setOpaque(true);
+        label.setBackground(new Color(0,0,0,180));
+        label.setBorder(BorderFactory.createEmptyBorder(12,24,12,24));
+
+        panel.add(label);
+
+        uiOverlay.add(panel,JLayeredPane.POPUP_LAYER);
+        uiOverlay.revalidate();
+        uiOverlay.repaint();
+
+        new Timer(2000, e -> {
+            uiOverlay.remove(panel);
+            uiOverlay.revalidate();
+            uiOverlay.repaint();
+        }) {{setRepeats(false);
+            start();
+        }};
     }
 }
