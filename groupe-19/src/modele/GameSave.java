@@ -5,7 +5,7 @@ import java.util.List;
 
 public class GameSave implements Serializable {
     //Etat courant de la partie
-    PartieSnapshot current;
+    public PartieSnapshot current;
     //Historique
     List<PartieSnapshot> undo;
     List<PartieSnapshot> redo;

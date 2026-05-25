@@ -30,8 +30,10 @@ public class VueMenuPrePartie extends JPanel {
     private boolean pseudoDroiteValide = false;
 
     private JButton boutonLancerGlobal;
+    private VueMenuPrincipal menuPrincipal;
 
-    public VueMenuPrePartie(JFrame parent, JPanel retourVers, String mode) {
+    public VueMenuPrePartie(JFrame parent, JPanel retourVers, VueMenuPrincipal menuPrincipal, String mode) {
+        this.menuPrincipal = menuPrincipal;
         setBackground(Color.GRAY);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
@@ -89,7 +91,7 @@ public class VueMenuPrePartie extends JPanel {
                     String pseudoJack = pseudoDroiteValide ? pseudoDroite : "Mr. Jack";
                     Partie partie = new Partie(joueurChoisi, niveauJack, niveauEnqueteur,
                             pseudoEnqueteur, pseudoJack);
-                    VueJeu jeu = new VueJeu(parent, (VueMenuPrincipal) retourVers, partie);
+                    VueJeu jeu = new VueJeu(parent, menuPrincipal, partie);
                     parent.setContentPane(jeu);
                     parent.revalidate();
                     parent.repaint();
@@ -147,7 +149,6 @@ public class VueMenuPrePartie extends JPanel {
         JButton retour = BoutonsMenu.creerBouton(
                 "Boutonretour",
                 () -> {
-                    ((VueMenuPrincipal) retourVers).resetBoutonsSurvoles();
                     parent.setContentPane(retourVers);
                     parent.revalidate();
                     parent.repaint();

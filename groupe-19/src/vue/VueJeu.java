@@ -495,7 +495,13 @@ public class VueJeu extends JPanel {
 
         JButton sauvegarder = makeSettingsButton("Sauvegarder");
         sauvegarder.addActionListener(e -> {
-            try { SaveManager.save(gameplay.partie.toGameSave(), "save.dat"); }
+            try { SaveManager.save(gameplay.partie.toGameSave(), "save.dat");
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Partie sauvegardée avec succès !",
+                        "Info",
+                        JOptionPane.INFORMATION_MESSAGE
+                );}
             catch (Exception ex) { System.err.println("Save echoue: " + ex.getMessage()); }
         });
 

@@ -49,15 +49,15 @@ public class VueMenuPrincipal extends JPanel {
 
         JButton partieSolo = BoutonsMenu.creerBouton(
                 "Boutonpartiesolo", () -> {
-            VueMenuPrePartie prePartieSolo = new VueMenuPrePartie(parent, this, "solo");
-            parent.setContentPane(prePartieSolo);
+                    VueMenuSolo menuSolo = new VueMenuSolo(parent, this);
+            parent.setContentPane(menuSolo);
             parent.revalidate();
             parent.repaint();
         });
 
         JButton partieMulti = BoutonsMenu.creerBouton(
                 "Boutonpartiemultijoueur", () -> {
-            VueMenuPrePartie prePartieMulti = new VueMenuPrePartie(parent, this, "multi");
+                    VueMenuPrePartie prePartieMulti = new VueMenuPrePartie(parent, this, this, "multi");
             parent.setContentPane(prePartieMulti);
             parent.revalidate();
             parent.repaint();
