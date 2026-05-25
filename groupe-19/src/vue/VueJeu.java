@@ -298,13 +298,10 @@ public class VueJeu extends JPanel {
 
         JButton[] boutons = {
                 makeRetourButton(),
-                makeNewGameButton(),
                 makeIaButton(),
                 makeAnnulerButton(),
                 makeRefaireButton(),
                 makeVisibleButton(),
-                makeSaveButton(),
-                makeLoadButton(),
                 makeReglesButton()
         };
 

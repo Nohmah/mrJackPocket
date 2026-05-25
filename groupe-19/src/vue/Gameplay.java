@@ -574,6 +574,9 @@ public class Gameplay {
 
         // ----- Enquêteur (index 0, toujours en bleu) -----
         String enqueteurNom = partie.pseudoEnqueteur;
+        if (partie.niveauEnqueteur == -1) {
+            enqueteurNom += " (Enquêteur)"; // On ajoute l'information que si c'est un humain
+        }
         String enqueteurType = getTypeTexte(partie.niveauEnqueteur);
         monde.setPlayerName(0, enqueteurNom);
         monde.setPlayerType(0, enqueteurType);
@@ -581,6 +584,9 @@ public class Gameplay {
 
         // ----- Mr. Jack (index 1, toujours en rouge) -----
         String jackNom = partie.pseudoJack;
+        if (partie.niveauJack == -1) {
+            jackNom += " (Jack)"; // On ajoute l'information que si c'est un humain
+        }
         String jackType = getTypeTexte(partie.niveauJack);
         monde.setPlayerName(1, jackNom);
         monde.setPlayerType(1, jackType);
