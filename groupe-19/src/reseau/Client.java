@@ -166,7 +166,13 @@ public class Client {
      }
 
     private void receptionRequeteMISE_A_JOUR_CHOIX(MessageServeur messageServeur) {
-        this.vueLobby.mettreAJourRoles(Boolean.parseBoolean(messageServeur.getContenue().toString()));
+        boolean veutEtreJack = Boolean.parseBoolean(messageServeur.getContenue().toString());
+        if (this.estHote) {
+            this.jeSuisJack = veutEtreJack;
+        } else{
+            this.jeSuisJack = !veutEtreJack;
+        }
+        this.vueLobby.mettreAJourRoles(veutEtreJack);
     }
 
     private void receptionRequeteMISE_A_JOUR_INFORMATIONS_JOUEURS(MessageServeur messageServeur) {
@@ -190,7 +196,6 @@ public class Client {
         PartieSnapshot versionServeur = (PartieSnapshot) messageServeur.getContenue();
         Partie partieClient = new Partie(Joueur.JACK, -1, -1, "ENQUETEUR", "JACK");
         PartieSaveMapper.fromSnapshot(partieClient,versionServeur);
-        System.out.println("[DEBUG] Client : jesuisjack : "+ jeSuisJack);
         if(jeSuisJack){
             partieClient.joueurChoisi = Joueur.JACK;
         }else{
@@ -218,6 +223,8 @@ public class Client {
                 case NOUVEAU_PLATEAU:
                     receptionRequeteNOUVEAU_PLATEAU(messageServeur);
                     break;
+                case AFFICHE_APPEL_TEMOIN:
+                    receptionRequeteAFFICE_APPEL_TEMOIN(messageServeur);
                 case ACTION_IMPOSSIBLE:
                     break;
                 default:
@@ -234,6 +241,16 @@ public class Client {
             partieClient.joueurChoisi = Joueur.ENQUETEUR;
         }
         this.vueJeu.getGameplay().refreshFromSnap(partieClient);
+    }
+
+    private void receptionRequeteAFFICE_APPEL_TEMOIN(MessageServeur messageServeur) {
+        PartieSnapshot partieClient = (PartieSnapshot) messageServeur.getContenue();
+        if(jeSuisJack){
+            partieClient.joueurChoisi = Joueur.JACK;
+        }else{
+            partieClient.joueurChoisi = Joueur.ENQUETEUR;
+        }
+        this.vueJeu.getGameplay().animationAppelTemoinReseau(partieClient);
     }
 
 
@@ -269,11 +286,7 @@ public class Client {
     }
 
     public void nouveauChoix(Boolean veutEtreJack) {
-        if (estHote) {
-            this.jeSuisJack = veutEtreJack;
-        } else{
-            this.jeSuisJack = !veutEtreJack;
-        }
+        System.out.println("[DEBUG CLIENT] nouveauChoix !");
         informerServeur(BOUTON_CHOIX,veutEtreJack.toString());
     }
 

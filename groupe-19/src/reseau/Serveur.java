@@ -32,7 +32,7 @@ public class Serveur {
     private int nombreJoueurPret = 0;
     private boolean joueur1pret;
     private boolean joueur2pret;
-    private boolean j1Jack;
+    private boolean j1Jack = true;
     private Joueur choixJ1;
 
     private boolean enJeu = false;
@@ -306,6 +306,7 @@ public class Serveur {
     private void gestionCommunicationVersClientJeu(MessageServeur messageServeur){
         Object[] contenueRecu = (Object[]) messageServeur.getContenue();
         CommunicationLobbyCS codeClient = messageServeur.getCodeClient();
+        boolean estDernierAction = (partieServeur.totalActionsJouees == 3);
         switch (codeClient){
             case PIOCHE_ALIBI :
                 receptionActionPioche();
@@ -325,10 +326,13 @@ public class Serveur {
         }
 
         PartieSnapshot partieEnCours = PartieSaveMapper.toSnapshot(partieServeur);
-
-        //TODO si dernier jeton alors envoyer plusieurs fois le plateau pour jolie ihm + pendant ce temps mettre les joueurs == courant pour ne pas avoir le message pendant animation jolie
-        // TODO dans gameplay si non ensolo et que joueur chosit n'est pas jack alors n'affiche pas
-        informerClients(NOUVEAU_PLATEAU, "Systeme", partieEnCours);
+        informerClients(NOUVEAU_PLATEAU,"Systeme", partieEnCours);
+        if(estDernierAction){
+            partieServeur.appelATemoin();
+            if(!partieServeur.isPartieTerminee()) partieServeur.tourSuivant();
+            partieEnCours = PartieSaveMapper.toSnapshot(partieServeur);
+            informerClients(AFFICHE_APPEL_TEMOIN,"Systeme", partieEnCours);
+        }
 
     }
 

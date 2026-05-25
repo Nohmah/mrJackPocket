@@ -91,13 +91,15 @@ public class Gameplay {
         // On affiche ou pas l'identité de jack
         // On affiche que c'est le tour de l'enqueteur (c'est toujours le cas)
 
-        afficherIdentiteJack(() -> {
+        if(partie.getIsSolo() || partie.joueurChoisi == Joueur.JACK) {
+            afficherIdentiteJack(() -> {
 
-            SwingUtilities.invokeLater(() -> {
-                vue.getMonde().showCenterMessage("Tour de l'enquêteur");
+                SwingUtilities.invokeLater(() -> {
+                    vue.getMonde().showCenterMessage("Tour de l'enquêteur");
+                });
+
             });
-
-        });
+        }
 
 
 
@@ -143,7 +145,6 @@ public class Gameplay {
 
     public void afficherVisibiliteTemporaire() {
         if (partie.isFreeze() || partie.isPartieTerminee()) return;
-
         // Vérifier si le joueur actuel est une IA
         boolean estIa = (partie.joueurCourant == Joueur.JACK && partie.niveauJack != -1)
                     || (partie.joueurCourant == Joueur.ENQUETEUR && partie.niveauEnqueteur != -1);
@@ -286,10 +287,47 @@ public class Gameplay {
         refreshView();
     }
 
+    public void animationAppelTemoinReseau(PartieSnapshot partieSnap){
+        if (partie.isPartieTerminee()) return;
+
+        // Geler les interactions utilisateur pendant l'assombrissement
+        partie.setFreeze(true);
+        System.out.println("Appel à témoin dans 3 secondes...");
+
+        boolean[][] masque = partie.getMasqueTuilesVisibles();
+        vue.getMonde().appliquerAssombrissement(masque);
+        refreshView();
+
+        javax.swing.Timer timer = new javax.swing.Timer(2500, e -> {
+            try {
+                System.out.println("Fin des 2 secondes : exécution de l'appel à témoin...");
+                vue.getMonde().retirerAssombrissement();
+
+                // Dégeler pour permettre l'exécution des méthodes internes
+                partie.setFreeze(false);
+
+                partie.fromSnapshot(partieSnap);
+            } catch (Exception ex) {
+                System.err.println("ERREUR dans l'appel à témoin :");
+                ex.printStackTrace();
+            } finally {
+                // S'assurer que le jeu est dégelé
+                partie.setFreeze(false);
+                refreshView();
+                if (!partie.isPartieTerminee()) {
+                    partie.verifTourIa();
+                }
+            }
+        });
+        timer.setRepeats(false);
+        timer.start();
+
+    }
+
     public boolean enReflexion(){
         if(partie.IaEnCours){return true;}
         if(partie.getIsSolo()){return false;}
-        return partie.joueurCourant == partie.joueurChoisi;
+        return partie.joueurCourant != partie.joueurChoisi;
     }
 
     // -------------------------------------------------------------------------

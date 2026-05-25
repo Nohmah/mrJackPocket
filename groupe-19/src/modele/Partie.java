@@ -264,12 +264,14 @@ public class Partie {
                 break;
                 
             case 4:
-                if(!estSimulation){
-                    // On informe que c'est au tour de l'appel à témoin
-                    fireAppelTemoinEvent();
-                    firePreAppelTemoinEvent(); // Déclenche le gel/Timer dans Gameplay
+                if(isSolo) {
+                    if (!estSimulation) {
+                        // On informe que c'est au tour de l'appel à témoin
+                        fireAppelTemoinEvent();
+                        firePreAppelTemoinEvent(); // Déclenche le gel/Timer dans Gameplay
+                    }
+                    // IMPORTANT : Pas de verifTourIa() ici, c'est le Timer qui s'en chargera dans 3 secondes !
                 }
-                // IMPORTANT : Pas de verifTourIa() ici, c'est le Timer qui s'en chargera dans 3 secondes !
                 break;
                 
             default:
