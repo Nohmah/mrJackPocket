@@ -94,7 +94,7 @@ public class VueMonde extends JPanel {
 };
 
 
-    private void afficherOverlayAvecImage(String nomImage, String texteSousImage, int dureeMs) {
+    public void afficherOverlayAvecImage(String nomImage, String texteSousImage, int dureeMs) {
         if (currentOverlayPanel != null) {
             uiOverlay.remove(currentOverlayPanel);
             currentOverlayPanel = null;
