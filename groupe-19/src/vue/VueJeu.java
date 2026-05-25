@@ -58,6 +58,8 @@ public class VueJeu extends JPanel {
     /** Panneau de regles actuellement affiche (null = ferme). */
     private JPanel panneauRegles = null;
 
+    private JPanel panneauSettings = null;
+
     // =========================================================================
     // Delegation vers VueMonde
     // =========================================================================
@@ -82,6 +84,7 @@ public class VueJeu extends JPanel {
 
         // 1. Creer le panneau monde AVANT d'initialiser la fenetre
         vueMonde = new VueMonde();
+        vueMonde.setSettingsClick(this::onSettingsPressed);
 
         // 2. Brancher le callback "clic boule d'action" -> mediateur
         vueMonde.setActionBallClickListener((ballIndex, spriteName) -> {
@@ -294,15 +297,15 @@ public class VueJeu extends JPanel {
         leftStrip.setBorder(BorderFactory.createEmptyBorder(20, 5, 10, 5));
 
         JButton[] boutons = {
-            makeRetourButton(),
-            makeNewGameButton(),
-            makeIaButton(),
-            makeAnnulerButton(),
-            makeVisibleButton(),
-            makeRefaireButton(),
-            makeSaveButton(),
-            makeLoadButton(),
-            makeReglesButton()
+                makeRetourButton(),
+                makeNewGameButton(),
+                makeIaButton(),
+                makeAnnulerButton(),
+                makeRefaireButton(),
+                makeVisibleButton(),
+                makeSaveButton(),
+                makeLoadButton(),
+                makeReglesButton()
         };
 
         for (JButton btn : boutons) {
@@ -379,7 +382,7 @@ public class VueJeu extends JPanel {
     }
 
     private JButton makeSaveButton() {
-        JButton btn = makeStripButton("Save", "Save.png");
+        JButton btn = makeStripButton("Save", "Sauvegarder.png");
         btn.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
             if (gameplay != null) {
@@ -394,7 +397,7 @@ public class VueJeu extends JPanel {
     }
 
     private JButton makeLoadButton() {
-        JButton btn = makeStripButton("Load", "Load.png");
+        JButton btn = makeStripButton("Load", "Charger.png");
         btn.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
             if (gameplay != null) {
@@ -417,6 +420,134 @@ public class VueJeu extends JPanel {
             onReglesPressed();
         });
         return btn;
+    }
+
+    private JButton makeSettingsButton(String label) {
+        JButton btn = new JButton(label);
+        btn.setFont(new Font("SansSerif", Font.BOLD, 16));
+        btn.setForeground(Color.WHITE);
+        btn.setBackground(new Color(70, 70, 90));
+        btn.setBorder(BorderFactory.createLineBorder(new Color(160, 160, 200), 2));
+        btn.setFocusPainted(false);
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btn.setPreferredSize(new Dimension(260, 50));
+        btn.setMaximumSize(new Dimension(260, 50));
+        //Ajoute un effet lors d'un hover
+        btn.setRolloverEnabled(true);
+        btn.getModel().addChangeListener(e -> {
+            ButtonModel m = (ButtonModel) e.getSource();
+            if (m.isRollover()) {
+                btn.setBackground(new Color(90, 90, 120));
+                btn.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 255), 2));
+            } else {
+                btn.setBackground(new Color(70, 70, 90));
+                btn.setBorder(BorderFactory.createLineBorder(new Color(160, 160, 200), 2));
+            }
+        });
+        return btn;
+    }
+
+    /**
+     *
+     *Créer l'overlay du menu settings par dessus le jeu.
+     */
+    private void onSettingsPressed() {
+        if (vueMonde.jeuVerrouille) return;
+
+        //Si le menu settings est déja affiché alors on le ferme.
+        if (panneauSettings != null && panneauSettings.isShowing()) {
+            fermerPanneauSettings();
+            return;
+        }
+
+        JPanel overlay = vueMonde.getUiOverlay();
+
+        panneauSettings = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                g.setColor(new Color(0, 0, 0, 230));
+                g.fillRect(0, 0, getWidth(), getHeight());
+            }
+        };
+        panneauSettings.setOpaque(false);
+        panneauSettings.setBounds(0, 0, overlay.getWidth(), overlay.getHeight());
+        panneauSettings.setBorder(BorderFactory.createEmptyBorder(80, 120, 80, 120));
+
+        JPanel panelCentral = new JPanel();
+        panelCentral.setOpaque(false);
+        panelCentral.setLayout(new BoxLayout(panelCentral, BoxLayout.Y_AXIS));
+
+        BufferedImage img = src.utils.utils.loadImage("Titre");
+        if (img != null) {
+            int w = Math.min(360, img.getWidth());
+            int h = Math.min(180, img.getHeight());
+            Image scaled = img.getScaledInstance(w, h, Image.SCALE_SMOOTH);            JLabel logo = new JLabel(new ImageIcon(scaled));
+            logo.setAlignmentX(Component.CENTER_ALIGNMENT);
+            panelCentral.add(logo);
+            panelCentral.add(Box.createVerticalStrut(16));
+        }
+
+        JButton continuer = makeSettingsButton("Continuer");
+        continuer.addActionListener(e -> {
+            fermerPanneauSettings();
+        });
+
+        JButton sauvegarder = makeSettingsButton("Sauvegarder");
+        sauvegarder.addActionListener(e -> {
+            try { SaveManager.save(gameplay.partie.toGameSave(), "save.dat"); }
+            catch (Exception ex) { System.err.println("Save echoue: " + ex.getMessage()); }
+        });
+
+        JButton charger = makeSettingsButton("Charger");
+        charger.addActionListener(e -> {
+            try {
+                GameSave saveFile = SaveManager.load("save.dat");
+                gameplay.partie.fromGameSave(saveFile);
+                refreshBoardComponents();
+            } catch (Exception ex) {
+                System.err.println("Load echoue: " + ex.getMessage());
+            }
+        });
+
+        JButton nvPartie = makeSettingsButton("Nouvelle partie");
+        nvPartie.addActionListener(e -> {
+            if (gameplay != null) gameplay.resetGame();
+        });
+
+        JButton retourMenu = makeSettingsButton("Retour menu");
+        retourMenu.addActionListener(e -> {
+            stopGameLoop();
+            gameplay.partie.kill();
+            menuPrincipal.resetBoutonsSurvoles();
+            parent.setContentPane(menuPrincipal);
+            parent.revalidate();
+            parent.repaint();
+        });
+
+        panelCentral.add(continuer);
+        panelCentral.add(Box.createVerticalStrut(12));
+        panelCentral.add(sauvegarder);
+        panelCentral.add(sauvegarder);
+        panelCentral.add(Box.createVerticalStrut(12));
+        panelCentral.add(charger);
+        panelCentral.add(Box.createVerticalStrut(12));
+        panelCentral.add(nvPartie);
+        panelCentral.add(Box.createVerticalStrut(12));
+        panelCentral.add(retourMenu);
+
+        panneauSettings.add(panelCentral, BorderLayout.CENTER);
+        overlay.add(panneauSettings, 0);
+        overlay.revalidate();
+        vueMonde.repositionOverlayElements(overlay.getWidth(), overlay.getHeight());
+    }
+
+    private void fermerPanneauSettings() {
+        if (panneauSettings != null) {
+            vueMonde.getUiOverlay().remove(panneauSettings);
+            panneauSettings = null;
+            vueMonde.getUiOverlay().revalidate();
+        }
     }
 
     public void stopGameLoop() {

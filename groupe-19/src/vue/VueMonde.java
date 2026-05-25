@@ -193,6 +193,10 @@ public class VueMonde extends JPanel {
     private JLabel thinkingLabel  = null;
     private JLabel actionTooltip;
 
+    private JButton settingsButton;
+    private Runnable settingsClick;
+    public void setSettingsClick(Runnable r) { this.settingsClick = r; }
+
     private boolean iaIsThinking = true;
     private double  currentScale = 1.0;
 
@@ -312,7 +316,27 @@ public class VueMonde extends JPanel {
         uiOverlay.add(actionTooltip);
 
         initSablierLabel();
+        initSettings();
         initThinking();
+    }
+
+    private void initSettings(){
+        BufferedImage img = Camera.GetSpriteImage("Settings");
+        if (img == null) Camera.AddSprite("Settings");
+        img = Camera.GetSpriteImage("Settings");
+
+        if (img != null) {
+            Image scaled = img.getScaledInstance(32, 32, Image.SCALE_SMOOTH);
+            settingsButton = new JButton(new ImageIcon(scaled));
+            settingsButton.setBorderPainted(false);
+            settingsButton.setContentAreaFilled(false);
+            settingsButton.setFocusPainted(false);
+            settingsButton.setOpaque(false);
+            settingsButton.setMargin(new Insets(0,0,0,0));
+            settingsButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            settingsButton.addActionListener(e -> { if (settingsClick != null) settingsClick.run(); });
+            uiOverlay.add(settingsButton);
+        }
     }
 
     private void initThinking() {
@@ -399,6 +423,10 @@ public class VueMonde extends JPanel {
     }
 
     public double getCurrentScale() { return currentScale; }
+
+    public void createSettingsButton(){
+
+    }
 
     // =========================================================================
     // API de mise à jour visuelle (appelée par VueJeu / Gameplay)
@@ -669,6 +697,13 @@ public class VueMonde extends JPanel {
         if (currentOverlayPanel != null) {
             currentOverlayPanel.setBounds(0, 0, camW, camH);
             currentOverlayPanel.revalidate();
+        }
+        if (settingsButton != null) {
+            int w = settingsButton.getPreferredSize().width;
+            int h = settingsButton.getPreferredSize().height;
+            int x = camW - w - 12;
+            int y = camH - h - 12;
+            settingsButton.setBounds(x, y, w, h);
         }
         uiOverlay.revalidate();
     }
