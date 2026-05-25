@@ -202,6 +202,32 @@ public class Gameplay {
     }
 
     /**
+     * Rappelle à Jack son identité secrète en cours de partie.
+     * Récupère le personnage depuis le modèle et délègue l'affichage à VueMonde
+     * via l'overlay générique — aucune logique métier dans la vue.
+     */
+    public void afficherRappelIdentiteJack() {
+        if (partie.isFreeze() || partie.isPartieTerminee()) return;
+
+        boolean jackHumain = (partie.niveauJack == -1);
+        if (!jackHumain) {
+            System.out.println("Rappel identité Jack : refusé, Jack est une IA.");
+            return;
+        }
+
+        CarteAlibi carteJack = partie.derniereCarteAlibiPiochee;
+        if (carteJack == null) {
+            System.out.println("Rappel identité Jack : aucun personnage connu pour l'instant.");
+            return;
+        }
+        Personnage jack = carteJack.getPersonnage();
+
+        String nomImage = jack.image;
+        String texte    = "Vous \u00eates " + jack.nom;
+        vue.getMonde().afficherOverlayAvecImage(nomImage, texte, 3000);
+    }
+
+    /**
      ** Change la responsabilité d'exécution, pour le jeu en réseau, c'est le serveur qui détient le modèle
      ** Par conséquent, il faut que le réseau puisse changer cette responsabilité.
      **/

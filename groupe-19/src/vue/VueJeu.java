@@ -302,7 +302,8 @@ public class VueJeu extends JPanel {
                 makeAnnulerButton(),
                 makeRefaireButton(),
                 makeVisibleButton(),
-                makeReglesButton()
+                makeReglesButton(),
+                makeIdentiteJackButton()
         };
 
         for (JButton btn : boutons) {
@@ -415,6 +416,15 @@ public class VueJeu extends JPanel {
         btn.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
             onReglesPressed();
+        });
+        return btn;
+    }
+
+    private JButton makeIdentiteJackButton() {
+        JButton btn = makeStripButton("M.Jack", "M.Jack");
+        btn.addActionListener(e -> {
+            if (vueMonde.jeuVerrouille) return;
+            if (gameplay != null) gameplay.afficherRappelIdentiteJack();
         });
         return btn;
     }
