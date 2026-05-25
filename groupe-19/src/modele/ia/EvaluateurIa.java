@@ -18,7 +18,9 @@ public class EvaluateurIa {
         score += poids[0] * ParametresEvaluateur.qualiteDuSplit(data, partie);
         score += poids[1] * ParametresEvaluateur.efficaciteRepartitionInspecteurs(partie);
         score += poids[2] * ParametresEvaluateur.distanceEnqueteursSuspects(data);
-        score += poids[3] * ParametresEvaluateur.bonusAlibi(partie);
+        score += poids[3] * ParametresEvaluateur.alibisPioches(partie);
+        score += poids[4] * ParametresEvaluateur.suspectsElimines(partie);
+        score += poids[5] * ParametresEvaluateur.sabliersNonLaisses(partie);
 
         return score;
     }
@@ -39,7 +41,7 @@ public class EvaluateurIa {
         score += poids[1] * ParametresEvaluateur.visibilitePossible(data);
         score += poids[2] * ParametresEvaluateur.expositionDeJack(data);
         score += poids[3] * ParametresEvaluateur.anonymat(data, partie);
-        score += poids[4] * ParametresEvaluateur.bonusAlibi(partie);
+        score += poids[4] * ParametresEvaluateur.accumulationSabliers(partie);
         score += poids[5] * ParametresEvaluateur.stabiliteDuPlateau(partie);
 
         return score;

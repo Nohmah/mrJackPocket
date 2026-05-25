@@ -1,16 +1,11 @@
 package src.modele;
+
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.CompletableFuture;
 import javax.swing.*;
-
-
 import src.modele.ia.*;
-
-/**
- * Représente une partie.
- **/
 
 public class Partie {
 
@@ -38,28 +33,31 @@ public class Partie {
     public volatile Joueur gagnant = null;
     public boolean coursePoursuiteActive = false;
 
-    //Suivi de tour
     private final int MAX_TOUR = 8;
     public int numeroTour = 0;
     public int totalActionsJouees;
     public boolean jackVisibleCeTour;
 
-    //pour l'ia et le thread
     private Ia ia = new Ia();
     private ExecutorService executor = Executors.newSingleThreadExecutor();
     public boolean IaEnCours = false;
     public boolean estSimulation = false;
-    public int niveauJack;  // niveau de son IA (-1 = manuel, 0 = facile, 1 = moyen, 2 = difficile)
-    public int niveauEnqueteur; // niveau de l'IA de l'enquêteur (-1 = manuel, 0 = facile, 1 = moyen, 2 = difficile)
+    public int niveauJack;
+    public int niveauEnqueteur;
     public String pseudoEnqueteur;
     public String pseudoJack;
-    public boolean changement; //si il y a eu un changement avec les undo / redo pour annuler le coup de l'ia
+    public boolean changement;
 
-    //Pour l'historique
     Deque<Partie> undo = new ArrayDeque<>();
     Deque<Partie> redo = new ArrayDeque<>();
 
     private boolean freeze = false;
+
+    public int simSabliers = 0;
+    public int simAlibis = 0;
+    public int simElimines = 0;
+    public int simJackVis = 0;
+    public int simTours = 0;
 
     public boolean isFreeze() { return freeze; }
     public void setFreeze(boolean freeze) { this.freeze = freeze; }
@@ -80,7 +78,6 @@ public class Partie {
 
     private boolean isSolo = true;
 
-    /** Constructeur **/
     public Partie(Joueur joueurChoisi, int niveauJack, int niveauEnqueteur, String pseudoEnqueteur, String pseudoJack){
         this.joueurChoisi = joueurChoisi;
         this.niveauJack = niveauJack;
@@ -147,12 +144,10 @@ public class Partie {
         this.alibiListener = listener;
     }
 
-    /** Listener **/
     public void fireAlibiEvent() {
         if (alibiListener != null) alibiListener.run();
     }
 
-    /** Initialise les élements de la partie **/
     private void initialiserPartie() {
         district = District.creerDistrict();
         PartieInit.initialiserJetons(this);
@@ -162,7 +157,6 @@ public class Partie {
         PartieInit.initialiserIdentiteJack(this);
     }
 
-    /** Réinitialise la partie **/
     public void reset() {
         if (freeze) return;
         gagnant = null;
@@ -183,19 +177,11 @@ public class Partie {
         verifTourIa();
     }
 
-    /**
-     * Termine le tour courant : appel à témoin, vérification de fin de partie,
-     * et préparation du tour suivant si la partie continue.
-     * Point d'entrée unique depuis Gameplay — remplace la logique dispersée dans endTurn().
-     */
     public void terminerTour() {
         if (freeze) return;
         appelATemoin();
-        // appelATemoin() appelle déjà verifFinDePartie() puis tourSuivant() si la partie continue.
-        // Gameplay lit ensuite isPartieTerminee() et numeroTour pour décider de la suite.
     }
 
-    /** Retourne un masque 3×3 indiquant quelles tuiles sont visibles par au moins un détective. **/
     public boolean[][] getMasqueTuilesVisibles() {
         boolean[][] masque = new boolean[3][3];
         for (Detective d : detectives) {
@@ -212,9 +198,11 @@ public class Partie {
         return masque;
     }
 
-    /** Réalise l'appel à témoin (deuxième étape du jeu) et vérifie si la partie est terminée **/
     public void appelATemoin(){
         if (freeze) return;
+        int sabliersAvant = sabliersDeJack;
+        int suspectsAvant = suspects.size();
+
         HashSet<Personnage> personnagesVisibles = new HashSet<>();
         for (Detective d : detectives) {
             personnagesVisibles.addAll(district.personnagesVisiblesParDetective(d));
@@ -231,21 +219,25 @@ public class Partie {
             if (!this.estSimulation) System.out.println("Jack n'est pas visible, il gagne le sablier du tour. Il est a " + sabliersDeJack + " sabliers");
             suspects.removeAll(personnagesVisibles);
         }
-        // Après réduction de suspects, on innocente les suspects supprimés.
-        avantAppel.removeAll(suspects); // Obtention des gens plus suspects
+        avantAppel.removeAll(suspects);
         for(Personnage p : avantAppel){
             district.innocenter(p);
         }
         verifFinDePartie();
+
+        simTours++;
+        if (jackVisibleCeTour) {
+            simJackVis++;
+        }
+        simSabliers += (sabliersDeJack - sabliersAvant);
+        simElimines += (suspectsAvant - suspects.size());
     }
 
-    /** Change [joueurCourant] pour l'autre joueur **/
     public void changerJoueur() {
         if (freeze) return;
         joueurCourant = (joueurCourant == Joueur.JACK) ? Joueur.ENQUETEUR : Joueur.JACK;
     }
 
-    /** Réalise le changement de joueur après un certain nombre de jetons Actions utilisés **/
     public void apresAction(){
         if (freeze) return;
         totalActionsJouees++;
@@ -259,29 +251,24 @@ public class Partie {
                 } else {
                     fireTourJackEvent();
                 }
-                // On vérifie si l'IA doit jouer au milieu du tour
-                if (!isPartieTerminee()) verifTourIa(); 
+                if (!isPartieTerminee()) verifTourIa();
                 break;
-                
+
             case 4:
                 if(isSolo) {
                     if (!estSimulation) {
-                        // On informe que c'est au tour de l'appel à témoin
                         fireAppelTemoinEvent();
-                        firePreAppelTemoinEvent(); // Déclenche le gel/Timer dans Gameplay
+                        firePreAppelTemoinEvent();
                     }
-                    // IMPORTANT : Pas de verifTourIa() ici, c'est le Timer qui s'en chargera dans 3 secondes !
                 }
                 break;
-                
+
             default:
                 if (!isPartieTerminee()) verifTourIa();
                 break;
         }
     }
 
-    /** Prépare le tour suivant : incrémente [numeroTour], flag les tuiles comme n'ayant pas pivoté,
-     * lance ou retourne les jetons Actions et définit le joueur qui va commencer le tour **/
     public void tourSuivant(){
         if (freeze) return;
         if(isPartieTerminee()) return;
@@ -341,7 +328,7 @@ public class Partie {
                 .thenAccept(iaCoup -> {
                     SwingUtilities.invokeLater(() -> {
                         IaEnCours = false;
-                        if(changement){ //si il y eu un changement de la partie
+                        if(changement){
                             verifTourIa();
                             return;
                         }
@@ -373,6 +360,9 @@ public class Partie {
 
     public void jouerCoup(CoupIa coupIa) {
         if (freeze) return;
+        int sabliersAvant = sabliersDeJack;
+        int suspectsAvant = suspects.size();
+
         switch (coupIa.action) {
             case HOLMES:
                 actions.deplacerDetective(detectives.get(0), coupIa.para1 + 1);
@@ -405,15 +395,14 @@ public class Partie {
                 actions.alibi();
                 break;
         }
+
+        if (coupIa.action == Action.ALIBI) {
+            simAlibis++;
+        }
+        simSabliers += (sabliersDeJack - sabliersAvant);
+        simElimines += (suspectsAvant - suspects.size());
     }
 
-    /**
-     *
-     * Logique de fin de partie.
-     *
-     */
-
-    /** Vérifie si la partie est terminée **/
     public void verifFinDePartie(){
         if (freeze) return;
         if(gagnant != null) return;
@@ -444,7 +433,6 @@ public class Partie {
         }
     }
 
-    /** Affecte à [gagnant] le joueur - Jack ou Enquêteur - qui a gagné **/
     private void declarerGagnant(Joueur vainqueur) {
         if (freeze) return;
         this.gagnant = vainqueur;
@@ -458,7 +446,6 @@ public class Partie {
         }
     }
 
-    /** Vérifie si la course poursuite est terminée **/
     public void verifFinCoursePoursuite(){
         if (freeze) return;
         if(jackVisibleCeTour){
@@ -474,17 +461,14 @@ public class Partie {
         }
     }
 
-    /** Vérifie s'il y a un gagnant **/
     public boolean isPartieTerminee(){
         return gagnant != null;
     }
 
-    /** Renvoie le joueur qui a gagné **/
     public Joueur getGagnant(){
         return gagnant;
     }
 
-    // Constructeur de copie pour l'IA
     public Partie(Partie p) {
         this.estSimulation = true;
         this.adnJack = p.adnJack;
@@ -520,19 +504,18 @@ public class Partie {
         this.niveauEnqueteur = p.niveauEnqueteur;
         this.undo = new ArrayDeque<>();
         this.redo = new ArrayDeque<>();
+
+        this.simSabliers = p.simSabliers;
+        this.simAlibis = p.simAlibis;
+        this.simElimines = p.simElimines;
+        this.simJackVis = p.simJackVis;
+        this.simTours = p.simTours;
     }
 
     public void kill() {
         IaEnCours = false;
         gagnant = Joueur.ENQUETEUR;
     }
-
-    /**
-     *
-     *
-     * HISTORIQUE ET SAUVEGARDE
-     *
-     */
 
     private boolean estTourHumain(){
         return (joueurCourant == Joueur.JACK && niveauJack == -1) ||
@@ -613,7 +596,6 @@ public class Partie {
         changement = true;
         verifTourIa();
     }
-
 
     public void setIsSolo(boolean isSolo) {
         this.isSolo = isSolo;

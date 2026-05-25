@@ -51,7 +51,7 @@ public class ParametresEvaluateur {
     public static double anonymat(DataPartie d, Partie p) {
         if (p.suspects.isEmpty()) return 0.0;
         int nbMemeEtat = d.JackVisible ? d.nbVisible : d.nbInvisible;
-        return (double) nbMemeEtat / p.suspects.size();
+        return (double) nbMemeEtat / 9.0;
     }
 
     public static double stabiliteDuPlateau(Partie p) {
@@ -71,5 +71,25 @@ public class ParametresEvaluateur {
             }
         }
         return 1.0 - ((double) nbChangements / 9.0);
+    }
+
+    public static double accumulationSabliers(Partie p) {
+        double maxSabliers = p.simTours * 1.0 + p.simAlibis * 2.0;
+        if (maxSabliers <= 0) return 0.0;
+        return Math.min(1.0, (double) p.simSabliers / maxSabliers);
+    }
+
+    public static double suspectsElimines(Partie p) {
+        return Math.min(1.0, (double) p.simElimines / 8.0);
+    }
+
+    public static double alibisPioches(Partie p) {
+        double maxAlibis = p.simTours > 0 ? p.simTours : 1.0;
+        return Math.min(1.0, (double) p.simAlibis / maxAlibis);
+    }
+
+    public static double sabliersNonLaisses(Partie p) {
+        if (p.simTours <= 0) return 0.0;
+        return (double) p.simJackVis / p.simTours;
     }
 }
