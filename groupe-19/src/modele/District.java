@@ -68,6 +68,9 @@ public class District {
             for (int j=0; j<3; j++){
                 if (grille[i][j].getPersonnage() == personnage){
                     grille[i][j].retourner();
+                    if (grille[i][j].getPersonnage() == Personnage.JOSEPH_LANE){
+                        grille[i][j].setOrientationMur(Orientation.AUCUN);
+                    }
                 }
             }
         }
