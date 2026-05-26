@@ -59,12 +59,12 @@ public class Serveur {
     private void accepterClient(){
         Thread threadClient = new Thread(() -> {
 
-            accepteClient1();
+            if(!accepteClient1()) return;
             ouvertureCanalCommunicationsClient1();
             lireRequeteClient1();
 
-            while (true) {
-                accepteClient2();
+            while (!fermetureServeur) {
+                if(!accepteClient2()) break;
 
                 if(enJeu){
                     fermerSocketClient(tempConnection);
@@ -94,6 +94,7 @@ public class Serveur {
             this.inC1 = new ObjectInputStream(clientSocket1.getInputStream());
             this.outC1 =  new ObjectOutputStream(clientSocket1.getOutputStream());
         } catch (IOException e) {
+            return;
         }
     }
 
@@ -102,20 +103,25 @@ public class Serveur {
             this.inC2 = new ObjectInputStream(clientSocket2.getInputStream());
             this.outC2 =  new ObjectOutputStream(clientSocket2.getOutputStream());
         } catch (IOException e) {
+            return;
         }
     }
 
-    private void accepteClient1() {
+    private boolean accepteClient1() {
         try {
             this.clientSocket1 = this.serveurSocket.accept();
+            return true;
         } catch (IOException e) {
+            return false;
         }
     }
 
-    private void accepteClient2() {
+    private boolean accepteClient2() {
         try {
             this.tempConnection = this.serveurSocket.accept();
+            return true;
         } catch (IOException e) {
+            return false;
         }
     }
 
@@ -231,7 +237,6 @@ public class Serveur {
                 receptionBoutonPret(messageServeur);
                 break;
             case QUITTE:
-                System.out.println("[DEBUG SERVEUR] gestionCommunicationVersClientLobby -> case QUITTE !");
                 receptionQuitte(messageServeur);
                 break;
             default:
@@ -242,13 +247,11 @@ public class Serveur {
     private void receptionQuitte(MessageServeur messageServeur) {
         this.enJeu = false;
         if((messageServeur.getPseudo()).equals(this.pseudoClient2)) {
-            System.out.println("[DEBUG SERVEUR] receptionQuitte -> if = "+(messageServeur.getPseudo()).equals(this.pseudoClient2)+ " dans le if ! ");
             informerClients(MISE_A_JOUR_INFORMATIONS_JOUEURS, messageServeur.getPseudo(), pseudoClient2 + " vient de quitter le lobby !");
             this.pseudoClient2 = null;
             this.joueur2pret = false;
             System.out.println("[SERVEUR] Joueur 2 a quitté le lobby !");
         }else{
-            System.out.println("[DEBUG SERVEUR] receptionQuitte -> if = "+(messageServeur.getPseudo()).equals(this.pseudoClient2)+ " dans le else ! ");
             informerClients(HOTE_QUITTE,"","");
             fermerServeur();
             this.fermetureServeur = true;
