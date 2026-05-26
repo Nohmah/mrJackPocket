@@ -38,6 +38,7 @@ public class RenduFeedback {
     private int selectedRow = -1;
     private int selectedCol = -1;
 
+    private int indexJetonClique = -1;
     private float clignotePhase = 0.0f;
 
     private final Timer timerClignote = new Timer(33, e -> {
@@ -79,6 +80,11 @@ public class RenduFeedback {
     public void setTuileSelected(int row, int col) {
         selectedRow = row;
         selectedCol = col;
+    }
+
+    public void setJetonActif(int index) {
+        this.indexJetonClique = index;
+        Camera.Repaint();
     }
 
     // =========================================================================
@@ -177,9 +183,19 @@ public class RenduFeedback {
         g.setStroke(new BasicStroke(3f));
         boolean hasHover = hoveredTokenIndex >= 0;
 
+        // Contour rouge pour le jeton action cliqué tant qu'il n'a pas été utilisé
+        if (indexJetonClique >= 0 && !gestionJetons.actionBallIsUsed[indexJetonClique]){
+            g.setStroke(new BasicStroke(5f));
+            drawActionTokenBorder(g, indexJetonClique, new Color(50, 205, 50, 200));
+            g.setStroke(new BasicStroke(3f));
+        }
+
+
+        // Contour jaune
         if (hasHover
                 && hoveredTokenIndex < gestionJetons.actionBalls.length
-                && !gestionJetons.actionBallIsUsed[hoveredTokenIndex]) {
+                && !gestionJetons.actionBallIsUsed[hoveredTokenIndex]
+                && hoveredTokenIndex != indexJetonClique) {
             drawActionTokenBorder(g, hoveredTokenIndex, new Color(255, 220, 0, 150));
             g.setColor(ancienneColor);
             g.setStroke(ancienStroke);
@@ -192,7 +208,7 @@ public class RenduFeedback {
         g.setColor(jaune);
 
         for (int i = 0; i < gestionJetons.actionBalls.length; i++) {
-            if (!gestionJetons.actionBallIsUsed[i]) drawActionTokenBorder(g, i, jaune);
+            if (!gestionJetons.actionBallIsUsed[i] && i!=indexJetonClique) drawActionTokenBorder(g, i, jaune);
         }
         g.setStroke(ancienStroke);
         g.setColor(ancienneColor);

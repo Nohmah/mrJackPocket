@@ -53,6 +53,7 @@ public class Gameplay {
                 if (partie.numeroTour >= 1 && partie.numeroTour <= 8) {
                     vue.switchTurnFace(partie.numeroTour - 2);
                 }
+                vue.getMonde().setJetonActif(-1); // On réinitialise le jeton action cliqué
             });
         });
         //Listener pour afficher dès que quelqu'un a gagné
@@ -433,7 +434,7 @@ public class Gameplay {
 
         //reset les states des actions echange et rotation au cas où le joueur change d'action.
         resetTileState();
-
+        vue.getMonde().setJetonActif(ballIndex);
         switch (actionName) {
             case "action_holmes"   -> demanderDeplacementEtDeplacer(Detective.Type.HOLMES);
             case "action_watson"   -> demanderDeplacementEtDeplacer(Detective.Type.WATSON);
@@ -468,11 +469,13 @@ public class Gameplay {
 
         // Annuler ou fermeture de fenêtre
         if (choix == 2 || choix == JOptionPane.CLOSED_OPTION) {
+            vue.getMonde().setJetonActif(-1);
             return;
         }
 
         int pas = (choix == 0) ? 1 : 2;
         executeAction.executeDetective(this,detective,pas);
+        vue.getMonde().setJetonActif(-1);
     }
 
     private void gererJoker() {
@@ -483,7 +486,10 @@ public class Gameplay {
                     "Quel détective voulez-vous déplacer d'un pas ?", "Action Joker",
                     JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
                     null, options, options[0]);
-            if (choix < 0) return;
+            if (choix < 0) {
+                vue.getMonde().setJetonActif(-1);
+                return;
+            }
             Detective det = switch (choix) {
                 case 0 -> trouverDetective(Detective.Type.HOLMES);
                 case 1 -> trouverDetective(Detective.Type.WATSON);
@@ -500,13 +506,17 @@ public class Gameplay {
                     "Action Joker - Mr. Jack",
                     JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
                     null, options, options[0]);
-            if (choix < 0) return;
+            if (choix < 0) {
+                vue.getMonde().setJetonActif(-1);
+                return;
+            }
             Detective det = switch (choix) {
                 case 0 -> trouverDetective(Detective.Type.HOLMES);
                 case 1 -> trouverDetective(Detective.Type.WATSON);
                 case 2 -> trouverDetective(Detective.Type.TOBY);
                 default -> null;
             };
+            vue.getMonde().setJetonActif(-1);
             executeAction.executeJoker(this, det); // null = ne rien faire, géré dans PartieActions
         }
     }
@@ -546,6 +556,7 @@ public class Gameplay {
                 rotationState.quarts
             );
         }
+        vue.getMonde().setJetonActif(-1);
         rotationState = null;
         rotationMode = false;
         System.out.println("Mode rotation terminé.");
@@ -608,6 +619,7 @@ public class Gameplay {
                 executeAction.executeEchangeQuartier(this,echangeState.row, echangeState.col, row, col);
                 echangeState = null;
                 vue.getMonde().setTuileSelected(-1,-1);
+                vue.getMonde().setJetonActif(-1);
                 refreshView();
             }
         } else if (rotationState != null) {
