@@ -5,6 +5,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.CompletableFuture;
 import javax.swing.*;
+
 import src.modele.ia.*;
 
 public class Partie {
@@ -38,7 +39,7 @@ public class Partie {
     public int totalActionsJouees;
     public boolean jackVisibleCeTour;
 
-    private Ia ia = new Ia();
+    public Ia ia = new Ia();
     private ExecutorService executor = Executors.newSingleThreadExecutor();
     public boolean IaEnCours = false;
     public boolean estSimulation = false;
@@ -51,7 +52,7 @@ public class Partie {
     Deque<Partie> undo = new ArrayDeque<>();
     Deque<Partie> redo = new ArrayDeque<>();
 
-    private volatile boolean  freeze = false;
+    private volatile boolean freeze = false;
 
     public int simSabliers = 0;
     public int simAlibis = 0;
@@ -313,7 +314,7 @@ public class Partie {
     }
 
     public void lanceIa() {
-        if (freeze) return;
+        //if (freeze) return;
         if(IaEnCours || isPartieTerminee() || actions.getActionsPossibles().isEmpty()) return;
         if (estSimulation) return;
         changement = false;
@@ -328,10 +329,19 @@ public class Partie {
         CompletableFuture
                 .supplyAsync(() -> {
                     CoupIa coupChoisi = ia.choisirAction(this, estJack);
+                    while(freeze){
+                        try {
+                            System.out.println("attente a cause du freeze");
+                            Thread.sleep(250);
+                        } catch (InterruptedException e) {
+                            System.err.println("Erreur lors de la pause du freeze dans lanceIa : ");
+                        }
+                    }
                     return coupChoisi;
                 }, executor)
                 .thenAccept(iaCoup -> {
                     SwingUtilities.invokeLater(() -> {
+                        
                         IaEnCours = false;
                         if(changement){
                             verifTourIa();

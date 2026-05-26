@@ -344,7 +344,20 @@ public class VueJeu extends JPanel {
         JButton btn = makeStripButton("L'IA prend ta place", "IA.png");
         btn.addActionListener(e -> {
             if (gameplay.isGameFrozen()) return;
-            if (gameplay != null) gameplay.partie.lanceIa();
+            if (gameplay != null){
+                System.out.println("Le bouton Ia a été cliqué");
+                if(gameplay.partie.IaEnCours) return;
+                if(gameplay.partie.joueurCourant == Joueur.JACK){
+                    gameplay.partie.niveauJack = 2;
+                    if(gameplay.partie.joueurChoisi == null) gameplay.partie.joueurChoisi = Joueur.ENQUETEUR ;
+                }
+                else{
+                    gameplay.partie.niveauEnqueteur = 2;
+                    if(gameplay.partie.joueurChoisi == null) gameplay.partie.joueurChoisi = Joueur.JACK ;
+                }
+                gameplay.partie.verifTourIa();
+                gameplay.updatePlayerRectangles();
+            }
         });
         return btn;
     }

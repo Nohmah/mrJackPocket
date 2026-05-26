@@ -665,7 +665,7 @@ public class Gameplay {
      * Le texte sous le nom (Humain / IA Random / IA Facile / IA Moyenne)
      * change en fonction de la configuration de la partie.
      */
-    private void updatePlayerRectangles() {
+    public void updatePlayerRectangles() {
         VueMonde monde = vue.getMonde();
 
         // ----- Enquêteur (index 0, toujours en bleu) -----
