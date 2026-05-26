@@ -138,6 +138,11 @@ public class Partie {
 
     public void fireAppelTemoinEvent() {
         if (appelTemoinListener != null) appelTemoinListener.run();
+        else{
+            appelATemoin();
+            tourSuivant();
+            verifTourIa();
+        }
     }
 
     public void setAlibiListener(Runnable listener) {

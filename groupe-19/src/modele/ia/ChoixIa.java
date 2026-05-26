@@ -46,7 +46,10 @@ public class ChoixIa {
     public static CoupIa choisirActionDifficile(Partie partie, boolean estJack){
         System.out.println("entre dans IA Difficile");
         int profondeur = 8 - partie.totalActionsJouees ; //fait max 2 tour
-        if(partie.numeroTour % 2 == 0) profondeur -= 2;
+        if(partie.numeroTour % 2 == 0){
+            if(estJack && partie.totalActionsJouees == 0)profondeur -= 3;
+            else profondeur -= 2;
+        }
         if(!estJack) profondeur --;
         //verif si les 2 jeton long a calculer sont encore là
         JetonAction jeton3 = partie.jetonsAction.get(3);
@@ -60,7 +63,7 @@ public class ChoixIa {
             if(jeton2.isFaceRectoVisible() || !jeton3.isFaceRectoVisible()) profondeur --;
         }
 
-        profondeur = Math.max(profondeur, 4);// minmum profondeur 4
+        profondeur = Math.max(profondeur, 3);// minmum profondeur 3
 
         //System.out.println("on entre dans MinMax avec profondeur " + profondeur);
         return IaMinMax.choisirActionMinMax(partie, estJack, profondeur);
