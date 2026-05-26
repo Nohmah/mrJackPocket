@@ -99,6 +99,8 @@ public class VueJeu extends JPanel {
         initResizeListener();
 
         // 4. Creer le mediateur (necessite que la vue soit prete)
+
+        vueMonde.initialiserSab(partie.niveauJack == -1);
         this.gameplay = new Gameplay(this, partie);
         // 4b. Injecter le médiateur dans VueMonde pour la délégation du verrou global
         vueMonde.setGameplay(this.gameplay);
