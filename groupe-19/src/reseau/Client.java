@@ -226,6 +226,7 @@ public class Client {
                 case AFFICHE_APPEL_TEMOIN:
                     receptionRequeteAFFICE_APPEL_TEMOIN(messageServeur);
                 case ACTION_IMPOSSIBLE:
+                    System.out.println("Non non non");
                     break;
                 default:
                     System.out.println("[CLIENT] gestionCommunicationVersVueJeu() a rencontré une erreur dans le switch avec le code : " + messageServeur.getCodeServeur() + " !");
@@ -251,6 +252,16 @@ public class Client {
             partieClient.joueurChoisi = Joueur.ENQUETEUR;
         }
         this.vueJeu.getGameplay().animationAppelTemoinReseau(partieClient);
+        if(partieClient.gagnant != null){
+            this.enJeu = false;
+            this.vueJeu.stopGameLoop();
+            this.vueJeu =  null;
+            javax.swing.Timer timer = new javax.swing.Timer(5000, e->{
+                this.vueLobby.revenirAuLobby();
+            });
+            timer.setRepeats(false);
+            timer.start();
+        }
     }
 
 
@@ -304,9 +315,17 @@ public class Client {
         informerServeur(JOKER,contenue);
     }
 
-    public void clientDeplaceDetective(Object contenue){
-        informerServeur(DETECTIVE,contenue);
+    public void clientDeplaceHolmes(Object contenue){
+        informerServeur(HOLMES,contenue);
     }
+    public void clientDeplaceWatson(Object contenue){
+        informerServeur(WATSON,contenue);
+    }
+    public void clientDeplaceToby(Object contenue){
+        informerServeur(TOBY,contenue);
+    }
+
+
 
     public void clientTourneQuartier(Object contenue){
         informerServeur(ROTATION,contenue);

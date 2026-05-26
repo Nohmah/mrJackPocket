@@ -278,8 +278,13 @@ public class VueLobby extends JPanel {
         if(nbPrets == 2) {
             statutPret.setForeground(Color.GREEN);
             boutonPret.setEnabled(false);
+            mrJackJ1.setEnabled(false);
+            lEnqueteurJ1.setEnabled(false);
         } else {
             statutPret.setForeground(Color.WHITE);
+            boutonPret.setEnabled(true);
+            mrJackJ1.setEnabled(true);
+            lEnqueteurJ1.setEnabled(true);
         }
     }
 
@@ -363,6 +368,19 @@ public class VueLobby extends JPanel {
         });
 
         timer.start();
+    }
+
+    public void revenirAuLobby(){
+        this.parent.setContentPane(this);
+        this.revalidate();
+        this.repaint();
+        mettreAJourCompteurPrets(0);
+        this.jeSuisPret = false;
+        boutonPret.setText("Je suis prêt !");
+        boutonPret.setBackground(Color.GREEN);
+        client.boutonPretAppuyer(this.jeSuisPret);
+
+
     }
 
 }

@@ -24,7 +24,7 @@ public class Ia {
     public CoupIa choisirAction(Partie partie, boolean estJack){
         //System.out.println("Choix de l'action de l'ia avec difficulte : " + difficulte);
         CoupIa coup;
-        int tempsMin = 4000; //temps minimum de l'ia avant quelle joue son coup (en ms)
+        int tempsMin = 5000; //temps minimum de l'ia avant quelle joue son coup (en ms)
         long debut = System.currentTimeMillis();
         switch (difficulte){
             case 0:
@@ -42,6 +42,7 @@ public class Ia {
         }
 
         long duree = System.currentTimeMillis() - debut;
+        //System.out.println("duree de l'ia = " + duree + "ms");
         if(duree < tempsMin){
             try {
                 Thread.sleep(tempsMin - duree);

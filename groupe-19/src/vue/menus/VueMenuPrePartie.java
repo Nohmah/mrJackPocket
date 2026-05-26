@@ -84,11 +84,13 @@ public class VueMenuPrePartie extends JPanel {
                         joueurChoisi = null;
                     } else if (iaEnqueteur && !iaJack) {
                         joueurChoisi = Joueur.JACK;
-                    } else {
+                    } else if (!iaEnqueteur && iaJack){
                         joueurChoisi = Joueur.ENQUETEUR;
+                    } else {
+                        joueurChoisi = null;
                     }
-                    String pseudoEnqueteur = pseudoGaucheValide ? pseudoGauche : "Enquêteur";
-                    String pseudoJack = pseudoDroiteValide ? pseudoDroite : "Mr. Jack";
+                    String pseudoEnqueteur = (pseudoGaucheValide && !iaEnqueteur) ? pseudoGauche : "Enquêteur";
+                    String pseudoJack = (pseudoDroiteValide && !iaJack) ? pseudoDroite : "Mr. Jack";
                     Partie partie = new Partie(joueurChoisi, niveauJack, niveauEnqueteur,
                             pseudoEnqueteur, pseudoJack);
                     VueJeu jeu = new VueJeu(parent, menuPrincipal, partie);
@@ -350,22 +352,11 @@ public class VueMenuPrePartie extends JPanel {
     }
 
     private void verifierConfigurationComplete() {
-        // variables pour simplifier la logique
+        // variables pour améliorer la compréhension des conditions
         boolean humainEnqueteur = pseudoGaucheValide && !iaEnqueteur;
         boolean humainJack = pseudoDroiteValide && !iaJack;
         boolean iaEnqueteurActive = iaEnqueteur;
         boolean iaJackActive = iaJack;
-        // ===== DEBUG =====
-        System.out.println("===== DEBUG CONFIG PARTIE =====");
-        System.out.println("pseudoGaucheValide = " + pseudoGaucheValide);
-        System.out.println("pseudoDroiteValide = " + pseudoDroiteValide);
-        System.out.println("iaEnqueteur (gauche) = " + iaEnqueteur);
-        System.out.println("iaJack (droite) = " + iaJack);
-        System.out.println("humainGauche = " + humainEnqueteur);
-        System.out.println("humainDroite = " + humainJack);
-        System.out.println("IA gauche active = " + iaEnqueteurActive);
-        System.out.println("IA droite active = " + iaJackActive);
-        System.out.println("================================");
 
         // humain vs humain
         if (humainEnqueteur && humainJack) {

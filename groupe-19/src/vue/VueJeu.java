@@ -100,6 +100,8 @@ public class VueJeu extends JPanel {
 
         // 4. Creer le mediateur (necessite que la vue soit prete)
         this.gameplay = new Gameplay(this, partie);
+        // 4b. Injecter le médiateur dans VueMonde pour la délégation du verrou global
+        vueMonde.setGameplay(this.gameplay);
 
         // 5. Positions initiales des detectives
         vueMonde.replaceOuterBall(12, 1);
@@ -315,9 +317,10 @@ public class VueJeu extends JPanel {
     }
 
     private JButton makeRetourButton() {
-        JButton btn = makeStripButton("Retour", "Retour.png");
+        JButton btn = makeStripButton("Retour au Menu", "Retour.png");
         btn.addActionListener(e -> {
-            if (vueMonde.jeuVerrouille) return;
+            // Pas de garde de verrou : le bouton Retour doit toujours être accessible,
+            // même si une animation est en cours.
             stopGameLoop();
             gameplay.partie.kill();
             menuPrincipal.resetBoutonsSurvoles();
@@ -329,27 +332,40 @@ public class VueJeu extends JPanel {
     }
 
     private JButton makeNewGameButton() {
-        JButton btn = makeStripButton("Nv. Partie", "Niv.Partie.png");
+        JButton btn = makeStripButton("Nouvelle Partie", "Niv.Partie.png");
         btn.addActionListener(e -> {
-            if (vueMonde.jeuVerrouille) return;
+            if (gameplay.isGameFrozen()) return;
             if (gameplay != null) gameplay.resetGame();
         });
         return btn;
     }
 
     private JButton makeIaButton() {
-        JButton btn = makeStripButton("IA", "IA.png");
+        JButton btn = makeStripButton("L'IA prend ta place", "IA.png");
         btn.addActionListener(e -> {
-            if (vueMonde.jeuVerrouille) return;
-            if (gameplay != null) gameplay.partie.lanceIa();
+            if (gameplay.isGameFrozen()) return;
+            if (gameplay != null){
+                System.out.println("Le bouton Ia a été cliqué");
+                if(gameplay.partie.IaEnCours) return;
+                if(gameplay.partie.joueurCourant == Joueur.JACK){
+                    gameplay.partie.niveauJack = 2;
+                    if(gameplay.partie.joueurChoisi == null) gameplay.partie.joueurChoisi = Joueur.ENQUETEUR ;
+                }
+                else{
+                    gameplay.partie.niveauEnqueteur = 2;
+                    if(gameplay.partie.joueurChoisi == null) gameplay.partie.joueurChoisi = Joueur.JACK ;
+                }
+                gameplay.partie.verifTourIa();
+                gameplay.updatePlayerRectangles();
+            }
         });
         return btn;
     }
 
     private JButton makeAnnulerButton() {
-        JButton btn = makeStripButton("Annuler", "Annuler.png");
+        JButton btn = makeStripButton("Annuler un coup", "Annuler.png");
         btn.addActionListener(e -> {
-            if (vueMonde.jeuVerrouille) return;
+            if (gameplay.isGameFrozen()) return;
             if (gameplay != null) {
                 gameplay.partie.annuler();
                 refreshBoardComponents();
@@ -359,18 +375,18 @@ public class VueJeu extends JPanel {
     }
 
     private JButton makeVisibleButton() {
-        JButton btn = makeStripButton("Visible", "Visible.png");
+        JButton btn = makeStripButton("Les suspects visibles par les détéctives", "Visible.png");
         btn.addActionListener(e -> {
-            if (vueMonde.jeuVerrouille) return;
+            if (gameplay.isGameFrozen()) return;
             if (gameplay != null) gameplay.afficherVisibiliteTemporaire();
         });
         return btn;
     }
 
     private JButton makeRefaireButton() {
-        JButton btn = makeStripButton("Refaire", "Refaire.png");
+        JButton btn = makeStripButton("Refaire un coup Annuler", "Refaire.png");
         btn.addActionListener(e -> {
-            if (vueMonde.jeuVerrouille) return;
+            if (gameplay.isGameFrozen()) return;
             if (gameplay != null) {
                 gameplay.partie.refaire();
                 refreshBoardComponents();
@@ -382,7 +398,7 @@ public class VueJeu extends JPanel {
     private JButton makeSaveButton() {
         JButton btn = makeStripButton("Save", "Sauvegarder.png");
         btn.addActionListener(e -> {
-            if (vueMonde.jeuVerrouille) return;
+            if (gameplay.isGameFrozen()) return;
             if (gameplay != null) {
                 try {
                     SaveManager.save(gameplay.partie.toGameSave(), "save.dat");
@@ -397,7 +413,7 @@ public class VueJeu extends JPanel {
     private JButton makeLoadButton() {
         JButton btn = makeStripButton("Load", "Charger.png");
         btn.addActionListener(e -> {
-            if (vueMonde.jeuVerrouille) return;
+            if (gameplay.isGameFrozen()) return;
             if (gameplay != null) {
                 try {
                     GameSave saveFile = SaveManager.load("save.dat");
@@ -412,9 +428,9 @@ public class VueJeu extends JPanel {
     }
 
     private JButton makeReglesButton() {
-        JButton btn = makeStripButton("Regles", "ReglesB.png");
+        JButton btn = makeStripButton("Règles du jeu", "ReglesB.png");
         btn.addActionListener(e -> {
-            if (vueMonde.jeuVerrouille) return;
+            if (gameplay.isGameFrozen()) return;
             onReglesPressed();
         });
         return btn;
@@ -423,7 +439,7 @@ public class VueJeu extends JPanel {
     private JButton makeIdentiteJackButton() {
         JButton btn = makeStripButton("M.Jack", "M.Jack");
         btn.addActionListener(e -> {
-            if (vueMonde.jeuVerrouille) return;
+            if (gameplay.isGameFrozen()) return;
             if (gameplay != null) gameplay.afficherRappelIdentiteJack();
         });
         return btn;
@@ -455,18 +471,20 @@ public class VueJeu extends JPanel {
         return btn;
     }
 
-    /**
-     *
-     *Créer l'overlay du menu settings par dessus le jeu.
-     */
-    private void onSettingsPressed() {
-        if (vueMonde.jeuVerrouille) return;
 
-        //Si le menu settings est déja affiché alors on le ferme.
+    private void onSettingsPressed() {
+        // Toggle : si le panneau est déjà ouvert, on ferme (même si jeu gelé)
         if (panneauSettings != null && panneauSettings.isShowing()) {
             fermerPanneauSettings();
             return;
         }
+
+        // Ouverture interdite si jeu déjà gelé pour une autre raison
+        if (gameplay.isGameFrozen()) return;
+
+        // --- GELER TOUTES LES INTERACTIONS ---
+        if (gameplay != null) gameplay.setGlobalFreeze(true);
+        vueMonde.jeuVerrouille = true;
 
         JPanel overlay = vueMonde.getUiOverlay();
 
@@ -489,47 +507,57 @@ public class VueJeu extends JPanel {
         if (img != null) {
             int w = Math.min(360, img.getWidth());
             int h = Math.min(180, img.getHeight());
-            Image scaled = img.getScaledInstance(w, h, Image.SCALE_SMOOTH);            JLabel logo = new JLabel(new ImageIcon(scaled));
+            Image scaled = img.getScaledInstance(w, h, Image.SCALE_SMOOTH);
+            JLabel logo = new JLabel(new ImageIcon(scaled));
             logo.setAlignmentX(Component.CENTER_ALIGNMENT);
             panelCentral.add(logo);
             panelCentral.add(Box.createVerticalStrut(16));
         }
 
+        // ----- CONTINUER : seul bouton qui ferme et dégèle -----
         JButton continuer = makeSettingsButton("Continuer");
-        continuer.addActionListener(e -> {
-            fermerPanneauSettings();
-        });
+        continuer.addActionListener(e -> fermerPanneauSettings());
 
+        // ----- SAUVEGARDER : reste dans le panneau, ne ferme pas -----
         JButton sauvegarder = makeSettingsButton("Sauvegarder");
         sauvegarder.addActionListener(e -> {
-            try { SaveManager.save(gameplay.partie.toGameSave(), "save.dat");
+            try {
+                SaveManager.save(gameplay.partie.toGameSave(), "save.dat");
                 JOptionPane.showMessageDialog(
                         this,
                         "Partie sauvegardée avec succès !",
                         "Info",
                         JOptionPane.INFORMATION_MESSAGE
-                );}
-            catch (Exception ex) { System.err.println("Save echoue: " + ex.getMessage()); }
+                );
+            } catch (Exception ex) {
+                System.err.println("Save echoue: " + ex.getMessage());
+            }
         });
 
+        // ----- CHARGER : charge, puis ferme le panneau -----
         JButton charger = makeSettingsButton("Charger");
         charger.addActionListener(e -> {
             try {
                 GameSave saveFile = SaveManager.load("save.dat");
                 gameplay.partie.fromGameSave(saveFile);
                 refreshBoardComponents();
+                fermerPanneauSettings();   // ferme après chargement
             } catch (Exception ex) {
                 System.err.println("Load echoue: " + ex.getMessage());
             }
         });
 
+        // ----- NOUVELLE PARTIE : ferme d'abord le panneau, puis reset -----
         JButton nvPartie = makeSettingsButton("Nouvelle partie");
         nvPartie.addActionListener(e -> {
+            fermerPanneauSettings();     // fermeture + dégel
             if (gameplay != null) gameplay.resetGame();
         });
 
+        // ----- RETOUR MENU : ferme d'abord le panneau, puis quitte -----
         JButton retourMenu = makeSettingsButton("Retour menu");
         retourMenu.addActionListener(e -> {
+            fermerPanneauSettings();     // fermeture + dégel
             stopGameLoop();
             gameplay.partie.kill();
             menuPrincipal.resetBoutonsSurvoles();
@@ -541,7 +569,6 @@ public class VueJeu extends JPanel {
         panelCentral.add(continuer);
         panelCentral.add(Box.createVerticalStrut(12));
         panelCentral.add(sauvegarder);
-        panelCentral.add(sauvegarder);
         panelCentral.add(Box.createVerticalStrut(12));
         panelCentral.add(charger);
         panelCentral.add(Box.createVerticalStrut(12));
@@ -550,7 +577,8 @@ public class VueJeu extends JPanel {
         panelCentral.add(retourMenu);
 
         panneauSettings.add(panelCentral, BorderLayout.CENTER);
-        overlay.add(panneauSettings, 0);
+        overlay.add(panneauSettings, JLayeredPane.POPUP_LAYER);
+
         overlay.revalidate();
         vueMonde.repositionOverlayElements(overlay.getWidth(), overlay.getHeight());
     }
@@ -559,9 +587,15 @@ public class VueJeu extends JPanel {
         if (panneauSettings != null) {
             vueMonde.getUiOverlay().remove(panneauSettings);
             panneauSettings = null;
+            
+            // --- DÉGELER LE JEU ---
+            if (gameplay != null) gameplay.setGlobalFreeze(false);
+            vueMonde.jeuVerrouille = false;
+            
             vueMonde.getUiOverlay().revalidate();
         }
     }
+    
 
     public void stopGameLoop() {
         partieEnCours = false;
@@ -691,11 +725,14 @@ public class VueJeu extends JPanel {
     // =========================================================================
 
     private void onReglesPressed() {
-        gameplay.partie.toggleFreeze();
         if (panneauRegles != null && panneauRegles.isShowing()) {
             fermerPanneauRegles();
             return;
         }
+
+        // --- GELER LE JEU DE FAÇON PERMANENTE ---
+        if (gameplay != null) gameplay.setGlobalFreeze(true);
+        vueMonde.jeuVerrouille = true;
 
         JPanel overlay = vueMonde.getUiOverlay();
 
@@ -733,11 +770,10 @@ public class VueJeu extends JPanel {
         scroll.addMouseListener(fermetureListener);
         labelRegles.addMouseListener(fermetureListener);
 
-        overlay.add(panneauRegles, 0);
+        overlay.add(panneauRegles, JLayeredPane.POPUP_LAYER);
         repositionnerPanneauRegles();
         overlay.revalidate();
 
-        // Adapter le panneau si la taille a ete mise a jour entre-temps
         vueMonde.repositionOverlayElements(overlay.getWidth(), overlay.getHeight());
         System.out.println("VueJeu — Panneau de regles affiche");
     }
@@ -746,6 +782,11 @@ public class VueJeu extends JPanel {
         if (panneauRegles != null) {
             vueMonde.getUiOverlay().remove(panneauRegles);
             panneauRegles = null;
+            
+            // --- DÉGELER LE JEU ---
+            if (gameplay != null) gameplay.setGlobalFreeze(false);
+            vueMonde.jeuVerrouille = false;
+            
             vueMonde.getUiOverlay().revalidate();
             System.out.println("VueJeu — Panneau de regles ferme");
         }

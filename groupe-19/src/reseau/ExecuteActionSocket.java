@@ -4,6 +4,9 @@ import src.modele.Detective;
 import src.vue.ExecuteAction;
 import src.vue.Gameplay;
 
+import static src.modele.Detective.Type.HOLMES;
+import static src.modele.Detective.Type.WATSON;
+
 public class ExecuteActionSocket implements ExecuteAction {
     private Client client;
 
@@ -32,7 +35,13 @@ public class ExecuteActionSocket implements ExecuteAction {
         Object[] contenue = new Object[2];
         contenue[0] = detective.getType();
         contenue[1] = pas;
-        client.clientDeplaceDetective(contenue);
+        if(contenue[0] == HOLMES) {
+            client.clientDeplaceHolmes(contenue);
+        }else if(contenue[0] == WATSON){
+            client.clientDeplaceWatson(contenue);
+        }else{
+            client.clientDeplaceToby(contenue);
+        }
     }
 
     @Override

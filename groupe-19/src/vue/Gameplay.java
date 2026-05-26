@@ -1,6 +1,8 @@
 package src.vue;
 
 import src.modele.*;
+import src.vue.menus.VueLobby;
+
 import javax.swing.*;
 import java.awt.Color;
 
@@ -71,19 +73,23 @@ public class Gameplay {
         // Listener pour l'affichage de la carte alibi piochée
         partie.setAppelTemoinListener(() -> {
             SwingUtilities.invokeLater(() -> {
-                vue.getMonde().showCenterMessage("Appel à témoin !");
             });
         });
-        // Listener pour l'affichage de la carte alibi piochée
+        // Listener pour l'affichage du tour de l'enquêteur
         partie.setTourEnqueteurListener(() -> {
             SwingUtilities.invokeLater(() -> {
-                vue.getMonde().showCenterMessage("Tour de l'enquêteur");
+                String nom = partie.pseudoEnqueteur;
+                if (partie.niveauEnqueteur == -1){ nom += " (Enquêteur)";}
+                vue.getMonde().showNotifMessage("C'est à " + nom, -1);
             });
         });
-        // Listener pour l'affichage de la carte alibi piochée
+
+        // Listener pour l'affichage du tour de Jack
         partie.setTourJackListener(() -> {
             SwingUtilities.invokeLater(() -> {
-                vue.getMonde().showCenterMessage("Tour de Jack");
+                String nom = partie.pseudoJack;
+                if (partie.niveauJack == -1){ nom += " (Jack)";}
+                vue.getMonde().showNotifMessage("C'est à " + nom, -1);
             });
         });
 
@@ -95,7 +101,6 @@ public class Gameplay {
             afficherIdentiteJack(() -> {
 
                 SwingUtilities.invokeLater(() -> {
-                    vue.getMonde().showCenterMessage("Tour de l'enquêteur");
                 });
 
             });
@@ -106,10 +111,12 @@ public class Gameplay {
         partie.setPreAppelTemoinListener(() -> {
             if (partie.isPartieTerminee()) return;
 
+            // Supprimer l'affichage "tour de l'enqueteur/tour de Jack"
+            vue.getMonde().hideNotifMessage();
             // Geler les interactions utilisateur pendant l'assombrissement
-            partie.setFreeze(true);
+            setGlobalFreeze(true);
             System.out.println("Appel à témoin dans 3 secondes...");
-
+            vue.getMonde().showNotifMessage("Appel à témoin", -1);
             boolean[][] masque = partie.getMasqueTuilesVisibles();
             vue.getMonde().appliquerAssombrissement(masque);
             refreshView();
@@ -120,9 +127,12 @@ public class Gameplay {
                     vue.getMonde().retirerAssombrissement();
 
                     // Dégeler pour permettre l'exécution des méthodes internes
-                    partie.setFreeze(false);
-
+                    setGlobalFreeze(false);
                     partie.appelATemoin();
+                    String resultat = partie.jackVisibleCeTour
+                            ? "Jack est visible !"
+                            : "Jack n'est pas visible !";
+                    vue.getMonde().showNotifMessage(resultat, 2500);
                     if (!partie.isPartieTerminee()) {
                         partie.tourSuivant();
                     }
@@ -131,7 +141,7 @@ public class Gameplay {
                     ex.printStackTrace();
                 } finally {
                     // S'assurer que le jeu est dégelé
-                    partie.setFreeze(false);
+                    setGlobalFreeze(false);
                     refreshView();
                     if (!partie.isPartieTerminee()) {
                         partie.verifTourIa();
@@ -141,6 +151,38 @@ public class Gameplay {
             timer.setRepeats(false);
             timer.start();
         });
+    }
+
+    // -------------------------------------------------------------------------
+    // Verrou global — point d'entrée unique pour geler/dégeler le jeu
+    // -------------------------------------------------------------------------
+
+    /**
+     * Gèle ou dégèle simultanément le modèle (Partie) et la vue (VueMonde).
+     * Toutes les modifications de l'état de verrou doivent passer par ici.
+     *
+     * @param state true pour verrouiller, false pour déverrouiller
+     */
+    public void setGlobalFreeze(boolean state) {
+        partie.setFreeze(state);
+        vue.getMonde().jeuVerrouille = state;
+    }
+
+    /**
+     * Inverse l'état du verrou global.
+     * Pratique pour les toggles (ex. ouverture/fermeture du panneau de règles).
+     */
+    public void toggleGlobalFreeze() {
+        setGlobalFreeze(!partie.isFreeze());
+    }
+
+    /**
+     * Retourne l'état courant du verrou global (source de vérité : le modèle).
+     *
+     * @return true si le jeu est actuellement gelé
+     */
+    public boolean isGameFrozen() {
+        return partie.isFreeze();
     }
 
     public void afficherVisibiliteTemporaire() {
@@ -154,7 +196,7 @@ public class Gameplay {
         }
 
         // Geler l'interface
-        partie.setFreeze(true);
+        setGlobalFreeze(true);
         System.out.println("Affichage temporaire de la visibilité (1.5s)...");
 
         // Calculer et appliquer l'assombrissement
@@ -169,7 +211,7 @@ public class Gameplay {
             } catch (Exception ex) {
                 ex.printStackTrace();
             } finally {
-                partie.setFreeze(false);
+                setGlobalFreeze(false);
                 refreshView();
             }
         });
@@ -250,8 +292,16 @@ public class Gameplay {
         boolean isIa = (partie.joueurCourant == Joueur.JACK && partie.niveauJack != -1)
                     || (partie.joueurCourant == Joueur.ENQUETEUR && partie.niveauEnqueteur != -1);
         controler.setActivePlayerType(isIa ? "AI" : "HUMAN");
+        if (partie.joueurCourant == Joueur.ENQUETEUR) {
+            String nom = partie.pseudoEnqueteur;
+            if (partie.niveauEnqueteur == -1){ nom += " (Enquêteur)";}
+            vue.getMonde().showNotifMessage("C'est à " + nom, -1);
+        } else {
+            String nom = partie.pseudoJack;
+            if (partie.niveauJack == -1){ nom += " (Jack)";}
+            vue.getMonde().showNotifMessage("C'est à " + nom, -1);
+        }
         vue.updateTurnIndicator(partie.numeroTour);
-
         if (isIa) {
             if (!partie.isFreeze()) {
                 SwingUtilities.invokeLater(controler::joueIa);
@@ -287,11 +337,11 @@ public class Gameplay {
         refreshView();
     }
 
-    public void animationAppelTemoinReseau(PartieSnapshot partieSnap){
+    public void animationAppelTemoinReseau(PartieSnapshot partieSnap) {
         if (partie.isPartieTerminee()) return;
 
         // Geler les interactions utilisateur pendant l'assombrissement
-        partie.setFreeze(true);
+        setGlobalFreeze(true);
         System.out.println("Appel à témoin dans 3 secondes...");
 
         boolean[][] masque = partie.getMasqueTuilesVisibles();
@@ -304,7 +354,7 @@ public class Gameplay {
                 vue.getMonde().retirerAssombrissement();
 
                 // Dégeler pour permettre l'exécution des méthodes internes
-                partie.setFreeze(false);
+                setGlobalFreeze(false);
 
                 partie.fromSnapshot(partieSnap);
             } catch (Exception ex) {
@@ -312,16 +362,15 @@ public class Gameplay {
                 ex.printStackTrace();
             } finally {
                 // S'assurer que le jeu est dégelé
-                partie.setFreeze(false);
+                setGlobalFreeze(false);
                 refreshView();
-                if (!partie.isPartieTerminee()) {
-                    partie.verifTourIa();
+                if (partie.isPartieTerminee()) {
+                    vue.showGameOverScreen(partie.gagnant.getNom());
                 }
             }
         });
         timer.setRepeats(false);
         timer.start();
-
     }
 
     public boolean enReflexion(){
@@ -345,7 +394,6 @@ public class Gameplay {
         afficherIdentiteJack(() -> {
 
             SwingUtilities.invokeLater(() -> {
-                vue.getMonde().showCenterMessage("Tour de l'enquêteur");
             });
 
         });
@@ -637,7 +685,7 @@ public class Gameplay {
      * Le texte sous le nom (Humain / IA Random / IA Facile / IA Moyenne)
      * change en fonction de la configuration de la partie.
      */
-    private void updatePlayerRectangles() {
+    public void updatePlayerRectangles() {
         VueMonde monde = vue.getMonde();
 
         // ----- Enquêteur (index 0, toujours en bleu) -----

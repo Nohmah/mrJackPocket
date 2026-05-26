@@ -24,9 +24,14 @@ public class VueMonde extends JPanel {
 
     /** true si les interactions sont verrouillées (animation en cours, etc.) */
     public boolean jeuVerrouille = false;
-
-    private JLabel centerMessage;
-    private JPanel centerMessagePanel;
+    private Timer notifTimer = null;
+    private boolean notifEnCours = false;
+    /**
+     * Référence vers le médiateur Gameplay, injectée après construction via
+     * {@link #setGameplay(Gameplay)}. Utilisée pour déléguer les changements
+     * d'état de verrou à {@code gameplay.setGlobalFreeze(...)}.
+     */
+    private Gameplay gameplay;
 
     // =========================================================================
     // Constantes monde (référencées statiquement depuis l'extérieur)
@@ -57,50 +62,12 @@ public class VueMonde extends JPanel {
 
     private JPanel currentOverlayPanel = null;
 
-    public void showCenterMessage(String text) {
-        //        if (centerMessagePanel != null) {
-//            uiOverlay.remove(centerMessagePanel);
-//        }
-//
-//        jeuVerrouille = true;
-//
-//        centerMessagePanel = new JPanel(new GridBagLayout());
-//        centerMessagePanel.setOpaque(false);
-//        centerMessagePanel.setBounds(0, 0, WORLD_W, WORLD_H);
-//
-//        centerMessage = new JLabel(text, SwingConstants.CENTER);
-//        centerMessage.setFont(new Font("SansSerif", Font.BOLD, 48));
-//        centerMessage.setForeground(Color.WHITE);
-//        centerMessage.setOpaque(true);
-//        centerMessage.setBackground(new Color(0, 0, 0, 180));
-//        centerMessage.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
-//
-//        centerMessagePanel.add(centerMessage);
-//
-//        uiOverlay.add(centerMessagePanel, JLayeredPane.POPUP_LAYER);
-//        uiOverlay.revalidate();
-//        uiOverlay.repaint();
-//
-//        new javax.swing.Timer(2000, e -> {
-//            uiOverlay.remove(centerMessagePanel);
-//            centerMessagePanel = null;
-//            centerMessage = null;
-//
-//            jeuVerrouille = false;
-//            uiOverlay.revalidate();
-//            uiOverlay.repaint();
-//        }) {{
-//            setRepeats(false);
-//            start();}
-};
-
-
     public void afficherOverlayAvecImage(String nomImage, String texteSousImage, int dureeMs) {
         if (currentOverlayPanel != null) {
             uiOverlay.remove(currentOverlayPanel);
             currentOverlayPanel = null;
         }
-        jeuVerrouille = true;
+        if (gameplay != null) gameplay.setGlobalFreeze(true); else jeuVerrouille = true;
         Camera.AddSprite(nomImage);
         BufferedImage img = Camera.GetSpriteImage(nomImage);
 
@@ -162,7 +129,7 @@ public class VueMonde extends JPanel {
         new javax.swing.Timer(dureeMs, e -> {
             uiOverlay.remove(overlayPanel);
             if (currentOverlayPanel == overlayPanel) currentOverlayPanel = null;
-            jeuVerrouille = false;
+            if (gameplay != null) gameplay.setGlobalFreeze(false); else jeuVerrouille = false;
             uiOverlay.revalidate();
             uiOverlay.repaint();
         }).start();
@@ -192,6 +159,8 @@ public class VueMonde extends JPanel {
     private JPanel sablierPanel   = null;
     private JPanel thinkingPanel  = null;
     private JLabel thinkingLabel  = null;
+    private JPanel notifPanel = null;
+    private JLabel notifLabel = null;
     private JLabel actionTooltip;
 
     private JButton settingsButton;
@@ -262,6 +231,18 @@ public class VueMonde extends JPanel {
         initUIOverlay();
     }
 
+    /**
+     * Injecte la référence vers le médiateur Gameplay.
+     * Doit être appelé depuis VueJeu immédiatement après la création de Gameplay,
+     * afin que VueMonde puisse déléguer les changements de verrou via
+     * {@code gameplay.setGlobalFreeze(...)}.
+     *
+     * @param gameplay le médiateur Gameplay
+     */
+    public void setGameplay(Gameplay gameplay) {
+        this.gameplay = gameplay;
+    }
+
     // =========================================================================
     // Initialisation interne
     // =========================================================================
@@ -319,6 +300,7 @@ public class VueMonde extends JPanel {
         initSablierLabel();
         initSettings();
         initThinking();
+        initNotifPanel();
     }
 
     private void initSettings(){
@@ -351,8 +333,67 @@ public class VueMonde extends JPanel {
         thinkingPanel.add(thinkingLabel);
         uiOverlay.add(thinkingPanel);
         thinkingPanel.setPreferredSize(new Dimension(320, 28));
-        thinkingPanel.setBounds(10, 10, 220, 28);
+        thinkingPanel.setBounds(60, 44, 220, 28);
         thinkingPanel.setVisible(false);
+    }
+
+    private void initNotifPanel() {
+        notifPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        notifPanel.setOpaque(true);
+        notifPanel.setBackground(new Color(0, 0, 0, 160));
+        notifPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200, 120), 1));
+        notifLabel = new JLabel("");
+        notifLabel.setForeground(Color.WHITE);
+        notifLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+        notifPanel.add(notifLabel);
+        uiOverlay.add(notifPanel);
+        notifPanel.setPreferredSize(new Dimension(320, 28));
+        notifPanel.setBounds(60, 10, 220, 28);
+        notifPanel.setVisible(false);
+    }
+
+    /**
+     * Affiche un message temporaire pour un certain temps où infini
+     */
+    public void showNotifMessage(String text, int dureeMs) {
+        if (notifPanel == null || notifLabel == null) return;
+
+        // Si il y a un affichage sous un timer (jack est visible/jack n'est pas visible) on refuse
+        if (notifEnCours) {
+            return;
+        }
+
+        if (notifTimer != null && notifTimer.isRunning()) {
+            notifTimer.stop();
+        }
+
+        notifLabel.setText(text);
+        notifPanel.setVisible(true);
+        uiOverlay.revalidate();
+        uiOverlay.repaint();
+
+        if (dureeMs > 0) {
+            notifEnCours = true;
+            notifTimer = new Timer(dureeMs, e -> {
+                notifEnCours = false;
+                notifPanel.setVisible(false);
+                uiOverlay.revalidate();
+                uiOverlay.repaint();
+                // affiche qui joue
+                String notif = (gameplay.partie.joueurCourant == Joueur.ENQUETEUR) ? "Tour de l'Enquêteur" : "Tour de Jack";
+                showNotifMessage(notif, -1);
+                });
+            notifTimer.setRepeats(false);
+            notifTimer.start();
+        }
+    }
+
+    public void hideNotifMessage() {
+        if (notifPanel != null) {
+            notifPanel.setVisible(false);
+            uiOverlay.revalidate();
+            uiOverlay.repaint();
+        }
     }
 
     private void initSablierLabel() {
@@ -651,7 +692,7 @@ public class VueMonde extends JPanel {
 
     public void showThinking() {
         if (thinkingPanel == null) return;
-        thinkingPanel.setLocation(10, 10);
+        thinkingPanel.setLocation(60, 54);
         thinkingPanel.setVisible(true);
         uiOverlay.revalidate();
         uiOverlay.repaint();
@@ -693,7 +734,13 @@ public class VueMonde extends JPanel {
             int fontSize = camH / 45;
             thinkingLabel.setFont(new Font("SansSerif", Font.BOLD, fontSize));
             thinkingPanel.revalidate();
-            thinkingPanel.setBounds(10, 10, camW / 4, camH / 18);
+            thinkingPanel.setBounds(60, 54, camW / 4, camH / 18);
+        }
+        if (notifPanel != null) {
+            int fontSize = camH / 45;
+            notifLabel.setFont(new Font("SansSerif", Font.BOLD, fontSize));
+            notifPanel.revalidate();
+            notifPanel.setBounds(60, 10, camW / 4, camH / 18);
         }
         if (currentOverlayPanel != null) {
             currentOverlayPanel.setBounds(0, 0, camW, camH);
@@ -702,8 +749,8 @@ public class VueMonde extends JPanel {
         if (settingsButton != null) {
             int w = settingsButton.getPreferredSize().width;
             int h = settingsButton.getPreferredSize().height;
-            int x = camW - w - 12;
-            int y = camH - h - 12;
+            int x = 12;
+            int y = 12;
             settingsButton.setBounds(x, y, w, h);
         }
         uiOverlay.revalidate();

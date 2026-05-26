@@ -1,13 +1,14 @@
 package src.modele.ia;
 
 import src.modele.*;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-public class IaMinMax {
-
-    public static class resultatMinMax {
+public class IaMinMax{
+    
+    public static class resultatMinMax { // classe pour stocker le résultat du MinMax
         public double score;
         public CoupIa coup;
 
@@ -17,22 +18,29 @@ public class IaMinMax {
         }
     }
 
+    // ---- plus simple pour appeler MinMax
     public static CoupIa choisirActionMinMax(Partie partie, boolean estJack, int profondeur){
+        //System.out.println("entre dans IA choisirActionMINMAX"); 
+
         CoupIa coup = MinMax(partie, estJack, profondeur, 0, -8000, 8000).coup ;
+
         if(coup != null){
             return coup;
         } else {
+            System.out.println("/!\\ Aucun coup trouvé en MinMax, renvoie random /!\\  Avec profondeur : " + profondeur);
             return ChoixIa.choisirActionRandom(partie, estJack);
         }
     }
 
     public static resultatMinMax MinMax(Partie partie, boolean estJack, int profondeur, int skip, double alpha, double beta){
+        //if(profondeur != 1) System.out.println("Entre dans MinMax Profondeur : " + profondeur + " avec " + partie.actions.getActionsPossibles().size() + " actions possibles");
+        //si mode max alors on cherche à maximiser le score, sinon on cherche à minimiser le score
         boolean modeMax = estJack ? partie.joueurCourant == Joueur.JACK : partie.joueurCourant == Joueur.ENQUETEUR;
         double scoreMax = modeMax ? -8000 : 8000;
         CoupIa meilleurCoup = null;
 
         if(partie.changement) return new resultatMinMax(scoreMax, null);
-
+        // Verification de si la partie n'est pas déjà terminé 
         if(partie.isPartieTerminee()){
             if(estJack){
                 if(partie.gagnant == Joueur.JACK){
@@ -50,47 +58,58 @@ public class IaMinMax {
             }
         }
 
-        if(partie.actions.getActionsPossibles().size() == 0){
-            if(partie.numeroTour % 2 == 0){
-                return new resultatMinMax(scoreMax, null);
+        //Cas special de fin de tour 
+        if(partie.actions.getActionsPossibles().size() == 0){// arrive seulement avec un autre appel de IaMinMax donc on peut modif partie
+            //System.out.println("Aucun coup possible dans MinMax, donc on retourn les jetons");
+            if(partie.numeroTour % 2 == 0){ 
+                return MinMaxFinTourPair(partie, estJack, profondeur, alpha, beta);
             }
-            if(estJack){
+            if(estJack){//si on est jack on peut juste continuer normalement
                 partie.appelATemoin();
-                if (!partie.isPartieTerminee()) {
-                    partie.tourSuivant();
-                }
+                partie.tourSuivant();
+                //System.out.println("Mise a jour des jetons : nb actions possibles :" + partie.actions.getActionsPossibles().size());
                 return MinMax(partie, estJack, profondeur, 0, alpha, beta);
             }
-            else{
-                return MinMaxDivision(partie, estJack, profondeur, alpha, beta);
+            else{// si on est enquêteur, c'est plus compliqué car on connait pas le Jack
+                return MinMaxDivision(partie, estJack, profondeur, alpha, beta, true);
             }
         }
 
-        int nbskip = 0;
+
+
+        //boucle classique de MinMax et principal 
+
+        int nbskip = 0; // la gestion des skips c'est pour eviter d'aller dans des branches deja calcule (jsp comment expliquer dsl)
         for(Action action : partie.actions.getActionsPossibles()){
             CoupIa coup = new CoupIa(action);
+            // la partie skip est opti quand la meme personne joue 2 fois car faire action a puis b = faire b puis a
             if(skip > 0){
                 skip --;
                 continue;
             }
-
+            
             if(nbskip == 2) continue ;
 
+            //System.out.println("Action testée en MinMax : " + action);
             for (int param1 = 0; param1 <= coup.para1Max(action); param1++) {
+
                 if(action == Action.ROTATION){
                     if (partie.district.get(param1 / 3, param1 % 3).getAPivote()) {
-                        continue;
+                        continue; // C'est illégal
                     }
                 }
 
                 for (int param2 = 0; param2 <= coup.para2Max(action); param2++) {
+
+                    // --- Filtre anti coup illégal ---
                     if(action == Action.JOKER && param2 == 0 && !estJack){
-                        continue;
+                        continue; // illégal !
                     }
 
                     if(action == Action.ROTATION && param1 == param2){
-                        continue ;
+                        continue ; //illégal !
                     }
+
 
                     CoupIa tentative = new CoupIa(action, param1, param2);
                     double note;
@@ -109,12 +128,14 @@ public class IaMinMax {
                         meilleurCoup = tentative;
                         scoreMax = note;
                         if(scoreMax > beta){
+                            //System.out.println("opti grace a beta, profondeur = " + profondeur + " beta =" + beta + " score = " + scoreMax);
                             return new resultatMinMax(scoreMax, meilleurCoup);
                         }
                     } else if (!modeMax && note <= scoreMax){
                         meilleurCoup = tentative;
                         scoreMax = note;
                         if(scoreMax < alpha){
+                            //System.out.println("opti grace a alpha, profondeur = " + profondeur + " alpha =" + alpha + " score = " + scoreMax);
                             return new resultatMinMax(scoreMax, meilleurCoup);
                         }
                     }
@@ -126,26 +147,40 @@ public class IaMinMax {
         if(meilleurCoup != null){
             return new resultatMinMax(scoreMax, meilleurCoup);
         } else {
+            System.out.println("/!\\ Aucun coup trouvé en MinMax, renvoie random /!\\  Avec profondeur : " + profondeur + " et scoreMax : " + scoreMax + " et nb actions possibles : " + partie.actions.getActionsPossibles().size() + " et tour actuell : " + partie.numeroTour);
             return new resultatMinMax(scoreMax, null);
         }
     }
 
-    public static resultatMinMax MinMaxDivision(Partie partie, boolean estJack, int profondeur, double alpha, double beta){
+
+    // UN minMax different pour un cas particulier du fin de tour impair et que l'on est enqueteur
+    public static resultatMinMax MinMaxDivision(Partie partie, boolean estJack, int profondeur, double alpha, double beta, boolean tourSuivant){
+        //boolean modeMax = estJack ? partie.joueurCourant == Joueur.JACK : partie.joueurCourant == Joueur.ENQUETEUR;
+        //double scoreMax = modeMax ? -8000 : 8000;
+        //boolean modeMax = false ; //si on entre dans cette fonction on est au debut d un tour pair (donc a jack de jouer) et on joue detective
         double scoreMax = 8000;
         CoupIa meilleurCoup = null;
 
+        // On simule 2 cas avec Jack visible et Jack invisible
+        //System.out.println("Création de 2 dimentions (bruit futuriste trop cool)");
+        // Utiliser deux copies pour simuler les deux issues (Jack visible / invisible)
         Partie partieVis = new Partie(partie);
         Partie partieInv = new Partie(partie);
 
-        int nbvisible = simuleAppelATemoin(partieVis, true);
-        int nbinvisible = simuleAppelATemoin(partieInv, false);
+        int nbvisible = simuleAppelATemoin(partieVis, true, tourSuivant);
+        int nbinvisible = simuleAppelATemoin(partieInv, false, tourSuivant);
+        int total = nbvisible + nbinvisible;
+        if(total == 0) return new resultatMinMax(scoreMax, null);
 
+
+        // Itérer sur les actions possibles de l'état "visible" (on pourrait aussi unionner les sets)
         List<Action> actionsVis = partieVis.actions.getActionsPossibles();
         List<Action> actionsInv = partieInv.actions.getActionsPossibles();
-
+        
         double poidsVis;
         double poidsInv;
 
+        //Verif du cas particulier ou une des partie est terminé 
         boolean visTerminee = partieVis.isPartieTerminee();
         boolean invTerminee = partieInv.isPartieTerminee();
         if(visTerminee && !invTerminee){
@@ -154,7 +189,7 @@ public class IaMinMax {
                 poidsInv = 0.1;
             }
             else{
-                poidsInv = 5.0;
+                poidsInv = 1.5 + ((double) nbvisible / (double) total);
             }
         } else if(!visTerminee && invTerminee){
             poidsInv = 0.0;
@@ -162,7 +197,7 @@ public class IaMinMax {
                 poidsVis = 0.1;
             }
             else{
-                poidsVis = 5.0;
+                poidsVis = 1.5 + ((double) nbinvisible / (double) total); // plus grande priorité a cette partie car 1 chance sur 2 de gagner, selon si gagner est + probable
             }
         } else if(visTerminee && invTerminee){
             if(partieInv.gagnant == Joueur.JACK && partieVis.gagnant == Joueur.JACK){
@@ -171,32 +206,38 @@ public class IaMinMax {
             if(partieInv.gagnant == Joueur.ENQUETEUR && partieVis.gagnant == Joueur.ENQUETEUR){
                 return new resultatMinMax(8000, null);
             }
-            return new resultatMinMax(0, null);
+            return new resultatMinMax(0, null); //si une fait gagner enqueteur et l'autre le Jack 
         } else {
-            int total = nbvisible + nbinvisible;
-            poidsVis = total == 0 ? 0.5 : (double) nbvisible / (double) total;
-            poidsInv = total == 0 ? 0.5 : (double) nbinvisible / (double) total;
+            poidsVis = (double) nbvisible / (double) total;
+            poidsInv = (double) nbinvisible / (double) total;
         }
 
-        List<Action> actionsToTest = actionsVis.isEmpty() ? actionsInv : actionsVis;
+
+        // Debut de la boucle du MinMax avec le cas particulier du changement de tour + on est enqueteur
+
+        List<Action> actionsToTest = actionsVis.isEmpty() ? actionsInv : actionsVis; //si Vis est vide donc deja finit on doit test seulemtn Inv
         for(Action action : actionsToTest){
+            //System.out.println("dans MinMaxDiv action choisis :" + action);
             CoupIa coup = new CoupIa(action);
             for (int param1 = 0; param1 <= coup.para1Max(action); param1++) {
                 if(action == Action.ROTATION){
                     int ligne = param1 / 3;
                     int colonne = param1 % 3;
                     if (partieVis.district.get(ligne, colonne).getAPivote()) {
-                        continue;
+                        continue; // C'est illégal
                     }
                 }
                 for (int param2 = 0; param2 <= coup.para2Max(action); param2++) {
+                    
+                    // --- Filtre anti coup illégal ---
                     if(action == Action.JOKER && param2 == 0 && !estJack){
-                        continue;
+                        continue; // illégal !
                     }
 
                     if(action == Action.ROTATION && param1 == param2){
-                        continue ;
+                        continue ; //illégal !
                     }
+
 
                     CoupIa tentative = new CoupIa(action, param1, param2);
                     double note = 0;
@@ -210,7 +251,7 @@ public class IaMinMax {
                             partieSimulee1.jouerCoup(tentative);
                             note += poidsVis * MinMax(partieSimulee1, estJack, profondeur - 1, 0, -8000, scoreMax * poidsVis).score;
                         }
-
+                        
                         if(!invTerminee){
                             Partie partieSimulee2 = new Partie(partieInv);
                             partieSimulee2.jouerCoup(tentative);
@@ -225,14 +266,38 @@ public class IaMinMax {
                 }
             }
         }
+        // on ne passe pas dans la boucle principale
         if(meilleurCoup != null){
             return new resultatMinMax(scoreMax, meilleurCoup);
         } else {
+            System.out.println("/!\\ Aucun coup trouvé en MinMax (dans le division), renvoie random /!\\");
             return new resultatMinMax(scoreMax, null);
         }
     }
 
-    public static int simuleAppelATemoin(Partie partie, boolean visible){
+
+    public static resultatMinMax MinMaxFinTourPair(Partie partie, boolean estJack, int profondeur, double alpha, double beta){
+            double score = 0;
+            if(estJack) partie.appelATemoin();
+            List<Partie> listParties = getTouteCombiJeton(partie);
+            for(Partie p : listParties){
+                for(JetonAction j : p.jetonsAction) j.setJoue(false);
+                if(estJack) score += MinMax(p, estJack, profondeur, 0, alpha/16, beta/16).score;
+                else{
+                    //System.err.println("nb action possible : " + partie.actions.getActionsPossibles().size());
+                    score += MinMaxDivision(p, estJack, profondeur, alpha/16, beta/16, false).score;
+                }
+            }
+            score = score / 16;
+            //System.out.println("Fin TourPai score = " + score);
+            return new resultatMinMax(score, null);
+    }
+
+
+    // ----- Pour simuler un appel a temoin quand on est detetctive car on ne doit pas connaitre la pos de Jack
+
+    public static int simuleAppelATemoin(Partie partie, boolean visible, boolean tourSuivant){
+        // simule un appel à témoin en enlvant les visible si visible = true
         HashSet<Personnage> personnagesVisibles = new HashSet<>();
         for (Detective d : partie.detectives) {
             personnagesVisibles.addAll(partie.district.personnagesVisiblesParDetective(d));
@@ -249,17 +314,57 @@ public class IaMinMax {
             partie.suspects.removeAll(personnagesVisibles);
         }
 
-        avantAppel.removeAll(partie.suspects);
+        avantAppel.removeAll(partie.suspects); // Obtention des gens plus suspects
         for(Personnage p : avantAppel){
             partie.district.innocenter(p);
         }
 
         try{
             partie.verifFinDePartie();
-            partie.tourSuivant();
+            if(tourSuivant) partie.tourSuivant();
         } catch (Exception e) {
+            System.err.println("Exception dans SimuleAppelATemoin : " + e.getMessage());
+            e.printStackTrace();
             return 0;
         }
         return partie.suspects.size();
+    }
+
+    // ----- Util pour les tours pair ou il faut test tout les jetons
+    public static List<Partie> getTouteCombiJeton(Partie partie){
+        List<Partie> listParties = new ArrayList<>();
+        Partie partieSimulee;
+        for(int i = 0; i < 16; i++ ){
+            partieSimulee = new Partie(partie);
+            int n = 2;
+            int f = i;
+            for(JetonAction j : partieSimulee.jetonsAction){
+                if(f % n != 0){
+                    f -= (f % n) ;
+                    j.retourner();
+                }
+                n = n*2;
+            }
+            partieSimulee.numeroTour++;
+            partieSimulee.totalActionsJouees = 0;
+            partieSimulee.district.reinitialiserFlagsRotation();
+            partieSimulee.joueurCourant = Joueur.ENQUETEUR;
+            listParties.add(partieSimulee);
+        }
+        return listParties ;
+    }
+
+    // ----- Util pour les tours pair ou il faut test tout les jetons
+
+    public static void simuleLanceJeton(Partie partie, int f){
+        int n = 2;
+        for(JetonAction j : partie.jetonsAction){
+            if(f % n != 0){
+                f -= (f % n) ;
+                j.retourner();
+            }
+            j.setJoue(false);
+            n = n*2;
+        }
     }
 }
