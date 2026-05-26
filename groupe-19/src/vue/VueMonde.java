@@ -385,8 +385,15 @@ public class VueMonde extends JPanel {
                 uiOverlay.revalidate();
                 uiOverlay.repaint();
                 // affiche qui joue
-                String notif = (gameplay.partie.joueurCourant == Joueur.ENQUETEUR) ? "Tour de l'Enquêteur" : "Tour de Jack";
-                showNotifMessage(notif, -1);
+                String nom;
+                if (gameplay.partie.joueurCourant == Joueur.ENQUETEUR) {
+                    nom = gameplay.partie.pseudoEnqueteur;
+                    if (gameplay.partie.niveauEnqueteur == -1) nom += " (Enquêteur)";
+                } else {
+                    nom = gameplay.partie.pseudoJack;
+                    if (gameplay.partie.niveauJack == -1) nom += " (Jack)";
+                }
+                showNotifMessage("C'est à " + nom, -1);
                 });
             notifTimer.setRepeats(false);
             notifTimer.start();
