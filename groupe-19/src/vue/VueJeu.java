@@ -473,129 +473,140 @@ public class VueJeu extends JPanel {
 
 
     private void onSettingsPressed() {
-        // Toggle : si le panneau est déjà ouvert, on ferme (même si jeu gelé)
-        if (panneauSettings != null && panneauSettings.isShowing()) {
-            fermerPanneauSettings();
-            return;
+            if (panneauSettings != null && panneauSettings.isShowing()) {
+                fermerPanneauSettings();
+                return;
+            }
+
+            if (gameplay.isGameFrozen()) return;
+
+            // --- GELER TOUTES LES INTERACTIONS ---
+            if (gameplay != null) gameplay.setGlobalFreeze(true);
+            vueMonde.jeuVerrouille = true;
+
+            JPanel glassPane = getFullscreenGlassPane();
+            glassPane.removeAll(); // Nettoyage de sécurité
+
+            // L'overlay prend 100% de l'écran. GridBagLayout permet de centrer le bloc central.
+            panneauSettings = new JPanel(new GridBagLayout()) {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    g.setColor(new Color(0, 0, 0, 230)); // Fond noir à 90% d'opacité
+                    g.fillRect(0, 0, getWidth(), getHeight());
+                }
+            };
+            panneauSettings.setOpaque(false);
+
+            // Fermeture si on clique sur la zone sombre en arrière-plan
+            panneauSettings.addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseClicked(java.awt.event.MouseEvent e) {
+                    fermerPanneauSettings();
+                }
+            });
+
+            // Conteneur vertical pour regrouper le logo et les boutons
+            JPanel panelCentral = new JPanel();
+            panelCentral.setOpaque(false);
+            panelCentral.setLayout(new BoxLayout(panelCentral, BoxLayout.Y_AXIS));
+            panelCentral.addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseClicked(java.awt.event.MouseEvent e) {
+                    e.consume(); // Empêche la fermeture accidentelle en cliquant sur le menu
+                }
+            });
+
+            // --- Construction du contenu ---
+            BufferedImage img = src.utils.utils.loadImage("Titre");
+            if (img != null) {
+                int w = Math.min(360, img.getWidth());
+                int h = Math.min(180, img.getHeight());
+                Image scaled = img.getScaledInstance(w, h, Image.SCALE_SMOOTH);
+                JLabel logo = new JLabel(new ImageIcon(scaled));
+                logo.setAlignmentX(Component.CENTER_ALIGNMENT);
+                panelCentral.add(logo);
+                panelCentral.add(Box.createVerticalStrut(16));
+            }
+
+            JButton continuer = makeSettingsButton("Continuer");
+            continuer.addActionListener(e -> fermerPanneauSettings());
+
+            JButton sauvegarder = makeSettingsButton("Sauvegarder");
+            sauvegarder.addActionListener(e -> {
+                try {
+                    SaveManager.save(gameplay.partie.toGameSave(), "save.dat");
+                    JOptionPane.showMessageDialog(this, "Partie sauvegardée avec succès !", "Info", JOptionPane.INFORMATION_MESSAGE);
+                } catch (Exception ex) {
+                    System.err.println("Save echoue: " + ex.getMessage());
+                }
+            });
+
+            JButton charger = makeSettingsButton("Charger");
+            charger.addActionListener(e -> {
+                try {
+                    GameSave saveFile = SaveManager.load("save.dat");
+                    gameplay.partie.fromGameSave(saveFile);
+                    gameplay.updatePlayerRectangles();
+                    refreshBoardComponents();
+                    fermerPanneauSettings();
+                } catch (Exception ex) {
+                    System.err.println("Load echoue: " + ex.getMessage());
+                }
+            });
+
+            JButton nvPartie = makeSettingsButton("Nouvelle partie");
+            nvPartie.addActionListener(e -> {
+                fermerPanneauSettings();
+                if (gameplay != null) gameplay.resetGame();
+            });
+
+            JButton retourMenu = makeSettingsButton("Retour menu");
+            retourMenu.addActionListener(e -> {
+                fermerPanneauSettings();
+                stopGameLoop();
+                gameplay.partie.kill();
+                menuPrincipal.resetBoutonsSurvoles();
+                parent.setContentPane(menuPrincipal);
+                parent.revalidate();
+                parent.repaint();
+            });
+
+            panelCentral.add(continuer);
+            panelCentral.add(Box.createVerticalStrut(12));
+            panelCentral.add(nvPartie);
+            panelCentral.add(Box.createVerticalStrut(12));
+            panelCentral.add(sauvegarder);
+            panelCentral.add(Box.createVerticalStrut(12));
+            panelCentral.add(charger);
+            panelCentral.add(Box.createVerticalStrut(12));
+            panelCentral.add(retourMenu);
+
+            // GridBagConstraints par défaut centre automatiquement le panelCentral dans les 100% d'espace
+            panneauSettings.add(panelCentral, new GridBagConstraints());
+
+            // Injection au centre du GlassPane (étirement 100% natif)
+            glassPane.add(panneauSettings, BorderLayout.CENTER);
+            glassPane.setVisible(true);
+            glassPane.revalidate();
+            glassPane.repaint();
         }
 
-        // Ouverture interdite si jeu déjà gelé pour une autre raison
-        if (gameplay.isGameFrozen()) return;
+        private void fermerPanneauSettings() {
+            if (panneauSettings != null) {
+                JPanel glassPane = getFullscreenGlassPane();
+                glassPane.remove(panneauSettings);
+                panneauSettings = null;
 
-        // --- GELER TOUTES LES INTERACTIONS ---
-        if (gameplay != null) gameplay.setGlobalFreeze(true);
-        vueMonde.jeuVerrouille = true;
+                if (glassPane.getComponentCount() == 0) glassPane.setVisible(false);
 
-        JPanel overlay = vueMonde.getUiOverlay();
+                // --- DÉGELER LE JEU ---
+                if (gameplay != null) gameplay.setGlobalFreeze(false);
+                vueMonde.jeuVerrouille = false;
 
-        panneauSettings = new JPanel(new BorderLayout()) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                g.setColor(new Color(0, 0, 0, 230));
-                g.fillRect(0, 0, getWidth(), getHeight());
+                glassPane.revalidate();
+                glassPane.repaint();
             }
-        };
-        panneauSettings.setOpaque(false);
-        panneauSettings.setBounds(0, 0, overlay.getWidth(), overlay.getHeight());
-        panneauSettings.setBorder(BorderFactory.createEmptyBorder(80, 120, 80, 120));
-
-        JPanel panelCentral = new JPanel();
-        panelCentral.setOpaque(false);
-        panelCentral.setLayout(new BoxLayout(panelCentral, BoxLayout.Y_AXIS));
-
-        BufferedImage img = src.utils.utils.loadImage("Titre");
-        if (img != null) {
-            int w = Math.min(360, img.getWidth());
-            int h = Math.min(180, img.getHeight());
-            Image scaled = img.getScaledInstance(w, h, Image.SCALE_SMOOTH);
-            JLabel logo = new JLabel(new ImageIcon(scaled));
-            logo.setAlignmentX(Component.CENTER_ALIGNMENT);
-            panelCentral.add(logo);
-            panelCentral.add(Box.createVerticalStrut(16));
         }
-
-        // ----- CONTINUER : seul bouton qui ferme et dégèle -----
-        JButton continuer = makeSettingsButton("Continuer");
-        continuer.addActionListener(e -> fermerPanneauSettings());
-
-        // ----- SAUVEGARDER : reste dans le panneau, ne ferme pas -----
-        JButton sauvegarder = makeSettingsButton("Sauvegarder");
-        sauvegarder.addActionListener(e -> {
-            try {
-                SaveManager.save(gameplay.partie.toGameSave(), "save.dat");
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Partie sauvegardée avec succès !",
-                        "Info",
-                        JOptionPane.INFORMATION_MESSAGE
-                );
-            } catch (Exception ex) {
-                System.err.println("Save echoue: " + ex.getMessage());
-            }
-        });
-
-        // ----- CHARGER : charge, puis ferme le panneau -----
-        JButton charger = makeSettingsButton("Charger");
-        charger.addActionListener(e -> {
-            try {
-                GameSave saveFile = SaveManager.load("save.dat");
-                gameplay.partie.fromGameSave(saveFile);
-                gameplay.updatePlayerRectangles();
-                refreshBoardComponents();
-                fermerPanneauSettings();   // ferme après chargement
-            } catch (Exception ex) {
-                System.err.println("Load echoue: " + ex.getMessage());
-            }
-        });
-
-        // ----- NOUVELLE PARTIE : ferme d'abord le panneau, puis reset -----
-        JButton nvPartie = makeSettingsButton("Nouvelle partie");
-        nvPartie.addActionListener(e -> {
-            fermerPanneauSettings();     // fermeture + dégel
-            if (gameplay != null) gameplay.resetGame();
-        });
-
-        // ----- RETOUR MENU : ferme d'abord le panneau, puis quitte -----
-        JButton retourMenu = makeSettingsButton("Retour menu");
-        retourMenu.addActionListener(e -> {
-            fermerPanneauSettings();     // fermeture + dégel
-            stopGameLoop();
-            gameplay.partie.kill();
-            menuPrincipal.resetBoutonsSurvoles();
-            parent.setContentPane(menuPrincipal);
-            parent.revalidate();
-            parent.repaint();
-        });
-
-        panelCentral.add(continuer);
-        panelCentral.add(Box.createVerticalStrut(12));
-        panelCentral.add(nvPartie);
-        panelCentral.add(Box.createVerticalStrut(12));
-        panelCentral.add(sauvegarder);
-        panelCentral.add(Box.createVerticalStrut(12));
-        panelCentral.add(charger);
-        panelCentral.add(Box.createVerticalStrut(12));
-        panelCentral.add(retourMenu);
-
-        panneauSettings.add(panelCentral, BorderLayout.CENTER);
-        overlay.add(panneauSettings, JLayeredPane.POPUP_LAYER);
-
-        overlay.revalidate();
-        vueMonde.repositionOverlayElements(overlay.getWidth(), overlay.getHeight());
-    }
-
-    private void fermerPanneauSettings() {
-        if (panneauSettings != null) {
-            vueMonde.getUiOverlay().remove(panneauSettings);
-            panneauSettings = null;
-            
-            // --- DÉGELER LE JEU ---
-            if (gameplay != null) gameplay.setGlobalFreeze(false);
-            vueMonde.jeuVerrouille = false;
-            
-            vueMonde.getUiOverlay().revalidate();
-        }
-    }
     
 
     public void stopGameLoop() {
@@ -628,21 +639,33 @@ public class VueJeu extends JPanel {
     }
 
     private void applyLetterbox() {
-        // VueMonde occupe tout le CENTER ; ses dimensions reflètent la zone disponible
-        int availW = vueMonde.getWidth();
-        int availH = vueMonde.getHeight();
-        vueMonde.applyLetterbox(availW, availH);
-        repositionnerPanneauRegles();
-    }
+            // VueMonde occupe tout le CENTER ; ses dimensions reflètent la zone disponible
+            int availW = vueMonde.getWidth();
+            int availH = vueMonde.getHeight();
+            vueMonde.applyLetterbox(availW, availH);
+            
+            // Plus besoin de recalcule manuel d'overlay ici ! Swing s'occupe de tout en tâche de fond.
+        }
 
     /**
-     * Repositionne le panneau de règles pour qu'il occupe tout l'overlay.
+     * Repositionne les overlays actifs pour qu'ils occupent toute la JFrame.
      */
-    private void repositionnerPanneauRegles() {
+/**
+     * Repositionne les overlays actifs pour qu'ils occupent toute la fenêtre.
+     */
+    private void repositionnerOverlays() {
+        JPanel glassPane = getFullscreenGlassPane();
+        
         if (panneauRegles != null) {
-            JPanel overlay = vueMonde.getUiOverlay();
-            panneauRegles.setBounds(0, 0, overlay.getWidth(), overlay.getHeight());
+            panneauRegles.setBounds(0, 0, glassPane.getWidth(), glassPane.getHeight());
             panneauRegles.revalidate();
+            panneauRegles.repaint();
+        }
+        
+        if (panneauSettings != null) {
+            panneauSettings.setBounds(0, 0, glassPane.getWidth(), glassPane.getHeight());
+            panneauSettings.revalidate();
+            panneauSettings.repaint();
         }
     }
 
@@ -725,70 +748,94 @@ public class VueJeu extends JPanel {
     // =========================================================================
 
     private void onReglesPressed() {
-        if (panneauRegles != null && panneauRegles.isShowing()) {
-            fermerPanneauRegles();
-            return;
-        }
-
-        // --- GELER LE JEU DE FAÇON PERMANENTE ---
-        if (gameplay != null) gameplay.setGlobalFreeze(true);
-        vueMonde.jeuVerrouille = true;
-
-        JPanel overlay = vueMonde.getUiOverlay();
-
-        panneauRegles = new JPanel(new BorderLayout()) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                g.setColor(new Color(0, 0, 0, 230));
-                g.fillRect(0, 0, getWidth(), getHeight());
-            }
-        };
-        panneauRegles.setOpaque(false);
-        panneauRegles.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
-
-        String html = VueReglesPanel.getHtml();
-
-        JLabel labelRegles = new JLabel(html);
-        labelRegles.setVerticalAlignment(SwingConstants.TOP);
-
-        JScrollPane scroll = new JScrollPane(labelRegles,
-                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scroll.setOpaque(false);
-        scroll.getViewport().setOpaque(false);
-        scroll.setBorder(BorderFactory.createLineBorder(new Color(200, 140, 0, 180), 2));
-        scroll.getVerticalScrollBar().setUnitIncrement(16);
-        panneauRegles.add(scroll, BorderLayout.CENTER);
-
-        java.awt.event.MouseAdapter fermetureListener = new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent e) {
+            if (panneauRegles != null && panneauRegles.isShowing()) {
                 fermerPanneauRegles();
+                return;
             }
-        };
-        panneauRegles.addMouseListener(fermetureListener);
-        scroll.addMouseListener(fermetureListener);
-        labelRegles.addMouseListener(fermetureListener);
 
-        overlay.add(panneauRegles, JLayeredPane.POPUP_LAYER);
-        repositionnerPanneauRegles();
-        overlay.revalidate();
+            if (gameplay.isGameFrozen()) return;
 
-        vueMonde.repositionOverlayElements(overlay.getWidth(), overlay.getHeight());
-        System.out.println("VueJeu — Panneau de regles affiche");
-    }
+            // --- GELER LE JEU ---
+            if (gameplay != null) gameplay.setGlobalFreeze(true);
+            vueMonde.jeuVerrouille = true;
 
-    private void fermerPanneauRegles() {
-        if (panneauRegles != null) {
-            vueMonde.getUiOverlay().remove(panneauRegles);
-            panneauRegles = null;
-            
-            // --- DÉGELER LE JEU ---
-            if (gameplay != null) gameplay.setGlobalFreeze(false);
-            vueMonde.jeuVerrouille = false;
-            
-            vueMonde.getUiOverlay().revalidate();
-            System.out.println("VueJeu — Panneau de regles ferme");
+            JPanel glassPane = getFullscreenGlassPane();
+            glassPane.removeAll(); // Nettyoage de sécurité
+
+            // L'overlay prend 100% de l'écran de manière native
+            panneauRegles = new JPanel(new BorderLayout()) {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    g.setColor(new Color(0, 0, 0, 230)); // Même opacité sombre
+                    g.fillRect(0, 0, getWidth(), getHeight());
+                }
+            };
+            panneauRegles.setOpaque(false);
+            // Marges intérieures pour un rendu élégant au milieu des 100% de l'écran
+            panneauRegles.setBorder(BorderFactory.createEmptyBorder(40, 60, 40, 60));
+
+            // Détecteur de clic global pour fermer les règles au clic arrière-plan
+            java.awt.event.MouseAdapter fermetureListener = new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseClicked(java.awt.event.MouseEvent e) {
+                    fermerPanneauRegles();
+                }
+            };
+            panneauRegles.addMouseListener(fermetureListener);
+
+            String html = VueReglesPanel.getHtml();
+            JLabel labelRegles = new JLabel(html);
+            labelRegles.setVerticalAlignment(SwingConstants.TOP);
+            labelRegles.addMouseListener(fermetureListener);
+
+            JScrollPane scroll = new JScrollPane(labelRegles,
+                    JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                    JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+            scroll.setOpaque(false);
+            scroll.getViewport().setOpaque(false);
+            scroll.setBorder(BorderFactory.createLineBorder(new Color(200, 140, 0, 180), 2));
+            scroll.getVerticalScrollBar().setUnitIncrement(16);
+            scroll.addMouseListener(fermetureListener);
+
+            panneauRegles.add(scroll, BorderLayout.CENTER);
+
+            // Injection au centre du GlassPane
+            glassPane.add(panneauRegles, BorderLayout.CENTER);
+            glassPane.setVisible(true);
+            glassPane.revalidate();
+            glassPane.repaint();
         }
+
+        private void fermerPanneauRegles() {
+            if (panneauRegles != null) {
+                JPanel glassPane = getFullscreenGlassPane();
+                glassPane.remove(panneauRegles);
+                panneauRegles = null;
+
+                if (glassPane.getComponentCount() == 0) glassPane.setVisible(false);
+
+                // --- DÉGELER LE JEU ---
+                if (gameplay != null) gameplay.setGlobalFreeze(false);
+                vueMonde.jeuVerrouille = false;
+
+                glassPane.revalidate();
+                glassPane.repaint();
+            }
+        }
+
+    /**
+     * Retourne le GlassPane de la JFrame parent, configuré avec un BorderLayout
+     * pour forcer l'overlay à occuper nativement 100% de la fenêtre.
+     */
+    private JPanel getFullscreenGlassPane() {
+        Component glass = parent.getGlassPane();
+        if (glass instanceof JPanel && ((JPanel) glass).getLayout() instanceof BorderLayout) {
+            return (JPanel) glass;
+        }
+        // Recréation d'un conteneur propre avec un gestionnaire de disposition BorderLayout
+        JPanel gp = new JPanel(new BorderLayout());
+        gp.setOpaque(false);
+        parent.setGlassPane(gp);
+        return gp;
     }
 }
