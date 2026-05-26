@@ -320,7 +320,7 @@ public class Gameplay {
         vue.updateDistrictView(partie.district);
         vue.updateJetons(partie.jetonsAction);
         vue.updateDetectivesView(partie.detectives);
-        vue.updateSabliers(partie.sabliersDeJack, 6);
+        vue.updateSabliers(partie.sabliersMinimumDeJack, 6);
     }
 
     public void activerCoursePoursuiteTest() {
@@ -440,7 +440,6 @@ public class Gameplay {
             case "action_echange"  -> startEchange();
             case "action_alibi"    -> {
                 executeAction.executePiocheAlibi(this);
-                vue.updateSabliers(partie.sabliersDeJack, 6);
             }
             default -> System.out.println("Action inconnue : " + actionName);
         }

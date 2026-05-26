@@ -29,7 +29,8 @@ public class Partie {
     private transient Runnable finPartieListener;
     private transient Runnable tourChangeListener;
 
-    public int sabliersDeJack;
+    public int sabliersDeJack = 0; // Le vrai nombre de sabliers de Jack
+    public int sabliersMinimumDeJack = 0; // Le nombre de sabliers de Jack qu'on peut afficher pour tout le monde
     private final int MAX_SABLIER = 6;
     public volatile Joueur gagnant = null;
     public boolean coursePoursuiteActive = false;
@@ -222,6 +223,7 @@ public class Partie {
         } else {
             jackVisibleCeTour = false;
             sabliersDeJack++;
+            sabliersMinimumDeJack++;
             if (!this.estSimulation) System.out.println("Jack n'est pas visible, il gagne le sablier du tour. Il est a " + sabliersDeJack + " sabliers");
             suspects.removeAll(personnagesVisibles);
         }
