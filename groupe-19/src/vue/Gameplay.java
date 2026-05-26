@@ -53,6 +53,7 @@ public class Gameplay {
                 if (partie.numeroTour >= 1 && partie.numeroTour <= 8) {
                     vue.switchTurnFace(partie.numeroTour - 2);
                 }
+                vue.getMonde().setJetonActif(-1); // On réinitialise le jeton action cliqué
             });
         });
         //Listener pour afficher dès que quelqu'un a gagné
@@ -429,7 +430,7 @@ public class Gameplay {
 
         //reset les states des actions echange et rotation au cas où le joueur change d'action.
         resetTileState();
-
+        vue.getMonde().setJetonActif(ballIndex);
         switch (actionName) {
             case "action_holmes"   -> demanderDeplacementEtDeplacer(Detective.Type.HOLMES);
             case "action_watson"   -> demanderDeplacementEtDeplacer(Detective.Type.WATSON);

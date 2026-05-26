@@ -396,6 +396,10 @@ public class VueMonde extends JPanel {
         }
     }
 
+    public void setJetonActif(int index) {
+        renduFeedback.setJetonActif(index);
+    }
+
     private void initSablierLabel() {
         JPanel turnIndicatorPanel = new JPanel() {
             @Override
