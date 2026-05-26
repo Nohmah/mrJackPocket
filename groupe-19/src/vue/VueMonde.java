@@ -680,8 +680,8 @@ public class VueMonde extends JPanel {
         if (settingsButton != null) {
             int w = settingsButton.getPreferredSize().width;
             int h = settingsButton.getPreferredSize().height;
-            int x = camW - w - 12;
-            int y = camH - h - 12;
+            int x = 12;
+            int y = 12;
             settingsButton.setBounds(x, y, w, h);
         }
         uiOverlay.revalidate();
