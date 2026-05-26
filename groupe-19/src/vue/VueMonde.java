@@ -333,7 +333,7 @@ public class VueMonde extends JPanel {
         thinkingPanel.add(thinkingLabel);
         uiOverlay.add(thinkingPanel);
         thinkingPanel.setPreferredSize(new Dimension(320, 28));
-        thinkingPanel.setBounds(10, 44, 220, 28);
+        thinkingPanel.setBounds(60, 44, 220, 28);
         thinkingPanel.setVisible(false);
     }
 
@@ -348,7 +348,7 @@ public class VueMonde extends JPanel {
         notifPanel.add(notifLabel);
         uiOverlay.add(notifPanel);
         notifPanel.setPreferredSize(new Dimension(320, 28));
-        notifPanel.setBounds(10, 10, 220, 28);  // en dessous du thinkingPanel (10 + 28 + 6)
+        notifPanel.setBounds(60, 10, 220, 28);
         notifPanel.setVisible(false);
     }
 
@@ -692,7 +692,7 @@ public class VueMonde extends JPanel {
 
     public void showThinking() {
         if (thinkingPanel == null) return;
-        thinkingPanel.setLocation(10, 44);
+        thinkingPanel.setLocation(60, 54);
         thinkingPanel.setVisible(true);
         uiOverlay.revalidate();
         uiOverlay.repaint();
@@ -734,13 +734,13 @@ public class VueMonde extends JPanel {
             int fontSize = camH / 45;
             thinkingLabel.setFont(new Font("SansSerif", Font.BOLD, fontSize));
             thinkingPanel.revalidate();
-            thinkingPanel.setBounds(10, 44, camW / 4, camH / 18);
+            thinkingPanel.setBounds(60, 54, camW / 4, camH / 18);
         }
         if (notifPanel != null) {
             int fontSize = camH / 45;
             notifLabel.setFont(new Font("SansSerif", Font.BOLD, fontSize));
             notifPanel.revalidate();
-            notifPanel.setBounds(10, 10, camW / 4, camH / 18);
+            notifPanel.setBounds(60, 10, camW / 4, camH / 18);
         }
         if (currentOverlayPanel != null) {
             currentOverlayPanel.setBounds(0, 0, camW, camH);
