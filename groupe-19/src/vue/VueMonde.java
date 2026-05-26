@@ -158,6 +158,8 @@ public class VueMonde extends JPanel {
     private JPanel sablierPanel   = null;
     private JPanel thinkingPanel  = null;
     private JLabel thinkingLabel  = null;
+    private JPanel notifPanel = null;
+    private JLabel notifLabel = null;
     private JLabel actionTooltip;
 
     private JButton settingsButton;
@@ -297,6 +299,7 @@ public class VueMonde extends JPanel {
         initSablierLabel();
         initSettings();
         initThinking();
+        initNotifPanel();
     }
 
     private void initSettings(){
@@ -331,6 +334,49 @@ public class VueMonde extends JPanel {
         thinkingPanel.setPreferredSize(new Dimension(320, 28));
         thinkingPanel.setBounds(10, 10, 220, 28);
         thinkingPanel.setVisible(false);
+    }
+
+    private void initNotifPanel() {
+        notifPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        notifPanel.setOpaque(true);
+        notifPanel.setBackground(new Color(0, 0, 0, 160));
+        notifPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200, 120), 1));
+        notifLabel = new JLabel("");
+        notifLabel.setForeground(Color.WHITE);
+        notifLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+        notifPanel.add(notifLabel);
+        uiOverlay.add(notifPanel);
+        notifPanel.setPreferredSize(new Dimension(320, 28));
+        notifPanel.setBounds(10, 44, 220, 28);  // en dessous du thinkingPanel (10 + 28 + 6)
+        notifPanel.setVisible(false);
+    }
+
+    /**
+     * Affiche un message temporaire
+     */
+    public void showNotifMessage(String text, int dureeMs) {
+        if (notifPanel == null || notifLabel == null) return;
+
+        notifLabel.setText(text);
+        notifPanel.setVisible(true);
+        uiOverlay.revalidate();
+        uiOverlay.repaint();
+
+        if (dureeMs > 0) {
+            new Timer(dureeMs, e -> {
+                notifPanel.setVisible(false);
+                uiOverlay.revalidate();
+                uiOverlay.repaint();
+            }).start();
+        }
+    }
+
+    public void hideNotifMessage() {
+        if (notifPanel != null) {
+            notifPanel.setVisible(false);
+            uiOverlay.revalidate();
+            uiOverlay.repaint();
+        }
     }
 
     private void initSablierLabel() {
@@ -672,6 +718,12 @@ public class VueMonde extends JPanel {
             thinkingLabel.setFont(new Font("SansSerif", Font.BOLD, fontSize));
             thinkingPanel.revalidate();
             thinkingPanel.setBounds(10, 10, camW / 4, camH / 18);
+        }
+        if (notifPanel != null) {
+            int fontSize = camH / 45;
+            notifLabel.setFont(new Font("SansSerif", Font.BOLD, fontSize));
+            notifPanel.revalidate();
+            notifPanel.setBounds(10, 44, camW / 4, camH / 18);
         }
         if (currentOverlayPanel != null) {
             currentOverlayPanel.setBounds(0, 0, camW, camH);

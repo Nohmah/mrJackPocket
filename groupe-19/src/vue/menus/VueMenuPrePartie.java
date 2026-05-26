@@ -84,11 +84,13 @@ public class VueMenuPrePartie extends JPanel {
                         joueurChoisi = null;
                     } else if (iaEnqueteur && !iaJack) {
                         joueurChoisi = Joueur.JACK;
-                    } else {
+                    } else if (!iaEnqueteur && iaJack){
                         joueurChoisi = Joueur.ENQUETEUR;
+                    } else {
+                        joueurChoisi = null;
                     }
-                    String pseudoEnqueteur = pseudoGaucheValide ? pseudoGauche : "Enquêteur";
-                    String pseudoJack = pseudoDroiteValide ? pseudoDroite : "Mr. Jack";
+                    String pseudoEnqueteur = (pseudoGaucheValide && !iaEnqueteur) ? pseudoGauche : "Enquêteur";
+                    String pseudoJack = (pseudoDroiteValide && !iaJack) ? pseudoDroite : "Mr. Jack";
                     Partie partie = new Partie(joueurChoisi, niveauJack, niveauEnqueteur,
                             pseudoEnqueteur, pseudoJack);
                     VueJeu jeu = new VueJeu(parent, menuPrincipal, partie);
