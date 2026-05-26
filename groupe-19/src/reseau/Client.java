@@ -254,7 +254,8 @@ public class Client {
         this.vueJeu.getGameplay().animationAppelTemoinReseau(partieClient);
         if(partieClient.gagnant != null){
             this.enJeu = false;
-            this.vueJeu = null;
+            this.vueJeu.stopGameLoop();
+            this.vueJeu =  null;
             javax.swing.Timer timer = new javax.swing.Timer(5000, e->{
                 this.vueLobby.revenirAuLobby();
             });
