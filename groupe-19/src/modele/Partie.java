@@ -296,6 +296,8 @@ public class Partie {
             joueurCourant = Joueur.JACK;
             if (!this.estSimulation) System.out.println("Le joueur est Jack");
         }
+        if (joueurCourant == Joueur.ENQUETEUR) fireTourEnqueteurEvent();
+        else fireTourJackEvent();
         fireTourChangeEvent();
     }
 

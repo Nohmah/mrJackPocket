@@ -24,7 +24,8 @@ public class VueMonde extends JPanel {
 
     /** true si les interactions sont verrouillées (animation en cours, etc.) */
     public boolean jeuVerrouille = false;
-
+    private Timer notifTimer = null;
+    private boolean notifEnCours = false;
     /**
      * Référence vers le médiateur Gameplay, injectée après construction via
      * {@link #setGameplay(Gameplay)}. Utilisée pour déléguer les changements
@@ -332,7 +333,7 @@ public class VueMonde extends JPanel {
         thinkingPanel.add(thinkingLabel);
         uiOverlay.add(thinkingPanel);
         thinkingPanel.setPreferredSize(new Dimension(320, 28));
-        thinkingPanel.setBounds(10, 10, 220, 28);
+        thinkingPanel.setBounds(10, 44, 220, 28);
         thinkingPanel.setVisible(false);
     }
 
@@ -347,15 +348,24 @@ public class VueMonde extends JPanel {
         notifPanel.add(notifLabel);
         uiOverlay.add(notifPanel);
         notifPanel.setPreferredSize(new Dimension(320, 28));
-        notifPanel.setBounds(10, 44, 220, 28);  // en dessous du thinkingPanel (10 + 28 + 6)
+        notifPanel.setBounds(10, 10, 220, 28);  // en dessous du thinkingPanel (10 + 28 + 6)
         notifPanel.setVisible(false);
     }
 
     /**
-     * Affiche un message temporaire
+     * Affiche un message temporaire pour un certain temps où infini
      */
     public void showNotifMessage(String text, int dureeMs) {
         if (notifPanel == null || notifLabel == null) return;
+
+        // Si il y a un affichage sous un timer (jack est visible/jack n'est pas visible) on refuse
+        if (notifEnCours) {
+            return;
+        }
+
+        if (notifTimer != null && notifTimer.isRunning()) {
+            notifTimer.stop();
+        }
 
         notifLabel.setText(text);
         notifPanel.setVisible(true);
@@ -363,11 +373,18 @@ public class VueMonde extends JPanel {
         uiOverlay.repaint();
 
         if (dureeMs > 0) {
-            new Timer(dureeMs, e -> {
+            notifEnCours = true;
+            notifTimer = new Timer(dureeMs, e -> {
+                notifEnCours = false;
                 notifPanel.setVisible(false);
                 uiOverlay.revalidate();
                 uiOverlay.repaint();
-            }).start();
+                // affiche qui joue
+                String notif = (gameplay.partie.joueurCourant == Joueur.ENQUETEUR) ? "Tour de l'Enquêteur" : "Tour de Jack";
+                showNotifMessage(notif, -1);
+                });
+            notifTimer.setRepeats(false);
+            notifTimer.start();
         }
     }
 
@@ -675,7 +692,7 @@ public class VueMonde extends JPanel {
 
     public void showThinking() {
         if (thinkingPanel == null) return;
-        thinkingPanel.setLocation(10, 10);
+        thinkingPanel.setLocation(10, 44);
         thinkingPanel.setVisible(true);
         uiOverlay.revalidate();
         uiOverlay.repaint();
@@ -717,13 +734,13 @@ public class VueMonde extends JPanel {
             int fontSize = camH / 45;
             thinkingLabel.setFont(new Font("SansSerif", Font.BOLD, fontSize));
             thinkingPanel.revalidate();
-            thinkingPanel.setBounds(10, 10, camW / 4, camH / 18);
+            thinkingPanel.setBounds(10, 44, camW / 4, camH / 18);
         }
         if (notifPanel != null) {
             int fontSize = camH / 45;
             notifLabel.setFont(new Font("SansSerif", Font.BOLD, fontSize));
             notifPanel.revalidate();
-            notifPanel.setBounds(10, 44, camW / 4, camH / 18);
+            notifPanel.setBounds(10, 10, camW / 4, camH / 18);
         }
         if (currentOverlayPanel != null) {
             currentOverlayPanel.setBounds(0, 0, camW, camH);

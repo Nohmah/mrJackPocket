@@ -75,14 +75,19 @@ public class Gameplay {
             SwingUtilities.invokeLater(() -> {
             });
         });
-        // Listener pour l'affichage de la carte alibi piochée
+        // Listener pour l'affichage du tour de l'enquêteur
         partie.setTourEnqueteurListener(() -> {
             SwingUtilities.invokeLater(() -> {
+                vue.getMonde().showNotifMessage("Tour de l'Enquêteur", -1);
+                System.out.println("vue.getMonde().showNotifMessage(\"Tour de l'Enquêteur\", -1);");
             });
         });
-        // Listener pour l'affichage de la carte alibi piochée
+
+        // Listener pour l'affichage du tour de Jack
         partie.setTourJackListener(() -> {
             SwingUtilities.invokeLater(() -> {
+                vue.getMonde().showNotifMessage("Tour de Jack", -1);
+                System.out.println("vue.getMonde().showNotifMessage(\"Tour de Jack\", -1);");
             });
         });
 
@@ -104,6 +109,8 @@ public class Gameplay {
         partie.setPreAppelTemoinListener(() -> {
             if (partie.isPartieTerminee()) return;
 
+            // Supprimer l'affichage "tour de l'enqueteur/tour de Jack"
+            vue.getMonde().hideNotifMessage();
             // Geler les interactions utilisateur pendant l'assombrissement
             setGlobalFreeze(true);
             System.out.println("Appel à témoin dans 3 secondes...");
@@ -119,11 +126,11 @@ public class Gameplay {
 
                     // Dégeler pour permettre l'exécution des méthodes internes
                     setGlobalFreeze(false);
+                    partie.appelATemoin();
                     String resultat = partie.jackVisibleCeTour
                             ? "Jack est visible !"
                             : "Jack n'est pas visible !";
                     vue.getMonde().showNotifMessage(resultat, 2500);
-                    partie.appelATemoin();
                     if (!partie.isPartieTerminee()) {
                         partie.tourSuivant();
                     }
@@ -284,7 +291,11 @@ public class Gameplay {
                     || (partie.joueurCourant == Joueur.ENQUETEUR && partie.niveauEnqueteur != -1);
         controler.setActivePlayerType(isIa ? "AI" : "HUMAN");
         vue.updateTurnIndicator(partie.numeroTour);
-
+        if (partie.joueurCourant == Joueur.ENQUETEUR) {
+            vue.getMonde().showNotifMessage("Tour de l'Enquêteur", -1);
+        } else {
+            vue.getMonde().showNotifMessage("Tour de Jack", -1);
+        }
         if (isIa) {
             if (!partie.isFreeze()) {
                 SwingUtilities.invokeLater(controler::joueIa);
