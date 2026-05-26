@@ -73,19 +73,16 @@ public class Gameplay {
         // Listener pour l'affichage de la carte alibi piochée
         partie.setAppelTemoinListener(() -> {
             SwingUtilities.invokeLater(() -> {
-                vue.getMonde().showCenterMessage("Appel à témoin !");
             });
         });
         // Listener pour l'affichage de la carte alibi piochée
         partie.setTourEnqueteurListener(() -> {
             SwingUtilities.invokeLater(() -> {
-                vue.getMonde().showCenterMessage("Tour de l'enquêteur");
             });
         });
         // Listener pour l'affichage de la carte alibi piochée
         partie.setTourJackListener(() -> {
             SwingUtilities.invokeLater(() -> {
-                vue.getMonde().showCenterMessage("Tour de Jack");
             });
         });
 
@@ -97,7 +94,6 @@ public class Gameplay {
             afficherIdentiteJack(() -> {
 
                 SwingUtilities.invokeLater(() -> {
-                    vue.getMonde().showCenterMessage("Tour de l'enquêteur");
                 });
 
             });
@@ -346,7 +342,6 @@ public class Gameplay {
         afficherIdentiteJack(() -> {
 
             SwingUtilities.invokeLater(() -> {
-                vue.getMonde().showCenterMessage("Tour de l'enquêteur");
             });
 
         });

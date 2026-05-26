@@ -315,7 +315,7 @@ public class VueJeu extends JPanel {
     }
 
     private JButton makeRetourButton() {
-        JButton btn = makeStripButton("Retour", "Retour.png");
+        JButton btn = makeStripButton("Retour au Menu", "Retour.png");
         btn.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
             stopGameLoop();
@@ -329,7 +329,7 @@ public class VueJeu extends JPanel {
     }
 
     private JButton makeNewGameButton() {
-        JButton btn = makeStripButton("Nv. Partie", "Niv.Partie.png");
+        JButton btn = makeStripButton("Nouvelle Partie", "Niv.Partie.png");
         btn.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
             if (gameplay != null) gameplay.resetGame();
@@ -338,7 +338,7 @@ public class VueJeu extends JPanel {
     }
 
     private JButton makeIaButton() {
-        JButton btn = makeStripButton("IA", "IA.png");
+        JButton btn = makeStripButton("L'IA prend ta place", "IA.png");
         btn.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
             if (gameplay != null) gameplay.partie.lanceIa();
@@ -347,7 +347,7 @@ public class VueJeu extends JPanel {
     }
 
     private JButton makeAnnulerButton() {
-        JButton btn = makeStripButton("Annuler", "Annuler.png");
+        JButton btn = makeStripButton("Annuler un coup", "Annuler.png");
         btn.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
             if (gameplay != null) {
@@ -359,7 +359,7 @@ public class VueJeu extends JPanel {
     }
 
     private JButton makeVisibleButton() {
-        JButton btn = makeStripButton("Visible", "Visible.png");
+        JButton btn = makeStripButton("Les suspects visibles par les détéctives", "Visible.png");
         btn.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
             if (gameplay != null) gameplay.afficherVisibiliteTemporaire();
@@ -368,7 +368,7 @@ public class VueJeu extends JPanel {
     }
 
     private JButton makeRefaireButton() {
-        JButton btn = makeStripButton("Refaire", "Refaire.png");
+        JButton btn = makeStripButton("Refaire un coup Annuler", "Refaire.png");
         btn.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
             if (gameplay != null) {
@@ -412,7 +412,7 @@ public class VueJeu extends JPanel {
     }
 
     private JButton makeReglesButton() {
-        JButton btn = makeStripButton("Regles", "ReglesB.png");
+        JButton btn = makeStripButton("Règles du jeu", "ReglesB.png");
         btn.addActionListener(e -> {
             if (vueMonde.jeuVerrouille) return;
             onReglesPressed();
