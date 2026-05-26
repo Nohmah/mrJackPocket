@@ -25,6 +25,13 @@ public class VueMonde extends JPanel {
     /** true si les interactions sont verrouillées (animation en cours, etc.) */
     public boolean jeuVerrouille = false;
 
+    /**
+     * Référence vers le médiateur Gameplay, injectée après construction via
+     * {@link #setGameplay(Gameplay)}. Utilisée pour déléguer les changements
+     * d'état de verrou à {@code gameplay.setGlobalFreeze(...)}.
+     */
+    private Gameplay gameplay;
+
     // =========================================================================
     // Constantes monde (référencées statiquement depuis l'extérieur)
     // =========================================================================
@@ -59,7 +66,7 @@ public class VueMonde extends JPanel {
             uiOverlay.remove(currentOverlayPanel);
             currentOverlayPanel = null;
         }
-        jeuVerrouille = true;
+        if (gameplay != null) gameplay.setGlobalFreeze(true); else jeuVerrouille = true;
         Camera.AddSprite(nomImage);
         BufferedImage img = Camera.GetSpriteImage(nomImage);
 
@@ -121,7 +128,7 @@ public class VueMonde extends JPanel {
         new javax.swing.Timer(dureeMs, e -> {
             uiOverlay.remove(overlayPanel);
             if (currentOverlayPanel == overlayPanel) currentOverlayPanel = null;
-            jeuVerrouille = false;
+            if (gameplay != null) gameplay.setGlobalFreeze(false); else jeuVerrouille = false;
             uiOverlay.revalidate();
             uiOverlay.repaint();
         }).start();
@@ -219,6 +226,18 @@ public class VueMonde extends JPanel {
 
         initTileComponents();
         initUIOverlay();
+    }
+
+    /**
+     * Injecte la référence vers le médiateur Gameplay.
+     * Doit être appelé depuis VueJeu immédiatement après la création de Gameplay,
+     * afin que VueMonde puisse déléguer les changements de verrou via
+     * {@code gameplay.setGlobalFreeze(...)}.
+     *
+     * @param gameplay le médiateur Gameplay
+     */
+    public void setGameplay(Gameplay gameplay) {
+        this.gameplay = gameplay;
     }
 
     // =========================================================================
