@@ -315,9 +315,17 @@ public class Client {
         informerServeur(JOKER,contenue);
     }
 
-    public void clientDeplaceDetective(Object contenue){
-        informerServeur(DETECTIVE,contenue);
+    public void clientDeplaceHolmes(Object contenue){
+        informerServeur(HOLMES,contenue);
     }
+    public void clientDeplaceWatson(Object contenue){
+        informerServeur(WATSON,contenue);
+    }
+    public void clientDeplaceToby(Object contenue){
+        informerServeur(TOBY,contenue);
+    }
+
+
 
     public void clientTourneQuartier(Object contenue){
         informerServeur(ROTATION,contenue);

@@ -11,7 +11,9 @@ public enum CommunicationLobbyCS {
     // JEU
     PIOCHE_ALIBI,
     JOKER,
-    DETECTIVE,
+    HOLMES,
+    WATSON,
+    TOBY,
     ROTATION,
     ECHANGE
 }

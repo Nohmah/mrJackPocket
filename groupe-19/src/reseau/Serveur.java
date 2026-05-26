@@ -302,46 +302,59 @@ public class Serveur {
         }
     }
 
-    //TODO  REVOIR LA SECURITER
     private void gestionCommunicationVersClientJeu(MessageServeur messageServeur){
         Object[] contenueRecu = (Object[]) messageServeur.getContenue();
         CommunicationLobbyCS codeClient = messageServeur.getCodeClient();
-        boolean estDernierAction = (partieServeur.totalActionsJouees == 3);
+
         switch (codeClient){
-            case PIOCHE_ALIBI :
-                //if(jetonActionEstJoue(Action.ALIBI)) {
+            case PIOCHE_ALIBI:
+                if(!jetonActionEstJoue(Action.ALIBI)) {
                     receptionActionPioche();
-                //}else{
-                 //   informerClients(ACTION_IMPOSSIBLE,"Système",null);
-                //}
+                }else{
+                    informerClients(ACTION_IMPOSSIBLE,"Système",null);
+                }
                 break;
             case JOKER:
-                //if(!jetonActionEstJoue(Action.JOKER)) {
+                if(!jetonActionEstJoue(Action.JOKER)) {
                     receptionActionJoker(contenueRecu);
-                //}else{
-                //    informerClients(ACTION_IMPOSSIBLE,"Système",null);
-                //}
+                }else{
+                    informerClients(ACTION_IMPOSSIBLE,"Système",null);
+                }
                 break;
-            case DETECTIVE:
-                //if(!jetonActionEstJoue(Action.WATSON) && !jetonActionEstJoue(Action.HOLMES) && !jetonActionEstJoue(Action.TOBY) ) {
+            case HOLMES:
+                if(!jetonActionEstJoue(Action.HOLMES)) {
                     receptionActionDetective(contenueRecu);
-                //}else{
-                 //   informerClients(ACTION_IMPOSSIBLE,"Système",null);
-                //}
+                }else{
+                    informerClients(ACTION_IMPOSSIBLE,"Système",null);
+                }
+                break;
+            case WATSON:
+                if(!jetonActionEstJoue(Action.WATSON)) {
+                    receptionActionDetective(contenueRecu);
+                }else{
+                    informerClients(ACTION_IMPOSSIBLE,"Système",null);
+                }
+                break;
+            case TOBY:
+                if(!jetonActionEstJoue(Action.TOBY)) {
+                    receptionActionDetective(contenueRecu);
+                }else{
+                    informerClients(ACTION_IMPOSSIBLE,"Système",null);
+                }
                 break;
             case ROTATION:
-                //if(!jetonActionEstJoue(Action.ROTATION)) {
+                if(!jetonActionEstJoue(Action.ROTATION)) {
                     receptionActionQuartier(codeClient, contenueRecu);
-                //}else{
-                 //   informerClients(ACTION_IMPOSSIBLE,"Système",null);
-                //}
+                }else{
+                    informerClients(ACTION_IMPOSSIBLE,"Système",null);
+                }
                 break;
             case ECHANGE:
-                //if(!jetonActionEstJoue(Action.ECHANGE)) {
+                if(!jetonActionEstJoue(Action.ECHANGE)) {
                     receptionActionQuartier(codeClient, contenueRecu);
-                //}else{
-                 //   informerClients(ACTION_IMPOSSIBLE,"Système",null);
-                //}
+                }else{
+                    informerClients(ACTION_IMPOSSIBLE,"Système",null);
+                }
                 break;
             default:
                 System.out.println("[SERVEUR] gestionCommunicationVersClientJeu() a rencontré une erreur dans le switch avec le code : " + codeClient + " !");
@@ -349,7 +362,9 @@ public class Serveur {
 
         PartieSnapshot partieEnCours = PartieSaveMapper.toSnapshot(partieServeur);
         informerClients(NOUVEAU_PLATEAU,"Systeme", partieEnCours);
-        if(estDernierAction){
+
+        //boolean estDernierAction = (partieServeur.totalActionsJouees == 0);
+        if(partieServeur.totalActionsJouees == 4){
             partieServeur.appelATemoin();
             if(!partieServeur.isPartieTerminee()) partieServeur.tourSuivant();
             partieEnCours = PartieSaveMapper.toSnapshot(partieServeur);
@@ -363,12 +378,17 @@ public class Serveur {
     }
 
     private boolean jetonActionEstJoue(Action cible){
+        int compteurJetons = 0;
+        int compteurJouees = 0;
         for(JetonAction jetonDisponible : this.partieServeur.jetonsAction){
             if(jetonDisponible.getActionVisible() == cible){
-                return jetonDisponible.isJoue();
+                compteurJetons++;
+            }
+            if(jetonDisponible.isJoue() && jetonDisponible.getActionVisible() == cible){
+                compteurJouees++;
             }
         }
-        return false;
+        return compteurJetons==compteurJouees;
     }
 
     private void receptionActionPioche(){
