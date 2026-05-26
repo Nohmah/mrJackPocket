@@ -107,7 +107,7 @@ public class Gameplay {
             // Geler les interactions utilisateur pendant l'assombrissement
             setGlobalFreeze(true);
             System.out.println("Appel à témoin dans 3 secondes...");
-
+            vue.getMonde().showNotifMessage("Appel à témoin", -1);
             boolean[][] masque = partie.getMasqueTuilesVisibles();
             vue.getMonde().appliquerAssombrissement(masque);
             refreshView();
@@ -119,7 +119,10 @@ public class Gameplay {
 
                     // Dégeler pour permettre l'exécution des méthodes internes
                     setGlobalFreeze(false);
-
+                    String resultat = partie.jackVisibleCeTour
+                            ? "Jack est visible !"
+                            : "Jack n'est pas visible !";
+                    vue.getMonde().showNotifMessage(resultat, 2500);
                     partie.appelATemoin();
                     if (!partie.isPartieTerminee()) {
                         partie.tourSuivant();

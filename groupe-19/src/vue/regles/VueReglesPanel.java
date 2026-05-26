@@ -85,10 +85,10 @@ public class VueReglesPanel {
                 + "(s'il est dans ligne de mire d'au moins un des 3 détectives) :</p>"
 
                 + "<ul>"
-                + "<li><b>Jack visible :</b> Les tuiles qui contiennent les suspects non visibles par les 3 détectives sont retournés sur leur face vide. (Ils ne peuvent pas être Jack) "
+                + "<li><b>Jack visible :</b> Les tuiles qui contiennent les suspects non visibles par les 3 détectives sont retournés sur leur face vide. (Ils ne peuvent pas être Jack.) "
                 + "L'Enquêteur prend le jeton Temps du tour, privant Jack du sablier du tour.</li>"
 
-                + "<li><b>Jack invisible :</b> Les tuiles qui contiennent les suspects visibles par au moins 1 détective sont retournés. (Ils ne peuvent pas être Jack) "
+                + "<li><b>Jack invisible :</b> Les tuiles qui contiennent les suspects visibles par au moins 1 détective sont retournés. (Ils ne peuvent pas être Jack.) "
                 + "Jack prend le jeton Temps du tour <i>(côté sablier)</i>.</li>"
                 + "<h2 style='color:#FFA500; margin-top:10px; margin-bottom:4px;'>"
                 + "Conditions de victoire</h2>"
