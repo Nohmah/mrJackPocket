@@ -78,16 +78,18 @@ public class Gameplay {
         // Listener pour l'affichage du tour de l'enquêteur
         partie.setTourEnqueteurListener(() -> {
             SwingUtilities.invokeLater(() -> {
-                vue.getMonde().showNotifMessage("Tour de l'Enquêteur", -1);
-                System.out.println("vue.getMonde().showNotifMessage(\"Tour de l'Enquêteur\", -1);");
+                String nom = partie.pseudoEnqueteur;
+                if (partie.niveauEnqueteur == -1){ nom += " (Enquêteur)";}
+                vue.getMonde().showNotifMessage("C'est à " + nom, -1);
             });
         });
 
         // Listener pour l'affichage du tour de Jack
         partie.setTourJackListener(() -> {
             SwingUtilities.invokeLater(() -> {
-                vue.getMonde().showNotifMessage("Tour de Jack", -1);
-                System.out.println("vue.getMonde().showNotifMessage(\"Tour de Jack\", -1);");
+                String nom = partie.pseudoJack;
+                if (partie.niveauJack == -1){ nom += " (Jack)";}
+                vue.getMonde().showNotifMessage("C'est à " + nom, -1);
             });
         });
 
@@ -290,12 +292,16 @@ public class Gameplay {
         boolean isIa = (partie.joueurCourant == Joueur.JACK && partie.niveauJack != -1)
                     || (partie.joueurCourant == Joueur.ENQUETEUR && partie.niveauEnqueteur != -1);
         controler.setActivePlayerType(isIa ? "AI" : "HUMAN");
-        vue.updateTurnIndicator(partie.numeroTour);
         if (partie.joueurCourant == Joueur.ENQUETEUR) {
-            vue.getMonde().showNotifMessage("Tour de l'Enquêteur", -1);
+            String nom = partie.pseudoEnqueteur;
+            if (partie.niveauEnqueteur == -1){ nom += " (Enquêteur)";}
+            vue.getMonde().showNotifMessage("C'est à " + nom, -1);
         } else {
-            vue.getMonde().showNotifMessage("Tour de Jack", -1);
+            String nom = partie.pseudoJack;
+            if (partie.niveauJack == -1){ nom += " (Jack)";}
+            vue.getMonde().showNotifMessage("C'est à " + nom, -1);
         }
+        vue.updateTurnIndicator(partie.numeroTour);
         if (isIa) {
             if (!partie.isFreeze()) {
                 SwingUtilities.invokeLater(controler::joueIa);
