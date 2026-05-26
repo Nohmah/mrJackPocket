@@ -7,6 +7,7 @@ import java.io.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import static src.reseau.CommunicationLobbyCS.QUITTE;
 import static src.reseau.CommunicationLobbySC.*;
 
 public class Serveur {
@@ -37,6 +38,8 @@ public class Serveur {
 
     private boolean enJeu = false;
     private Partie partieServeur;
+
+    private boolean fermetureServeur = false;
 
     public Serveur() {
         receptionRequeteClient = new LinkedBlockingQueue<>();
@@ -91,7 +94,6 @@ public class Serveur {
             this.inC1 = new ObjectInputStream(clientSocket1.getInputStream());
             this.outC1 =  new ObjectOutputStream(clientSocket1.getOutputStream());
         } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -100,7 +102,6 @@ public class Serveur {
             this.inC2 = new ObjectInputStream(clientSocket2.getInputStream());
             this.outC2 =  new ObjectOutputStream(clientSocket2.getOutputStream());
         } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -108,7 +109,6 @@ public class Serveur {
         try {
             this.clientSocket1 = this.serveurSocket.accept();
         } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -116,7 +116,6 @@ public class Serveur {
         try {
             this.tempConnection = this.serveurSocket.accept();
         } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -124,7 +123,7 @@ public class Serveur {
         try {
             clientSocket.close();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.out.println("[SERVEUR] fermerSocketClient, la fermeture du Socket Client");
         }
     }
 
@@ -137,8 +136,10 @@ public class Serveur {
                     this.receptionRequeteClient.put(messageRecu);
 
                 } catch ( IOException e) {
-                    System.out.println("[SERVEUR] lireRequeteClient1(), l'hôte s'est déconnecté sans prévenir, fermeture du serveur !");
-                    fermerServeur();
+                    if (!fermetureServeur){
+                        System.out.println("[SERVEUR] lireRequeteClient1(), l'hôte s'est déconnecté sans prévenir, fermeture du serveur !");
+                        fermerServeur();
+                    }
                     break;
                 } catch (ClassNotFoundException e){
                     System.out.println("[SERVEUR] lireRequeteClient1(), le cast n'a pas fonctionnait correctement !");
@@ -161,7 +162,21 @@ public class Serveur {
                     this.receptionRequeteClient.put(messageRecu);
 
                 } catch (IOException e) {
+                    if (fermetureServeur){break;}
 
+                    if(this.enJeu){
+                        MessageServeur messageHote = new MessageServeur(DECONNEXION,this.pseudoClient2,this.pseudoClient2 + " s'est déconnecté de la partie !");
+                        try {
+                            outC1.writeObject(messageHote);
+                        } catch (IOException ex) {
+                            break;
+                        }
+                        this.joueur2pret = false;
+                        this.joueur1pret = false;
+                        this.pseudoClient2 = null;
+                        this.enJeu = false;
+                        fermerClient2();
+                    }
                     if(this.pseudoClient2 != null){
                         this.pseudoClient2 = null;
                         informerClients(MISE_A_JOUR_INFORMATIONS_JOUEURS, "Système", "Le Joueur 2 a crashé/quitté le jeu.");
@@ -216,6 +231,7 @@ public class Serveur {
                 receptionBoutonPret(messageServeur);
                 break;
             case QUITTE:
+                System.out.println("[DEBUG SERVEUR] gestionCommunicationVersClientLobby -> case QUITTE !");
                 receptionQuitte(messageServeur);
                 break;
             default:
@@ -224,15 +240,18 @@ public class Serveur {
     }
 
     private void receptionQuitte(MessageServeur messageServeur) {
+        this.enJeu = false;
         if((messageServeur.getPseudo()).equals(this.pseudoClient2)) {
+            System.out.println("[DEBUG SERVEUR] receptionQuitte -> if = "+(messageServeur.getPseudo()).equals(this.pseudoClient2)+ " dans le if ! ");
             informerClients(MISE_A_JOUR_INFORMATIONS_JOUEURS, messageServeur.getPseudo(), pseudoClient2 + " vient de quitter le lobby !");
             this.pseudoClient2 = null;
             this.joueur2pret = false;
             System.out.println("[SERVEUR] Joueur 2 a quitté le lobby !");
         }else{
-            System.out.println("[SERVEUR] Joueur 1 a quitté le lobby, donc fermeture du serveur!");
+            System.out.println("[DEBUG SERVEUR] receptionQuitte -> if = "+(messageServeur.getPseudo()).equals(this.pseudoClient2)+ " dans le else ! ");
             informerClients(HOTE_QUITTE,"","");
             fermerServeur();
+            this.fermetureServeur = true;
         }
     }
 
@@ -291,6 +310,10 @@ public class Serveur {
     }
 
     private void gestionEcoute(MessageServeur messageServeur){
+        if(messageServeur.getCodeClient() == QUITTE){
+            gestionCommunicationVersClientJeu(messageServeur);
+        }
+
         if(partieServeur.joueurCourant == choixJ1){
             if(messageServeur.getPseudo().equals(this.pseudoClient1)){
                 gestionCommunicationVersClientJeu(messageServeur);
@@ -356,6 +379,9 @@ public class Serveur {
                     informerClients(ACTION_IMPOSSIBLE,"Système",null);
                 }
                 break;
+            case QUITTE:
+                receptionRequeteQUITTE(messageServeur);
+                return;
             default:
                 System.out.println("[SERVEUR] gestionCommunicationVersClientJeu() a rencontré une erreur dans le switch avec le code : " + codeClient + " !");
         }
@@ -363,7 +389,6 @@ public class Serveur {
         PartieSnapshot partieEnCours = PartieSaveMapper.toSnapshot(partieServeur);
         informerClients(NOUVEAU_PLATEAU,"Systeme", partieEnCours);
 
-        //boolean estDernierAction = (partieServeur.totalActionsJouees == 0);
         if(partieServeur.totalActionsJouees == 4){
             partieServeur.appelATemoin();
             if(!partieServeur.isPartieTerminee()) partieServeur.tourSuivant();
@@ -434,6 +459,20 @@ public class Serveur {
 
     }
 
+    private void receptionRequeteQUITTE(MessageServeur messageServeur){
+        this.enJeu = false;
+        if(messageServeur.getPseudo().equals(this.pseudoClient1)){
+            informerClients(HOTE_QUITTE,messageServeur.getPseudo(),"L'Hôte s'est déconnecter vous allez être rediriger vers le menu !");
+            fermerServeur();
+            this.fermetureServeur = true;
+        }else{
+            informerClients(DECONNEXION,messageServeur.getPseudo(),messageServeur.getPseudo() + " s'est déconnecté de la partie !");
+            this.joueur2pret = false;
+            this.joueur1pret = false;
+            fermerClient2();
+        }
+    }
+
     private void informerClients(CommunicationLobbySC codeServeur, String pseudo, Object contenu){
         MessageServeur messageServeur = new MessageServeur(codeServeur,pseudo, contenu);
         try {
@@ -456,9 +495,7 @@ public class Serveur {
             if (outC1 != null) outC1.close();
             if (clientSocket1 != null) clientSocket1.close();
 
-            if (inC2 != null) inC2.close();
-            if (outC2 != null) outC2.close();
-            if (clientSocket2 != null) clientSocket2.close();
+            fermerClient2();
             if (serveurSocket != null && !serveurSocket.isClosed()) {
                 serveurSocket.close();
             }
@@ -466,6 +503,28 @@ public class Serveur {
         } catch (IOException e) {
             System.out.println("[SERVEUR] fermerServeur() a rencontré une erreur lors de la fermeture des cannaux de communications !");
         }
+    }
+
+    private void fermerClient2(){
+        if(fermetureServeur) return;
+        try {
+            if (inC2 != null){
+                inC2.close();
+                inC2 = null;
+            }
+            if (outC2 != null) {
+                outC2.close();
+                outC2 = null;
+            }
+            if (clientSocket2 != null) {
+                clientSocket2.close();
+                clientSocket2 = null;
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+
     }
 
 }

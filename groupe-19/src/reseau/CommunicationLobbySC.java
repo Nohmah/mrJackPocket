@@ -13,5 +13,6 @@ public enum CommunicationLobbySC {
     // JEU
     NOUVEAU_PLATEAU,
     AFFICHE_APPEL_TEMOIN,
+    DECONNEXION,
     ACTION_IMPOSSIBLE
 }

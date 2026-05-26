@@ -38,4 +38,7 @@ public class ExecuteActionLocal implements ExecuteAction {
         gameplay.partie.actions.echange(rowPremierChoix, colPremierChoix, row, col);
         gameplay.refreshView();
     }
+
+    @Override
+    public void executeQuitter(){}
 }

@@ -323,6 +323,9 @@ public class VueJeu extends JPanel {
             // même si une animation est en cours.
             stopGameLoop();
             gameplay.partie.kill();
+
+            gameplay.quitterPartie(); // Implémentation pour le réseauy
+
             menuPrincipal.resetBoutonsSurvoles();
             parent.setContentPane(menuPrincipal);
             parent.revalidate();
@@ -561,6 +564,9 @@ public class VueJeu extends JPanel {
             fermerPanneauSettings();     // fermeture + dégel
             stopGameLoop();
             gameplay.partie.kill();
+
+            gameplay.quitterPartie(); // Implémentation pour le réseauy
+
             menuPrincipal.resetBoutonsSurvoles();
             parent.setContentPane(menuPrincipal);
             parent.revalidate();

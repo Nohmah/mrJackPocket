@@ -283,8 +283,10 @@ public class VueLobby extends JPanel {
         } else {
             statutPret.setForeground(Color.WHITE);
             boutonPret.setEnabled(true);
-            mrJackJ1.setEnabled(true);
-            lEnqueteurJ1.setEnabled(true);
+            if(estHote) {
+                mrJackJ1.setEnabled(true);
+                lEnqueteurJ1.setEnabled(true);
+            }
         }
     }
 
