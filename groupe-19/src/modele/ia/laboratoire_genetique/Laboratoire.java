@@ -6,11 +6,11 @@ import java.util.Arrays;
 
 public class Laboratoire {
     private PoolProfils poolJack = new PoolProfils(Joueur.JACK, 6);
-    private PoolProfils poolInsp = new PoolProfils(Joueur.ENQUETEUR, 4);
+    private PoolProfils poolInsp = new PoolProfils(Joueur.ENQUETEUR, 6);
     private UsineGenetique usine = new UsineGenetique();
     private Arene arene = new Arene();
-    private int NB_CYCLES_MAX = 100;
-    private int NB_GEN_PAR_ROLE = 50;
+    private int NB_CYCLES_MAX = 1;
+    private int NB_GEN_PAR_ROLE = 1;
 
     public static void main(String[] args) {
         Laboratoire lab = new Laboratoire();
