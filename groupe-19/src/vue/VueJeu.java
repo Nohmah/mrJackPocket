@@ -540,6 +540,7 @@ public class VueJeu extends JPanel {
             try {
                 GameSave saveFile = SaveManager.load("save.dat");
                 gameplay.partie.fromGameSave(saveFile);
+                gameplay.updatePlayerRectangles();
                 refreshBoardComponents();
                 fermerPanneauSettings();   // ferme après chargement
             } catch (Exception ex) {
@@ -568,11 +569,11 @@ public class VueJeu extends JPanel {
 
         panelCentral.add(continuer);
         panelCentral.add(Box.createVerticalStrut(12));
+        panelCentral.add(nvPartie);
+        panelCentral.add(Box.createVerticalStrut(12));
         panelCentral.add(sauvegarder);
         panelCentral.add(Box.createVerticalStrut(12));
         panelCentral.add(charger);
-        panelCentral.add(Box.createVerticalStrut(12));
-        panelCentral.add(nvPartie);
         panelCentral.add(Box.createVerticalStrut(12));
         panelCentral.add(retourMenu);
 
