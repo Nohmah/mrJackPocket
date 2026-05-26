@@ -296,8 +296,6 @@ public class VueMonde extends JPanel {
         actionTooltip.setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8));
         actionTooltip.setVisible(false);
         uiOverlay.add(actionTooltip);
-
-        initSablierLabel();
         initSettings();
         initThinking();
         initNotifPanel();
@@ -351,6 +349,13 @@ public class VueMonde extends JPanel {
         notifPanel.setBounds(60, 10, 220, 28);
         notifPanel.setVisible(false);
     }
+
+    public void initialiserSab(boolean jackHumain) {
+            if (jackHumain) {
+                initSablierLabel();
+                // Autres éléments spécifiques au joueur humain
+            }
+        }
 
     /**
      * Affiche un message temporaire pour un certain temps où infini
@@ -480,7 +485,7 @@ public class VueMonde extends JPanel {
 
     public void updateSabliers(int sabliers, int maxSabliers) {
         if (sablierLabel == null) return;
-        sablierLabel.setText(sabliers + "/" + maxSabliers);
+        sablierLabel.setText(sabliers + "+?/" + maxSabliers);
         sablierLabel.setBackground(new Color(180, 0, 0, 200));
         sablierLabel.setForeground(Color.RED);
         sablierLabel.repaint();
