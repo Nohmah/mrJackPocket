@@ -367,7 +367,7 @@ public class Camera extends JComponent {
 
         Image img;
         try {
-            InputStream in = new FileInputStream("res/Images/" + name + ".png");
+            InputStream in = Camera.class.getResourceAsStream("/res/Images/" + name + ".png");
             img = ImageIO.read(in);
         } catch (FileNotFoundException e) {
             System.err.println("ERREUR : impossible de trouver le fichier : " + name);

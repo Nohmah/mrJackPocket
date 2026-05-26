@@ -17,7 +17,7 @@ public class utils {
 
     /** Charge et renvoie une image **/
     public static BufferedImage loadImage(String name){
-        try (InputStream in = new FileInputStream("res/Images/" + name + ".png")) {
+        try (InputStream in = utils.class.getResourceAsStream("/res/Images/" + name + ".png")) {
             return ImageIO.read(in);
         } catch (IOException e) {
             System.err.println("Erreur chargement image " + name + " : " + e.getMessage());

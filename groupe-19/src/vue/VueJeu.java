@@ -660,13 +660,12 @@ public class VueJeu extends JPanel {
      * @return un ImageIcon redimensionne, ou null si le fichier est introuvable
      */
     private ImageIcon loadIcon(String fileName, int width, int height) {
-        File f = new File("res/Images/" + fileName);
-        if (!f.exists()) {
-            System.err.println("VueJeu.loadIcon — fichier introuvable : res/Images/" + fileName);
+        InputStream in = VueJeu.class.getResourceAsStream("/res/Images/" + fileName);
+        if (in == null) {
+            System.err.println("VueJeu.loadIcon — fichier introuvable : /res/Images/" + fileName);
             return null;
         }
         try {
-            InputStream in = new FileInputStream(f);
             BufferedImage raw = ImageIO.read(in);
             if (raw == null) {
                 System.err.println("VueJeu.loadIcon — ImageIO n'a pas pu lire : " + fileName);
