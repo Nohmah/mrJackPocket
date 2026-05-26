@@ -51,7 +51,7 @@ public class Partie {
     Deque<Partie> undo = new ArrayDeque<>();
     Deque<Partie> redo = new ArrayDeque<>();
 
-    private boolean freeze = false;
+    private volatile boolean  freeze = false;
 
     public int simSabliers = 0;
     public int simAlibis = 0;
