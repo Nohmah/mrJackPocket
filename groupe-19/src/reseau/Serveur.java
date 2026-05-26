@@ -302,24 +302,46 @@ public class Serveur {
         }
     }
 
-
+    //TODO  REVOIR LA SECURITER
     private void gestionCommunicationVersClientJeu(MessageServeur messageServeur){
         Object[] contenueRecu = (Object[]) messageServeur.getContenue();
         CommunicationLobbyCS codeClient = messageServeur.getCodeClient();
         boolean estDernierAction = (partieServeur.totalActionsJouees == 3);
         switch (codeClient){
             case PIOCHE_ALIBI :
-                receptionActionPioche();
+                //if(jetonActionEstJoue(Action.ALIBI)) {
+                    receptionActionPioche();
+                //}else{
+                 //   informerClients(ACTION_IMPOSSIBLE,"Système",null);
+                //}
                 break;
             case JOKER:
-                receptionActionJoker(contenueRecu);
+                //if(!jetonActionEstJoue(Action.JOKER)) {
+                    receptionActionJoker(contenueRecu);
+                //}else{
+                //    informerClients(ACTION_IMPOSSIBLE,"Système",null);
+                //}
                 break;
             case DETECTIVE:
-                receptionActionDetective(contenueRecu);
+                //if(!jetonActionEstJoue(Action.WATSON) && !jetonActionEstJoue(Action.HOLMES) && !jetonActionEstJoue(Action.TOBY) ) {
+                    receptionActionDetective(contenueRecu);
+                //}else{
+                 //   informerClients(ACTION_IMPOSSIBLE,"Système",null);
+                //}
                 break;
             case ROTATION:
+                //if(!jetonActionEstJoue(Action.ROTATION)) {
+                    receptionActionQuartier(codeClient, contenueRecu);
+                //}else{
+                 //   informerClients(ACTION_IMPOSSIBLE,"Système",null);
+                //}
+                break;
             case ECHANGE:
-                receptionActionQuartier(codeClient, contenueRecu);
+                //if(!jetonActionEstJoue(Action.ECHANGE)) {
+                    receptionActionQuartier(codeClient, contenueRecu);
+                //}else{
+                 //   informerClients(ACTION_IMPOSSIBLE,"Système",null);
+                //}
                 break;
             default:
                 System.out.println("[SERVEUR] gestionCommunicationVersClientJeu() a rencontré une erreur dans le switch avec le code : " + codeClient + " !");
@@ -332,8 +354,21 @@ public class Serveur {
             if(!partieServeur.isPartieTerminee()) partieServeur.tourSuivant();
             partieEnCours = PartieSaveMapper.toSnapshot(partieServeur);
             informerClients(AFFICHE_APPEL_TEMOIN,"Systeme", partieEnCours);
+            if(partieServeur.isPartieTerminee()){
+                this.enJeu = false;
+                partieServeur = null;
+            }
         }
 
+    }
+
+    private boolean jetonActionEstJoue(Action cible){
+        for(JetonAction jetonDisponible : this.partieServeur.jetonsAction){
+            if(jetonDisponible.getActionVisible() == cible){
+                return jetonDisponible.isJoue();
+            }
+        }
+        return false;
     }
 
     private void receptionActionPioche(){

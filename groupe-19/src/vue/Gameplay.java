@@ -1,6 +1,8 @@
 package src.vue;
 
 import src.modele.*;
+import src.vue.menus.VueLobby;
+
 import javax.swing.*;
 import java.awt.Color;
 
@@ -287,7 +289,7 @@ public class Gameplay {
         refreshView();
     }
 
-    public void animationAppelTemoinReseau(PartieSnapshot partieSnap){
+    public void animationAppelTemoinReseau(PartieSnapshot partieSnap) {
         if (partie.isPartieTerminee()) return;
 
         // Geler les interactions utilisateur pendant l'assombrissement
@@ -314,14 +316,13 @@ public class Gameplay {
                 // S'assurer que le jeu est dégelé
                 partie.setFreeze(false);
                 refreshView();
-                if (!partie.isPartieTerminee()) {
-                    partie.verifTourIa();
+                if (partie.isPartieTerminee()) {
+                    vue.showGameOverScreen(partie.gagnant.getNom());
                 }
             }
         });
         timer.setRepeats(false);
         timer.start();
-
     }
 
     public boolean enReflexion(){
