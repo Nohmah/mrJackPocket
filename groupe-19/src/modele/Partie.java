@@ -413,7 +413,7 @@ public class Partie {
                 if (jackVisibleCeTour){
                     declarerGagnant(Joueur.ENQUETEUR);
                 }
-                else if (numeroTour == MAX_TOUR){
+                else if (numeroTour >= MAX_TOUR){
                     declarerGagnant(Joueur.JACK);
                 } else {
                     coursePoursuiteActive = true;
@@ -427,7 +427,7 @@ public class Partie {
             else if(sabliersDeJack >= MAX_SABLIER){
                 declarerGagnant(Joueur.JACK);
             }
-            else if (numeroTour == MAX_TOUR) {
+            else if (numeroTour >= MAX_TOUR) {
                 declarerGagnant(Joueur.JACK);
             }
         }
@@ -454,7 +454,7 @@ public class Partie {
             coursePoursuiteActive = false;
             return;
         }
-        if(numeroTour == MAX_TOUR){
+        if(numeroTour >= MAX_TOUR){
             if(!estSimulation) System.out.println("Fin de la course poursuite.");
             declarerGagnant(Joueur.JACK);
             coursePoursuiteActive = false;
