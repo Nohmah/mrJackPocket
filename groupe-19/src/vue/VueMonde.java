@@ -485,7 +485,7 @@ public class VueMonde extends JPanel {
 
     public void updateSabliers(int sabliers, int maxSabliers) {
         if (sablierLabel == null) return;
-        sablierLabel.setText(sabliers + "/" + maxSabliers);
+        sablierLabel.setText(sabliers + "+?/" + maxSabliers);
         sablierLabel.setBackground(new Color(180, 0, 0, 200));
         sablierLabel.setForeground(Color.RED);
         sablierLabel.repaint();
