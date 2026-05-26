@@ -1,7 +1,6 @@
 package src.modele.ia.laboratoire_genetique;
 
 import src.modele.Joueur;
-import src.modele.ia.PoidsIa;
 import java.io.*;
 import java.util.Arrays;
 
@@ -10,8 +9,8 @@ public class Laboratoire {
     private PoolProfils poolInsp = new PoolProfils(Joueur.ENQUETEUR, 6);
     private UsineGenetique usine = new UsineGenetique();
     private Arene arene = new Arene();
-    private int NB_CYCLES_MAX = 100;
-    private int NB_GEN_PAR_ROLE = 50;
+    private int NB_CYCLES_MAX = 1;
+    private int NB_GEN_PAR_ROLE = 1;
 
     public static void main(String[] args) {
         Laboratoire lab = new Laboratoire();
@@ -37,26 +36,11 @@ public class Laboratoire {
 
     public void exporterStats(Joueur role, int c, int g, PoolProfils pool) {
         ProfilGenetique meilleur = pool.getProfil(0);
-
-        if (role == Joueur.JACK) {
-            PoidsIa.POIDS_JACK_DEBUT = meilleur.poidsDebut.clone();
-            PoidsIa.POIDS_JACK_MILIEU = meilleur.poidsMilieu.clone();
-            PoidsIa.POIDS_JACK_FIN = meilleur.poidsFin.clone();
-        } else {
-            PoidsIa.POIDS_ENQ_DEBUT = meilleur.poidsDebut.clone();
-            PoidsIa.POIDS_ENQ_MILIEU = meilleur.poidsMilieu.clone();
-            PoidsIa.POIDS_ENQ_FIN = meilleur.poidsFin.clone();
-        }
-
         double somme = 0;
         for (ProfilGenetique p : pool.listeProfils) somme += p.score;
         double moyenne = somme / 100.0;
-
-        String data = role + ";Cycle" + c + ";Gen" + g + ";MaxScore:" + meilleur.score + ";Moyenne:" + moyenne
-                + ";PoidsDebut:" + Arrays.toString(meilleur.poidsDebut)
-                + ";PoidsMilieu:" + Arrays.toString(meilleur.poidsMilieu)
-                + ";PoidsFin:" + Arrays.toString(meilleur.poidsFin);
-
+        String data = role + ";Cycle" + c + ";Gen" + g + ";MaxScore:" + meilleur.score + ";Moyenne:" + moyenne + ";Poids:" + Arrays.toString(meilleur.poidsDebut);
+        //System.out.println(data);
         try (FileWriter fw = new FileWriter("stats_genetiques.csv", true);
              BufferedWriter bw = new BufferedWriter(fw);
              PrintWriter out = new PrintWriter(bw)) {
