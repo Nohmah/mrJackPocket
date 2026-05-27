@@ -485,10 +485,6 @@ public class VueJeu extends JPanel {
 
             if (gameplay.isGameFrozen()) return;
 
-            // --- GELER TOUTES LES INTERACTIONS ---
-            if (gameplay != null) gameplay.setGlobalFreeze(true);
-            vueMonde.jeuVerrouille = true;
-
             JPanel glassPane = getFullscreenGlassPane();
             glassPane.removeAll(); // Nettoyage de sécurité
 
@@ -767,10 +763,6 @@ public class VueJeu extends JPanel {
             }
 
             if (gameplay.isGameFrozen()) return;
-
-            // --- GELER LE JEU ---
-            if (gameplay != null) gameplay.setGlobalFreeze(true);
-            vueMonde.jeuVerrouille = true;
 
             JPanel glassPane = getFullscreenGlassPane();
             glassPane.removeAll(); // Nettyoage de sécurité
