@@ -606,15 +606,19 @@ public class VueMenuPrePartie extends JPanel {
         rejoindre.setFont(new Font("Arial", Font.BOLD, 18));
         rejoindre.addActionListener(e -> {
             if (this.pseudo == null || this.pseudo.trim().isEmpty()) {
-                erreurPseudoNonMis(zoneErreur);
+                messageDErreur(zoneErreur,"Vous devez saisir un pseudonym pour pouvoir jouer en Multijoueur ! ");
             }else {
                 this.serveur = serveurField.getText();
                 Client client = new Client(pseudo, false, serveur);
-                VueLobby lobby = new VueLobby(parent, retourVers, pseudo, false, client);
-                client.setVueLobby(lobby);
-                parent.setContentPane(lobby);
-                parent.revalidate();
-                parent.repaint();
+                if(client.getEstDansServeur()) {
+                    VueLobby lobby = new VueLobby(parent, retourVers, pseudo, false, client);
+                    client.setVueLobby(lobby);
+                    parent.setContentPane(lobby);
+                    parent.revalidate();
+                    parent.repaint();
+                }else{
+                    messageDErreur(zoneErreur,"Le serveur que vous essayez de joindre est indisponible ! ");
+                }
             }
         });
 
@@ -630,7 +634,7 @@ public class VueMenuPrePartie extends JPanel {
         creeServeur.setFont(new Font("Arial", Font.BOLD, 18));
         creeServeur.addActionListener(e -> {
             if (this.pseudo == null || this.pseudo.trim().isEmpty()){
-                erreurPseudoNonMis(zoneErreur);
+                messageDErreur(zoneErreur,"Vous devez saisir un pseudonym pour pouvoir jouer en Multijoueur ! ");
             }else {
                 System.out.println("[DEBUG] création serveur confirmé :) ");
                 Serveur serveur = new Serveur();
@@ -664,10 +668,10 @@ public class VueMenuPrePartie extends JPanel {
         background.add(colonneDroite);
     }
 
-    private void erreurPseudoNonMis(JPanel parent) {
+    private void messageDErreur(JPanel parent, String message) {
         parent.removeAll();
 
-        JLabel messageErreur = new JLabel("Vous devez saisir un pseudonym pour pouvoir jouer en Multijoueur ! ");
+        JLabel messageErreur = new JLabel(message);
         messageErreur.setFont(new Font("Arial", Font.BOLD, 15));
         messageErreur.setForeground(Color.RED);
         messageErreur.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -711,7 +715,7 @@ public class VueMenuPrePartie extends JPanel {
         zoneSaisie.add(Box.createVerticalGlue());
 
         ActionListener actionPseudoRecu = e -> {
-            this.pseudo = pseudoField.getText();
+            this.pseudo = pseudoField.getText().trim();
             if(!this.pseudo.isEmpty()){
                 zoneSaisie.removeAll();
                 messageErreur.removeAll();

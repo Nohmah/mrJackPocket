@@ -558,7 +558,7 @@ public class VueMonde extends JPanel {
         this.iaIsThinking = iaEnJeo;
         thinkingLabel.setText(iaIsThinking
                 ? "IA en train de chercher un coup..."
-                : "Votre adversaire est entrain de réfléchir...");
+                : "Votre adversaire est en réflexion...");
         if (enReflexion) showThinking();
         else             hideThinking();
     }

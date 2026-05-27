@@ -43,11 +43,6 @@ public class Serveur {
 
     public Serveur() {
         receptionRequeteClient = new LinkedBlockingQueue<>();
-        try {
-            System.out.println("|DEBUG SERVEUR] IP : "+InetAddress.getLocalHost().getHostAddress());
-        } catch (UnknownHostException e) {
-            throw new RuntimeException(e);
-        }
         initialisationServeur();
         accepterClient();
         consommerRequeteClient();

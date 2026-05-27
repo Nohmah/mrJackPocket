@@ -10,6 +10,8 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 public class VueLobby extends JPanel {
 
@@ -21,6 +23,7 @@ public class VueLobby extends JPanel {
     private JLabel labelJ2;
     private JLabel statutPret;
     private JButton boutonPret;
+    private JButton retour;
 
     private JRadioButton mrJackJ1, lEnqueteurJ1;
     private JRadioButton mrJackJ2, lEnqueteurJ2;
@@ -38,53 +41,54 @@ public class VueLobby extends JPanel {
         this.parent = parent;
         this.panel = retourVers;
 
-        setBackground(Color.GRAY);
         setLayout(new BorderLayout());
+
         Background background = new Background();
-        background.setLayout(new GridLayout(1, 2));
+        background.setLayout(new GridLayout(1, 2, 20, 0)); // 20px d'espacement entre les 2 colonnes
         add(background, BorderLayout.CENTER);
 
-        JPanel contenuPrincipal = new JPanel(new GridLayout(1, 2, 20, 0));
-        contenuPrincipal.setOpaque(false);
-
         Border contourColonnes = BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.BLACK, 0),
+                BorderFactory.createLineBorder(Color.BLACK, 10), // Bordure unifiée avec MenuPrePartie
                 BorderFactory.createEmptyBorder(10, 10, 10, 10)
         );
 
         JPanel colonneGauche = new JPanel();
         colonneGauche.setLayout(new BoxLayout(colonneGauche, BoxLayout.Y_AXIS));
-        colonneGauche.setOpaque(false);
+        colonneGauche.setOpaque(false); // Transparent pour voir le fond
         colonneGauche.setBorder(contourColonnes);
 
         retourFenetrePrecedent(parent, retourVers, colonneGauche);
         creerChatBox(colonneGauche);
 
-
         JPanel colonneDroite = new JPanel();
         colonneDroite.setLayout(new BoxLayout(colonneDroite, BoxLayout.Y_AXIS));
-        colonneDroite.setOpaque(false);
+        colonneDroite.setOpaque(false); // Transparent pour voir le fond
         colonneDroite.setBorder(contourColonnes);
+
+        JPanel espaceHeader = new JPanel();
+        espaceHeader.setOpaque(false);
+        espaceHeader.setPreferredSize(new Dimension(160, 66));
+        colonneDroite.add(espaceHeader);
 
         creerPanneauJoueurs(colonneDroite);
 
-        contenuPrincipal.add(colonneGauche);
-        contenuPrincipal.add(colonneDroite);
-
-        add(contenuPrincipal, BorderLayout.CENTER);
+        background.add(colonneGauche);
+        background.add(colonneDroite);
 
         mettreAJourRoles(true);
     }
 
     private void retourFenetrePrecedent(JFrame parent, JPanel retourVers, JPanel colonne) {
-        JButton retour = new BoutonsMenu(utils.loadImage("fast-forward"), null);
-        retour.setAlignmentX(Component.LEFT_ALIGNMENT);
-        retour.addActionListener(e -> {
-            client.joueurQuitte();
-            parent.setContentPane(retourVers);
-            parent.revalidate();
-            parent.repaint();
-        });
+        retour = BoutonsMenu.creerBouton(
+                "Boutonretour",
+                () -> {
+                    client.joueurQuitte();
+                    parent.setContentPane(retourVers);
+                    parent.revalidate();
+                    parent.repaint();
+                },
+                new Dimension(160, 66)
+        );
 
         JPanel panneauRetour = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         panneauRetour.setOpaque(false);
@@ -103,7 +107,14 @@ public class VueLobby extends JPanel {
         historiqueChat.setLineWrap(true);
         historiqueChat.setWrapStyleWord(true);
         historiqueChat.setFont(new Font("Arial", Font.PLAIN, 14));
-        historiqueChat.setText("Système : Serveur créé. En attente d'un adversaire...\n");
+        try {
+            if(estHote) {
+                historiqueChat.setText("Système : Serveur créé. En attente d'un adversaire...\n");
+                historiqueChat.setText("Voici votre adresse IP : " + InetAddress.getLocalHost().getHostAddress() + "\n");
+            }
+        } catch (UnknownHostException e) {
+            return;
+        }
 
         JScrollPane scrollPane = new JScrollPane(historiqueChat);
         scrollPane.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -283,9 +294,11 @@ public class VueLobby extends JPanel {
             boutonPret.setEnabled(false);
             mrJackJ1.setEnabled(false);
             lEnqueteurJ1.setEnabled(false);
+            retour.setEnabled(false);
         } else {
             statutPret.setForeground(Color.WHITE);
             boutonPret.setEnabled(true);
+            retour.setEnabled(true);
             if(estHote) {
                 mrJackJ1.setEnabled(true);
                 lEnqueteurJ1.setEnabled(true);

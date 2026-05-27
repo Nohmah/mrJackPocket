@@ -341,20 +341,17 @@ public class Gameplay {
 
         String nouvelAlibi = (this.partie.derniereCarteAlibiPiochee != null) ? this.partie.derniereCarteAlibiPiochee.getPersonnage().nom : null;
 
-
-
-        String nom;
         if (partie.joueurCourant == Joueur.ENQUETEUR) {
-            nom = partie.pseudoEnqueteur;
-            if (partie.niveauEnqueteur == -1) { nom += " (Enquêteur)"; }
+            String nom = partie.pseudoEnqueteur;
+            if (partie.niveauEnqueteur == -1){ nom += " (Enquêteur)";}
+            vue.getMonde().showNotifMessage("C'est à " + nom, -1);
         } else {
-            nom = partie.pseudoJack;
-            if (partie.niveauJack == -1) { nom += " (Jack)"; }
+            String nom = partie.pseudoJack;
+            if (partie.niveauJack == -1){ nom += " (Jack)";}
+            vue.getMonde().showNotifMessage("C'est à " + nom, -1);
         }
-        vue.getMonde().showNotifMessage("C'est à " + nom, -1);
         if (nouvelAlibi != null && !nouvelAlibi.equals(ancienAlibi)) {
             if (partie.joueurChoisi == joueurQuiAPioche) {
-                // C'est moi qui ai pioché : je vois la carte !
                 CarteAlibi nouvelleCarte = this.partie.derniereCarteAlibiPiochee;
                 SwingUtilities.invokeLater(() -> {
                     vue.getMonde().afficherCarteAlibi(nouvelleCarte.getPersonnage());
@@ -384,6 +381,16 @@ public class Gameplay {
                 setGlobalFreeze(false);
 
                 partie.fromSnapshot(partieSnap);
+
+                if (partie.joueurCourant == Joueur.ENQUETEUR) {
+                    String nom = partie.pseudoEnqueteur;
+                    if (partie.niveauEnqueteur == -1){ nom += " (Enquêteur)";}
+                    vue.getMonde().showNotifMessage("C'est à " + nom, -1);
+                } else {
+                    String nom = partie.pseudoJack;
+                    if (partie.niveauJack == -1){ nom += " (Jack)";}
+                    vue.getMonde().showNotifMessage("C'est à " + nom, -1);
+                }
             } catch (Exception ex) {
                 System.err.println("ERREUR dans l'appel à témoin :");
                 ex.printStackTrace();

@@ -21,6 +21,8 @@ public class Client {
     private final Boolean estHote;
     private Socket serveurSocket;
 
+    private boolean estDansServeur = false;
+
     private ObjectOutputStream out;
     private ObjectInputStream in;
     private final BlockingQueue<MessageServeur> receptionRequeteServeur;
@@ -39,11 +41,13 @@ public class Client {
         this.jeSuisJack = estHote;
         receptionRequeteServeur = new LinkedBlockingQueue<>();
 
-        rejoindreServeur(serveur);
-
-        receptionRequeteServeur();
-        consommerMessagesDeLaQueue();
-
+        if(rejoindreServeur(serveur)) {
+            estDansServeur = true;
+            receptionRequeteServeur();
+            consommerMessagesDeLaQueue();
+        }else {
+            estDansServeur = false;
+        }
     }
 
     public void setVueLobby(VueLobby vueLobby){
@@ -55,13 +59,19 @@ public class Client {
         this.vueJeu = vueJeu;
     }
 
-    private void rejoindreServeur(String serveur){
+    public boolean getEstDansServeur() {
+        return estDansServeur;
+    }
+
+    private boolean rejoindreServeur(String serveur){
         try {
             this.serveurSocket = new Socket(serveur, PORT_SERVEUR);
             this.out = new ObjectOutputStream(this.serveurSocket.getOutputStream());
             this.in = new ObjectInputStream(this.serveurSocket.getInputStream());
+            return true;
         } catch (IOException e) {
             System.out.println("[CLIENT] rejoindreServeur(), la connexion a serveur n'a pas pu être établit !");
+            return false;
         }
     }
 
