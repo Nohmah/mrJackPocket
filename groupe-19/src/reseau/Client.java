@@ -7,6 +7,7 @@ import src.vue.menus.VueLobby;
 import javax.swing.*;
 import java.net.*;
 import java.io.*;
+import java.sql.SQLOutput;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -285,8 +286,10 @@ public class Client {
         this.enJeu = false;
         if(estHote){
             JOptionPane.showMessageDialog(vueLobby,messageServeur.getContenue().toString());
-            this.vueJeu.stopGameLoop();
-            this.vueJeu = null;
+            if(this.vueJeu != null) {
+                this.vueJeu.stopGameLoop();
+                this.vueJeu = null;
+            }
             this.vueLobby.setJoueur2Deconnecte(messageServeur.getContenue().toString());
             this.vueLobby.revenirAuLobby();
         }else{
@@ -333,7 +336,6 @@ public class Client {
     public void joueurQuitte(){
         informerServeur(QUITTE, null);
         this.deconnexionForce = true;
-        fermerConnexion();
     }
 
 

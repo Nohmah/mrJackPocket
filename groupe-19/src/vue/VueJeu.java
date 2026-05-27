@@ -326,7 +326,7 @@ public class VueJeu extends JPanel {
             stopGameLoop();
             gameplay.partie.kill();
 
-            gameplay.quitterPartie(); // Implémentation pour le réseauy
+            gameplay.quitterPartie(); // Implémentation pour le réseau
 
             menuPrincipal.resetBoutonsSurvoles();
             parent.setContentPane(menuPrincipal);

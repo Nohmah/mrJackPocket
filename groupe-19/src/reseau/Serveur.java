@@ -170,12 +170,14 @@ public class Serveur {
                 } catch (IOException e) {
                     if (fermetureServeur){break;}
 
-                    if(this.enJeu){
-                        MessageServeur messageHote = new MessageServeur(DECONNEXION,this.pseudoClient2,this.pseudoClient2 + " s'est déconnecté de la partie !");
-                        try {
-                            outC1.writeObject(messageHote);
-                        } catch (IOException ex) {
-                            break;
+                    if(this.enJeu) {
+                        if (this.pseudoClient2 != null) {
+                            MessageServeur messageHote = new MessageServeur(DECONNEXION, this.pseudoClient2, this.pseudoClient2 + " s'est déconnecté de la partie !");
+                            try {
+                                outC1.writeObject(messageHote);
+                            } catch (IOException ex) {
+                                break;
+                            }
                         }
                         this.joueur2pret = false;
                         this.joueur1pret = false;
@@ -470,6 +472,7 @@ public class Serveur {
             this.fermetureServeur = true;
         }else{
             informerClients(DECONNEXION,messageServeur.getPseudo(),messageServeur.getPseudo() + " s'est déconnecté de la partie !");
+            this.pseudoClient2 = null;
             this.joueur2pret = false;
             this.joueur1pret = false;
             fermerClient2();
