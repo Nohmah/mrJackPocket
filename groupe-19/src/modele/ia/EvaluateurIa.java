@@ -22,6 +22,16 @@ public class EvaluateurIa {
         score += poids[4] * ParametresEvaluateur.suspectsElimines(partie);
         score += poids[5] * ParametresEvaluateur.sabliersNonLaisses(partie);
 
+        double borneMax = 0.0;
+        if (partie.niveauEnqueteur == 0) {
+            borneMax = 0.2;
+        } else if (partie.niveauEnqueteur == 1) {
+            borneMax = 0.1;
+        } else if (partie.niveauEnqueteur == 2) {
+            borneMax = 0.05;
+        }
+        score += Math.random() * borneMax;
+
         return score;
     }
 
@@ -43,6 +53,16 @@ public class EvaluateurIa {
         score += poids[3] * ParametresEvaluateur.anonymat(data, partie);
         score += poids[4] * ParametresEvaluateur.accumulationSabliers(partie);
         score += poids[5] * ParametresEvaluateur.stabiliteDuPlateau(partie);
+
+        double borneMax = 0.0;
+        if (partie.niveauJack == 0) {
+            borneMax = 0.2;
+        } else if (partie.niveauJack == 1) {
+            borneMax = 0.1;
+        } else if (partie.niveauJack == 2) {
+            borneMax = 0.05;
+        }
+        score += Math.random() * borneMax;
 
         return score;
     }
