@@ -546,6 +546,7 @@ public class VueJeu extends JPanel {
                 }
             });
 
+
             JButton charger = makeSettingsButton("Charger");
             charger.addActionListener(e -> {
                 try {
@@ -565,6 +566,8 @@ public class VueJeu extends JPanel {
                 if (gameplay != null) gameplay.resetGame();
             });
 
+
+
             JButton retourMenu = makeSettingsButton("Retour menu");
             retourMenu.addActionListener(e -> {
                 fermerPanneauSettings();
@@ -579,11 +582,15 @@ public class VueJeu extends JPanel {
 
             panelCentral.add(continuer);
             panelCentral.add(Box.createVerticalStrut(12));
-            panelCentral.add(nvPartie);
+            if(gameplay.partie.getIsSolo()) {  //Désactivation des boutons à problèmes pour le réseau
+                panelCentral.add(nvPartie);
+            }
             panelCentral.add(Box.createVerticalStrut(12));
             panelCentral.add(sauvegarder);
             panelCentral.add(Box.createVerticalStrut(12));
-            panelCentral.add(charger);
+            if(gameplay.partie.getIsSolo()) { //Désactivation des boutons à problèmes pour le réseau
+                panelCentral.add(charger);
+            }
             panelCentral.add(Box.createVerticalStrut(12));
             panelCentral.add(retourMenu);
 
@@ -844,4 +851,30 @@ public class VueJeu extends JPanel {
         parent.setGlassPane(gp);
         return gp;
     }
+
+    /**
+     **
+     ** Désactive les boutons non nécessaires pour une partie en réseau
+     **
+     **/
+
+    public void setJeuReseau(boolean isMulti) {
+        if (!isMulti) return;
+
+        for (Component comp : leftStrip.getComponents()) {
+            if (comp instanceof JButton btn) {
+                String bouton = btn.getToolTipText();
+                if ("Annuler un coup".equals(bouton) ||
+                        "Refaire un coup Annuler".equals(bouton) ||
+                        "L'IA prend ta place".equals(bouton) ||
+                        "Save".equals(bouton) ||
+                        "Load".equals(bouton)) {
+
+                    btn.setEnabled(false);
+                    btn.setVisible(false);
+                }
+            }
+        }
+    }
+
 }

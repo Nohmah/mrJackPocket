@@ -3,7 +3,6 @@ package src.vue.menus;
 
 import src.reseau.Client;
 import src.reseau.ExecuteActionSocket;
-import src.utils.utils;
 import src.vue.VueJeu;
 
 import javax.swing.*;
@@ -375,6 +374,7 @@ public class VueLobby extends JPanel {
                     VueMenuPrincipal menuPrincipal = (VueMenuPrincipal) panel;
 
                     VueJeu vueJeu = new VueJeu(parent, menuPrincipal, partie);
+                    vueJeu.setJeuReseau(true);
                     client.setVueJeu(vueJeu);
                     vueJeu.getGameplay().setExecuteAction(new ExecuteActionSocket(client));
 
