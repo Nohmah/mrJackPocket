@@ -52,6 +52,7 @@ public final class PartieSaveMapper {
         snap.niveauEnqueteur = partie.niveauEnqueteur;
         snap.niveauJack = partie.niveauJack;
         snap.sabliersDeJack = partie.sabliersDeJack;
+        snap.sabliersMinimumDeJack = partie.sabliersMinimumDeJack;
         snap.identiteJack = partie.identiteJack;
         snap.jackVisibleCeTour = partie.jackVisibleCeTour;
         snap.totalActionsJouees = partie.totalActionsJouees;
@@ -97,6 +98,7 @@ public final class PartieSaveMapper {
         partie.niveauEnqueteur = snap.niveauEnqueteur;
         partie.niveauJack = snap.niveauJack;
         partie.sabliersDeJack = snap.sabliersDeJack;
+        partie.sabliersMinimumDeJack = snap.sabliersMinimumDeJack;
         partie.identiteJack = snap.identiteJack;
         partie.jackVisibleCeTour = snap.jackVisibleCeTour;
         partie.totalActionsJouees = snap.totalActionsJouees;

@@ -40,6 +40,9 @@ public class VueLobby extends JPanel {
 
         setBackground(Color.GRAY);
         setLayout(new BorderLayout());
+        Background background = new Background();
+        background.setLayout(new GridLayout(1, 2));
+        add(background, BorderLayout.CENTER);
 
         JPanel contenuPrincipal = new JPanel(new GridLayout(1, 2, 20, 0));
         contenuPrincipal.setOpaque(false);

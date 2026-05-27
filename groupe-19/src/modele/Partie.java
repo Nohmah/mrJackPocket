@@ -77,6 +77,7 @@ public class Partie {
 
     public src.modele.ia.laboratoire_genetique.ProfilGenetique adnJack = null;
     public src.modele.ia.laboratoire_genetique.ProfilGenetique adnInspecteur = null;
+    public boolean forcerPoidsExternes = false;
 
     private boolean isSolo = true;
 
@@ -362,18 +363,13 @@ public class Partie {
     }
 
     public double simulerEtNoter(CoupIa coup, boolean estJack) {
+        System.out.println("DEBUG: Je suis dans Partie.java, je simule le coup...");
         Partie copie = new Partie(this);
         copie.jouerCoup(coup);
-        try {
-            if(estJack){
-                return EvaluateurIa.jeSuisJack(copie);
-            } else {
-                return EvaluateurIa.jeSuisEnqueteur(copie);
-            }
-        } catch (Exception e) {
-            System.err.println("Exception dans EvaluateurIa : " + e.getMessage());
-            e.printStackTrace();
-            return 0;
+        if(estJack){
+            return EvaluateurIa.jeSuisJack(copie);
+        } else {
+            return EvaluateurIa.jeSuisEnqueteur(copie);
         }
     }
 

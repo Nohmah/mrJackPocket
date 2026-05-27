@@ -8,7 +8,7 @@ public class EvaluateurIa {
         DataPartie data = new DataPartie(partie);
         double[] poids;
 
-        if (partie.adnInspecteur != null) {
+        if (partie.adnInspecteur != null && !partie.forcerPoidsExternes) {
             poids = partie.adnInspecteur.getPoids(partie.numeroTour);
         } else {
             poids = PoidsIa.getPoidsEnqueteur(partie.numeroTour);
@@ -30,7 +30,7 @@ public class EvaluateurIa {
         data.visibiliteJack(partie);
         double[] poids;
 
-        if (partie.adnJack != null) {
+        if (partie.adnJack != null && !partie.forcerPoidsExternes) {
             poids = partie.adnJack.getPoids(partie.numeroTour);
         } else {
             poids = PoidsIa.getPoidsJack(partie.numeroTour);

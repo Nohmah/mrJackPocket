@@ -22,6 +22,7 @@ public class PartieSnapshot implements Serializable {
     public int numeroTour;
     public int totalActionsJouees;
     public int sabliersDeJack;
+    public int sabliersMinimumDeJack;
     public Joueur joueurCourant;
     public Personnage identiteJack;
     public boolean jackVisibleCeTour;

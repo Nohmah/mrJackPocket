@@ -333,8 +333,34 @@ public class Gameplay {
     }
 
     public void refreshFromSnap(PartieSnapshot partieSnap){
-        System.out.println("[DEBUG] refreshFromSnap");
+        String ancienAlibi = (this.partie.derniereCarteAlibiPiochee != null) ? this.partie.derniereCarteAlibiPiochee.getPersonnage().nom : null;
+
+        Joueur joueurQuiAPioche = this.partie.joueurCourant;
+
         this.partie.fromSnapshot(partieSnap);
+
+        String nouvelAlibi = (this.partie.derniereCarteAlibiPiochee != null) ? this.partie.derniereCarteAlibiPiochee.getPersonnage().nom : null;
+
+
+
+        String nom;
+        if (partie.joueurCourant == Joueur.ENQUETEUR) {
+            nom = partie.pseudoEnqueteur;
+            if (partie.niveauEnqueteur == -1) { nom += " (Enquêteur)"; }
+        } else {
+            nom = partie.pseudoJack;
+            if (partie.niveauJack == -1) { nom += " (Jack)"; }
+        }
+        vue.getMonde().showNotifMessage("C'est à " + nom, -1);
+        if (nouvelAlibi != null && !nouvelAlibi.equals(ancienAlibi)) {
+            if (partie.joueurChoisi == joueurQuiAPioche) {
+                // C'est moi qui ai pioché : je vois la carte !
+                CarteAlibi nouvelleCarte = this.partie.derniereCarteAlibiPiochee;
+                SwingUtilities.invokeLater(() -> {
+                    vue.getMonde().afficherCarteAlibi(nouvelleCarte.getPersonnage());
+                });
+            }
+        }
         refreshView();
     }
 

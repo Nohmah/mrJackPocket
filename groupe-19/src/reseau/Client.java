@@ -238,7 +238,6 @@ public class Client {
                 case AFFICHE_APPEL_TEMOIN:
                     receptionRequeteAFFICE_APPEL_TEMOIN(messageServeur);
                 case ACTION_IMPOSSIBLE:
-                    System.out.println("Non non non");
                     break;
                 case DECONNEXION:
                     receptionRequeteDECONNEXION(messageServeur);

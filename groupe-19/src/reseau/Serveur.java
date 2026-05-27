@@ -43,6 +43,11 @@ public class Serveur {
 
     public Serveur() {
         receptionRequeteClient = new LinkedBlockingQueue<>();
+        try {
+            System.out.println("|DEBUG SERVEUR] IP : "+InetAddress.getLocalHost().getHostAddress());
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
         initialisationServeur();
         accepterClient();
         consommerRequeteClient();
@@ -171,14 +176,13 @@ public class Serveur {
                     if (fermetureServeur){break;}
 
                     if(this.enJeu) {
-                        if (this.pseudoClient2 != null) {
-                            MessageServeur messageHote = new MessageServeur(DECONNEXION, this.pseudoClient2, this.pseudoClient2 + " s'est déconnecté de la partie !");
-                            try {
-                                outC1.writeObject(messageHote);
-                            } catch (IOException ex) {
-                                break;
-                            }
+                        MessageServeur messageHote = new MessageServeur(DECONNEXION, this.pseudoClient2, this.pseudoClient2 + " s'est déconnecté de la partie !");
+                        try {
+                            outC1.writeObject(messageHote);
+                        } catch (IOException ex) {
+                            break;
                         }
+
                         this.joueur2pret = false;
                         this.joueur1pret = false;
                         this.pseudoClient2 = null;
@@ -317,6 +321,7 @@ public class Serveur {
     private void gestionEcoute(MessageServeur messageServeur){
         if(messageServeur.getCodeClient() == QUITTE){
             gestionCommunicationVersClientJeu(messageServeur);
+            return;
         }
 
         if(partieServeur.joueurCourant == choixJ1){
@@ -468,11 +473,10 @@ public class Serveur {
         this.enJeu = false;
         if(messageServeur.getPseudo().equals(this.pseudoClient1)){
             informerClients(HOTE_QUITTE,messageServeur.getPseudo(),"L'Hôte s'est déconnecter vous allez être rediriger vers le menu !");
-            fermerServeur();
             this.fermetureServeur = true;
+            fermerServeur();
         }else{
             informerClients(DECONNEXION,messageServeur.getPseudo(),messageServeur.getPseudo() + " s'est déconnecté de la partie !");
-            this.pseudoClient2 = null;
             this.joueur2pret = false;
             this.joueur1pret = false;
             fermerClient2();

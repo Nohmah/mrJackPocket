@@ -48,11 +48,6 @@ public class ProfilGenetique {
         return poidsFin;
     }
 
-    public void incrementerScore() {
-        this.score++;
-    }
-
-    public void resetScore() {
-        this.score = 0;
-    }
+    public void incrementerScore() { this.score++; }
+    public void resetScore() { this.score = 0; }
 }

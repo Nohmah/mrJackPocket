@@ -61,7 +61,7 @@ public class Arene {
                 silencieux.set(true);
                 try {
                     mutant.resetScore();
-                    for (int i = 0; i < 40; i++) {
+                    for (int i = 0; i < 50; i++) {
                         ProfilGenetique adv = poolAdverse.getAdversaireAleatoire();
                         if (lancerMatch(mutant, adv)) {
                             synchronized (mutant) {

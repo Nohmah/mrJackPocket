@@ -5,13 +5,13 @@ import src.modele.*;
 public class PoidsIa {
     public enum Phase { DEBUT, MILIEU, FIN }
 
-    public static final double[] POIDS_ENQ_DEBUT  = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-    public static final double[] POIDS_ENQ_MILIEU = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-    public static final double[] POIDS_ENQ_FIN    = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+    public static final double[] POIDS_ENQ_DEBUT  = {0.0, 0.12, 0.23, 0.19, 0.37, 0.08};
+    public static final double[] POIDS_ENQ_MILIEU = {0.0, 0.12, 0.23, 0.19, 0.37, 0.08};
+    public static final double[] POIDS_ENQ_FIN    = {0.0, 0.12, 0.23, 0.19, 0.37, 0.08};
 
-    public static final double[] POIDS_JACK_DEBUT  = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-    public static final double[] POIDS_JACK_MILIEU = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-    public static final double[] POIDS_JACK_FIN    = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+    public static final double[] POIDS_JACK_DEBUT  = {0.03, 0.03, 0.0, 0.21, 0.70, 0.01};
+    public static final double[] POIDS_JACK_MILIEU = {0.03, 0.03, 0.0, 0.21, 0.70, 0.01};
+    public static final double[] POIDS_JACK_FIN    = {0.03, 0.03, 0.0, 0.21, 0.70, 0.01};
 
     private static Phase determinerPhase(int tour) {
         if (tour <= 3) return Phase.DEBUT;

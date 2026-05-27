@@ -15,20 +15,17 @@ public class AreneTest {
         try {
             Partie p = new Partie(Joueur.ENQUETEUR, -1, -1, "E", "J");
             p.estSimulation = true;
+            p.forcerPoidsExternes = true;
             p.adnJack = j;
             p.adnInspecteur = e;
             int s = 0;
             while (p.getGagnant() == null && s < 100) {
                 s++;
                 CoupIa c = IaMinMax.choisirActionMinMax(p, p.joueurCourant == Joueur.JACK, 2);
-                if (c != null) {
-                    p.jouerCoup(c);
-                }
+                if (c != null) p.jouerCoup(c);
                 if (p.totalActionsJouees >= 4) {
                     p.appelATemoin();
-                    if (p.getGagnant() == null) {
-                        p.tourSuivant();
-                    }
+                    if (p.getGagnant() == null) p.tourSuivant();
                 }
             }
             System.setOut(original);

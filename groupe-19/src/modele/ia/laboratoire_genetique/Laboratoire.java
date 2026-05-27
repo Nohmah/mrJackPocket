@@ -9,8 +9,8 @@ public class Laboratoire {
     private PoolProfils poolInsp = new PoolProfils(Joueur.ENQUETEUR, 6);
     private UsineGenetique usine = new UsineGenetique();
     private Arene arene = new Arene();
-    private int NB_CYCLES_MAX = 1;
-    private int NB_GEN_PAR_ROLE = 1;
+    private int NB_CYCLES_MAX = 1000;
+    private int NB_GEN_PAR_ROLE = 20;
 
     public static void main(String[] args) {
         Laboratoire lab = new Laboratoire();
@@ -37,10 +37,18 @@ public class Laboratoire {
     public void exporterStats(Joueur role, int c, int g, PoolProfils pool) {
         ProfilGenetique meilleur = pool.getProfil(0);
         double somme = 0;
-        for (ProfilGenetique p : pool.listeProfils) somme += p.score;
-        double moyenne = somme / 100.0;
-        String data = role + ";Cycle" + c + ";Gen" + g + ";MaxScore:" + meilleur.score + ";Moyenne:" + moyenne + ";Poids:" + Arrays.toString(meilleur.poidsDebut);
-        //System.out.println(data);
+        for (ProfilGenetique p : pool.listeProfils) {
+            somme += p.score;
+        }
+        double moyenne = somme / pool.listeProfils.size();
+
+        String data = role + ";Cycle" + c + ";Gen" + g
+                + ";MaxScore:" + meilleur.score
+                + ";Moyenne:" + moyenne
+                + ";Debut:" + Arrays.toString(meilleur.poidsDebut)
+                + ";Milieu:" + Arrays.toString(meilleur.poidsMilieu)
+                + ";Fin:" + Arrays.toString(meilleur.poidsFin);
+
         try (FileWriter fw = new FileWriter("stats_genetiques.csv", true);
              BufferedWriter bw = new BufferedWriter(fw);
              PrintWriter out = new PrintWriter(bw)) {
