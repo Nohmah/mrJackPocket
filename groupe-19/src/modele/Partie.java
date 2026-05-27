@@ -172,6 +172,7 @@ public class Partie {
         numeroTour = 0;
         jackVisibleCeTour = false;
         sabliersDeJack = 0;
+        sabliersMinimumDeJack = 0;
 
         jetonsAction.clear();
         cartesAlibiPioche.clear();
