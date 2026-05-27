@@ -360,7 +360,9 @@ public class VueMonde extends JPanel {
      */
     public void showNotifMessage(String text, int dureeMs) {
         if (notifPanel == null || notifLabel == null) return;
-
+        if (gameplay != null && gameplay.partie.isPartieTerminee()){
+            notifPanel.setVisible(false);
+        }
         // Si il y a un affichage sous un timer (jack est visible/jack n'est pas visible) on refuse
         if (notifEnCours) {
             return;
@@ -391,7 +393,9 @@ public class VueMonde extends JPanel {
                     nom = gameplay.partie.pseudoJack;
                     if (gameplay.partie.niveauJack == -1) nom += " (Jack)";
                 }
-                showNotifMessage("C'est à " + nom, -1);
+                if (!gameplay.partie.isPartieTerminee()){
+                    showNotifMessage("C'est à " + nom, -1);
+                }
                 });
             notifTimer.setRepeats(false);
             notifTimer.start();
