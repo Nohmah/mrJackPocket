@@ -100,7 +100,7 @@ public class VueJeu extends JPanel {
 
         // 4. Creer le mediateur (necessite que la vue soit prete)
 
-        vueMonde.initialiserSab(partie.niveauJack == -1);
+        vueMonde.initialiserSab();
         this.gameplay = new Gameplay(this, partie);
         // 4b. Injecter le médiateur dans VueMonde pour la délégation du verrou global
         vueMonde.setGameplay(this.gameplay);
@@ -272,6 +272,7 @@ public class VueJeu extends JPanel {
         }
         updateJetons(gameplay.partie.jetonsAction);
         updateDetectivesView(gameplay.partie.detectives);
+        updateSabliers(gameplay.partie.sabliersMinimumDeJack, 6);
         vueMonde.updateThinking(gameplay.enReflexion(), gameplay.partie.IaEnCours);
         vueMonde.repaintWorld();
     }

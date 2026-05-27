@@ -350,11 +350,9 @@ public class VueMonde extends JPanel {
         notifPanel.setVisible(false);
     }
 
-    public void initialiserSab(boolean jackHumain) {
-            if (jackHumain) {
-                initSablierLabel();
-                // Autres éléments spécifiques au joueur humain
-            }
+    public void initialiserSab() {
+            initSablierLabel();
+            // Autres éléments spécifiques au joueur humain
         }
 
     /**
