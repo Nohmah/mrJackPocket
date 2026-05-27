@@ -259,12 +259,7 @@ public class Gameplay {
             return;
         }
 
-        CarteAlibi carteJack = partie.derniereCarteAlibiPiochee;
-        if (carteJack == null) {
-            System.out.println("Rappel identité Jack : aucun personnage connu pour l'instant.");
-            return;
-        }
-        Personnage jack = carteJack.getPersonnage();
+        Personnage jack = partie.identiteJack;
 
         String nomImage = jack.image;
         String texte    = "Vous \u00eates " + jack.nom;
