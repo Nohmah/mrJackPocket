@@ -607,7 +607,6 @@ public class Partie {
     }
 
     public void fromGameSave(GameSave save) {
-        if (freeze) return;
         PartieSaveMapper.fromGameSave(this, save);
         changement = true;
         verifTourIa();
