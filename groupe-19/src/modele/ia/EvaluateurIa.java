@@ -28,7 +28,7 @@ public class EvaluateurIa {
         } else if (partie.niveauEnqueteur == 1) {
             borneMax = 0.3;
         } else if (partie.niveauEnqueteur == 2) {
-            borneMax = 0.0;
+            borneMax = 0.01;
         }
         score += Math.random() * borneMax;
 
@@ -60,7 +60,7 @@ public class EvaluateurIa {
         } else if (partie.niveauJack == 1) {
             borneMax = 0.3;
         } else if (partie.niveauJack == 2) {
-            borneMax = 0.0;
+            borneMax = 0.01;
         }
         score += Math.random() * borneMax;
 
