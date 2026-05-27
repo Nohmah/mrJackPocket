@@ -364,7 +364,7 @@ public class Partie {
     }
 
     public double simulerEtNoter(CoupIa coup, boolean estJack) {
-        System.out.println("DEBUG: Je suis dans Partie.java, je simule le coup...");
+        //System.out.println("DEBUG: Je suis dans Partie.java, je simule le coup...");
         Partie copie = new Partie(this);
         copie.jouerCoup(coup);
         if(estJack){

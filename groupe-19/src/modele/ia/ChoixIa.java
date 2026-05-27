@@ -35,12 +35,16 @@ public class ChoixIa {
 
     public static CoupIa choisirActionFacile(Partie partie, boolean estJack){
         System.out.println("entre dans IA Facile");
-        return choisirActionRandom(partie, estJack);
+        int profondeur = 1;
+        if(estJack) profondeur ++;
+        return IaMinMax.choisirActionMinMax(partie, estJack, profondeur);
     }
 
     public static CoupIa choisirActionMoyen(Partie partie, boolean estJack) {
         System.out.println("entre dans IA Moyen");
-        return IaMinMax.choisirActionMinMax(partie, estJack, 1);
+        int profondeur = 2;
+        if(estJack) profondeur ++;
+        return IaMinMax.choisirActionMinMax(partie, estJack, profondeur);
     }
 
     public static CoupIa choisirActionDifficile(Partie partie, boolean estJack){

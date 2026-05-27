@@ -24,11 +24,11 @@ public class EvaluateurIa {
 
         double borneMax = 0.0;
         if (partie.niveauEnqueteur == 0) {
-            borneMax = 0.2;
+            borneMax = 0.5;
         } else if (partie.niveauEnqueteur == 1) {
-            borneMax = 0.1;
+            borneMax = 0.3;
         } else if (partie.niveauEnqueteur == 2) {
-            borneMax = 0.05;
+            borneMax = 0.0;
         }
         score += Math.random() * borneMax;
 
@@ -56,11 +56,11 @@ public class EvaluateurIa {
 
         double borneMax = 0.0;
         if (partie.niveauJack == 0) {
-            borneMax = 0.2;
+            borneMax = 0.5;
         } else if (partie.niveauJack == 1) {
-            borneMax = 0.1;
+            borneMax = 0.3;
         } else if (partie.niveauJack == 2) {
-            borneMax = 0.05;
+            borneMax = 0.0;
         }
         score += Math.random() * borneMax;
 
