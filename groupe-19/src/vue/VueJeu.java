@@ -443,7 +443,7 @@ public class VueJeu extends JPanel {
     }
 
     private JButton makeIdentiteJackButton() {
-        JButton btn = makeStripButton("M.Jack", "M.Jack");
+        JButton btn = makeStripButton("Pour vous rappelez de votre identité (uniquement si Mr. Jack joue sur cette machine et est humain)", "MrJack.png");
         btn.addActionListener(e -> {
             if (gameplay.isGameFrozen()) return;
             if (gameplay != null) gameplay.afficherRappelIdentiteJack();
