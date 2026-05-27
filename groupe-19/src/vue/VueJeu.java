@@ -866,6 +866,10 @@ public class VueJeu extends JPanel {
                     btn.setEnabled(false);
                     btn.setVisible(false);
                 }
+                if(gameplay.partie.joueurChoisi == Joueur.ENQUETEUR && "Pour vous rappelez de votre identité (uniquement si Mr. Jack joue sur cette machine et est humain)".equals(bouton)) {
+                    btn.setEnabled(false);
+                    btn.setVisible(false);
+                }
             }
         }
     }
