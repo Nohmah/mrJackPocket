@@ -380,6 +380,10 @@ public class Gameplay {
         return partie.joueurCourant != partie.joueurChoisi;
     }
 
+    public void quitterPartie(){
+        executeAction.executeQuitter();
+    }
+
     // -------------------------------------------------------------------------
     // Cycle de jeu
     // -------------------------------------------------------------------------

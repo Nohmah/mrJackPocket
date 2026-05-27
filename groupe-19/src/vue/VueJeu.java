@@ -325,6 +325,9 @@ public class VueJeu extends JPanel {
             // même si une animation est en cours.
             stopGameLoop();
             gameplay.partie.kill();
+
+            gameplay.quitterPartie(); // Implémentation pour le réseau
+
             menuPrincipal.resetBoutonsSurvoles();
             parent.setContentPane(menuPrincipal);
             parent.revalidate();
@@ -645,7 +648,7 @@ public class VueJeu extends JPanel {
             int availW = vueMonde.getWidth();
             int availH = vueMonde.getHeight();
             vueMonde.applyLetterbox(availW, availH);
-            
+
             // Plus besoin de recalcule manuel d'overlay ici ! Swing s'occupe de tout en tâche de fond.
         }
 
@@ -657,13 +660,13 @@ public class VueJeu extends JPanel {
      */
     private void repositionnerOverlays() {
         JPanel glassPane = getFullscreenGlassPane();
-        
+
         if (panneauRegles != null) {
             panneauRegles.setBounds(0, 0, glassPane.getWidth(), glassPane.getHeight());
             panneauRegles.revalidate();
             panneauRegles.repaint();
         }
-        
+
         if (panneauSettings != null) {
             panneauSettings.setBounds(0, 0, glassPane.getWidth(), glassPane.getHeight());
             panneauSettings.revalidate();

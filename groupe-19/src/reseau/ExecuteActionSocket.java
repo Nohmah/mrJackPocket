@@ -63,4 +63,10 @@ public class ExecuteActionSocket implements ExecuteAction {
         contenue[3] = col;
         client.clientEchangeQuartier(contenue);
     }
+
+    @Override
+    public void executeQuitter() {
+        client.joueurQuitte();
+    }
+
 }

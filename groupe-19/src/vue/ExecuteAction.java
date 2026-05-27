@@ -8,6 +8,7 @@ public interface ExecuteAction {
     void executeDetective(Gameplay gameplay, Detective detective, int pas);
     void executeRotationQuartier(Gameplay gameplay, int jetonIndex,int row, int col, int quarts);
     void executeEchangeQuartier(Gameplay gameplay, int rowPremierChoix, int colPremierChoix, int row, int col);
+    void executeQuitter();
 }
 
 

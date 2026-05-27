@@ -7,6 +7,7 @@ import src.vue.menus.VueLobby;
 import javax.swing.*;
 import java.net.*;
 import java.io.*;
+import java.sql.SQLOutput;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -25,10 +26,10 @@ public class Client {
     private final BlockingQueue<MessageServeur> receptionRequeteServeur;
 
     private VueLobby vueLobby;
-    private VueJeu vueJeu;
+    private VueJeu vueJeu = null;
 
     private boolean enJeu = false;
-    private boolean deconnexionForce = false;
+    private volatile boolean deconnexionForce = false;
 
     private boolean jeSuisJack;
 
@@ -77,7 +78,7 @@ public class Client {
                         System.out.println("[CLIENT] receptionRequeteServeur(), le serveur s'est arrêté sans prévenir !");
                         fermerConnexion();
 
-                        if (this.vueLobby != null) {
+                        if (this.vueJeu == null) {
                             SwingUtilities.invokeLater(() -> {
                                 this.vueLobby.ajouterMessageChat("System", "L'hôte s'est déconnecté, redirection dans 5 secondes !");
                                 javax.swing.Timer timer = new javax.swing.Timer(5000, event -> {
@@ -88,6 +89,15 @@ public class Client {
                                 timer.setRepeats(false);
                                 timer.start();
                             });
+                        }else{
+                            if(!estHote) {
+                                JOptionPane.showMessageDialog(vueJeu,"L'hôte s'est déconnecté, vous allez être rediriger vers le menu principale !");
+                            }
+                            this.vueJeu.stopGameLoop();
+                            this.vueJeu = null;
+                            this.vueLobby.revenirMenuPrincipal();
+                            this.vueLobby = null;
+                            fermerConnexion();
                         }
                     }
                     break;
@@ -176,6 +186,7 @@ public class Client {
     }
 
     private void receptionRequeteMISE_A_JOUR_INFORMATIONS_JOUEURS(MessageServeur messageServeur) {
+
         if (estHote) {
             if(!messageServeur.getContenue().toString().isEmpty()){
                 this.vueLobby.setJoueur2Deconnecte(messageServeur.getContenue().toString());
@@ -189,6 +200,7 @@ public class Client {
 
     private void receptionRequeteHOTE_QUITTE() {
         System.out.println("[CLIENT] L'hôte a quitté le lobby !");
+        this.deconnexionForce = true ;
         fermerConnexion();
     }
 
@@ -228,6 +240,12 @@ public class Client {
                 case ACTION_IMPOSSIBLE:
                     System.out.println("Non non non");
                     break;
+                case DECONNEXION:
+                    receptionRequeteDECONNEXION(messageServeur);
+                    break;
+                case HOTE_QUITTE:
+                    receptionRequeteHOTE_QUITTE();
+                    break;
                 default:
                     System.out.println("[CLIENT] gestionCommunicationVersVueJeu() a rencontré une erreur dans le switch avec le code : " + messageServeur.getCodeServeur() + " !");
             }
@@ -264,6 +282,21 @@ public class Client {
         }
     }
 
+    private void receptionRequeteDECONNEXION(MessageServeur messageServeur) {
+        this.enJeu = false;
+        if(estHote){
+            JOptionPane.showMessageDialog(vueLobby,messageServeur.getContenue().toString());
+            if(this.vueJeu != null) {
+                this.vueJeu.stopGameLoop();
+                this.vueJeu = null;
+            }
+            this.vueLobby.setJoueur2Deconnecte(messageServeur.getContenue().toString());
+            this.vueLobby.revenirAuLobby();
+        }else{
+            this.deconnexionForce = true;
+            fermerConnexion();
+        }
+    }
 
     private void informerServeur(CommunicationLobbyCS codePOurServeur, Object contenue) {
 
@@ -297,12 +330,12 @@ public class Client {
     }
 
     public void nouveauChoix(Boolean veutEtreJack) {
-        System.out.println("[DEBUG CLIENT] nouveauChoix !");
         informerServeur(BOUTON_CHOIX,veutEtreJack.toString());
     }
 
     public void joueurQuitte(){
         informerServeur(QUITTE, null);
+        this.deconnexionForce = true;
     }
 
 
