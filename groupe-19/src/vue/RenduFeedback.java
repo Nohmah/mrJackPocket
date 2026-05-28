@@ -4,7 +4,7 @@ import java.awt.*;
 import javax.swing.Timer;
 
 /**
- * RenduFeedback — Feedback visuel interactif sur le plateau.
+ * RenduFeedback  Feedback visuel interactif sur le plateau.
  *
  * Gère : survol des jetons d'action, sélection de tuile, clignotement,
  * lisérés de board, cibles de déplacement, info-bulles.
@@ -15,9 +15,9 @@ import javax.swing.Timer;
  */
 public class RenduFeedback {
 
-    // =========================================================================
+    // 
     // Dépendances injectées
-    // =========================================================================
+    // 
 
     /** Accès aux jetons d'action (sprites et état « utilisé »). */
     private final GestionJetons gestionJetons;
@@ -28,9 +28,9 @@ public class RenduFeedback {
     /** Accès aux positions courantes des détectives (0-based). */
     private final GestionDetectives gestionDetectives;
 
-    // =========================================================================
+    // 
     // État feedback
-    // =========================================================================
+    // 
 
     /** Index du jeton d'action actuellement survolé (-1 = aucun). */
     private int hoveredTokenIndex = -1;
@@ -47,9 +47,9 @@ public class RenduFeedback {
         Camera.Repaint();
     });
 
-    // =========================================================================
+    // 
     // Constructeur
-    // =========================================================================
+    // 
 
     /**
      * @param gestionJetons      Instance de GestionJetons pour lire les sprites/états.
@@ -65,9 +65,9 @@ public class RenduFeedback {
         timerClignote.start();
     }
 
-    // =========================================================================
+    // 
     // Setters (délégation depuis VueMonde)
-    // =========================================================================
+    // 
 
     public void setHoveredTokenIndex(int index) {
         hoveredTokenIndex = index;
@@ -87,9 +87,9 @@ public class RenduFeedback {
         Camera.Repaint();
     }
 
-    // =========================================================================
-    // Rendu — appelé depuis paintComponent() de la Camera
-    // =========================================================================
+    // 
+    // Rendu  appelé depuis paintComponent() de la Camera
+    // 
 
     /** Dessine le calque de survol + lisérés permanents. */
     public void paintHoverOverlay(Graphics2D g) {
@@ -129,9 +129,9 @@ public class RenduFeedback {
             dessinerTuileFeedback(g, selectedRow, selectedCol, new Color(255, 220, 0, 150));
     }
 
-    // =========================================================================
+    // 
     // Tooltip texte
-    // =========================================================================
+    // 
 
     public String getActionTooltipText(String action) {
         return switch (action) {
@@ -153,9 +153,9 @@ public class RenduFeedback {
         return new Point((int) Math.round(screenCenter.x), (int) Math.round(screenCenter.y));
     }
 
-    // =========================================================================
+    // 
     // Méthodes de dessin privées
-    // =========================================================================
+    // 
 
     private void dessinerTuileFeedback(Graphics2D g, int row, int col, Color couleur) {
         Composant2D comp = tileComponents[row][col];

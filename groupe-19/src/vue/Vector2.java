@@ -20,7 +20,7 @@ public class Vector2
     }
     // T
 
-    // --- Constructeurs ---
+    //  Constructeurs 
 
     public Vector2(double x_, double y_)
     {
@@ -46,7 +46,7 @@ public class Vector2
     }
 
 
-    // --- Opérations géométriques ---
+    //  Opérations géométriques 
 
     public Vector2 Normaliser()
     {
@@ -74,7 +74,7 @@ public class Vector2
     }
 
 
-    // --- Arithmétique ---
+    //  Arithmétique 
 
     public Vector2 Add(Vector2 op)
     {

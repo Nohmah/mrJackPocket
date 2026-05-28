@@ -28,7 +28,7 @@ public class Camera extends JComponent {
     public static int nbreSprites;
     private static int backgroundSpriteId = -1;
 
-    // --- Dimming (assombrissement pendant le gel pré-appel à témoin) ---
+    //  Dimming (assombrissement pendant le gel pré-appel à témoin) 
     public static boolean dimmingActive = false;
     public static List<Composant2D> exemptComponents = new ArrayList<>();
 
@@ -42,9 +42,9 @@ public class Camera extends JComponent {
     public int testCounter;
 
 
-    // -------------------------------------------------------------------------
+    // 
     // Déplacements et zoom
-    // -------------------------------------------------------------------------
+    // 
 
     public static void MoveCamera(Vector2 move)
     {
@@ -68,8 +68,8 @@ public class Camera extends JComponent {
     // RecalculateZoom : recalcule les grandeurs dérivées du zoom ET de la position.
     //
     // tailleRel  = combien d'unités monde tiennent dans la fenêtre
-    //              → plus le zoom est grand, moins on voit de monde
-    //              → plus le zoom est petit, plus on voit de monde
+    //               plus le zoom est grand, moins on voit de monde
+    //               plus le zoom est petit, plus on voit de monde
     //
     // positionHG = coin haut-gauche de ce qu'on voit
     //              = centre caméra - moitié de la zone visible
@@ -90,9 +90,9 @@ public class Camera extends JComponent {
     }
 
 
-    // -------------------------------------------------------------------------
+    // 
     // Rendu
-    // -------------------------------------------------------------------------
+    // 
 
     public static void setBackgroundImage(String imageName) {
         backgroundSpriteId = AddSprite(imageName);
@@ -140,7 +140,7 @@ public class Camera extends JComponent {
                 // Coin haut-gauche du composant dans l'espace monde
                 Vector2 worldHG = comp.CoinHG();
 
-                // Conversion monde → écran
+                // Conversion monde  écran
                 Vector2 screenPos   = worldHG.Sub(Camera.positionHG).Mult(Camera.zoom);
                 Vector2 screenTaille = comp.TailleRel().Mult(Camera.zoom);
 
@@ -155,7 +155,7 @@ public class Camera extends JComponent {
                 }
             }
         }
-        // --- Dimming : calque noir semi-transparent par-dessus tout ---
+        //  Dimming : calque noir semi-transparent par-dessus tout 
         if (dimmingActive) {
             drawable.setColor(new Color(0, 0, 0, 180));
             drawable.fillRect(0, 0, getWidth(), getHeight());
@@ -183,7 +183,7 @@ public class Camera extends JComponent {
     // CORRECTION de InCamera :
     //
     // On veut savoir si le rectangle du composant (coin HG + taille) est
-    // au moins partiellement visible dans la fenêtre (0,0) → (taille.x, taille.y).
+    // au moins partiellement visible dans la fenêtre (0,0)  (taille.x, taille.y).
     //
     // Un rectangle A est HORS champ si :
     //   - son bord droit  est à gauche de 0              (pos.x + tail.x < 0)
@@ -204,9 +204,9 @@ public class Camera extends JComponent {
     // T
 
 
-    // -------------------------------------------------------------------------
+    // 
     // Resize de la fenêtre
-    // -------------------------------------------------------------------------
+    // 
 
     // T
     // NOUVEAU : OnResize
@@ -237,9 +237,9 @@ public class Camera extends JComponent {
     // T
 
 
-    // -------------------------------------------------------------------------
+    // 
     // Debug
-    // -------------------------------------------------------------------------
+    // 
 
     private static void DebugInfo(Vector2 vec)
     {
@@ -252,9 +252,9 @@ public class Camera extends JComponent {
     }
 
 
-    // -------------------------------------------------------------------------
+    // 
     // Constructeur et initialisation
-    // -------------------------------------------------------------------------
+    // 
 
     public Camera(Vector2 taille_, JFrame frame_)
     {
@@ -287,9 +287,9 @@ public class Camera extends JComponent {
     }
 
 
-    // -------------------------------------------------------------------------
+    // 
     // API publique : ajout de composants et sprites
-    // -------------------------------------------------------------------------
+    // 
 
     public static void ActiverDimming(List<Composant2D> composantsAExempter) {
         dimmingActive = true;

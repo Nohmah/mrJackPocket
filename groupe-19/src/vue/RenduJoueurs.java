@@ -3,7 +3,7 @@ package src.vue;
 import java.awt.*;
 
 /**
- * RenduJoueurs — Dessine les deux rectangles joueurs (Enquêteur et Jack)
+ * RenduJoueurs  Dessine les deux rectangles joueurs (Enquêteur et Jack)
  * directement dans l'espace caméra (rendu vectoriel).
  *
  * Instanciée et possédée par VueMonde ; les appelants extérieurs passent
@@ -11,9 +11,9 @@ import java.awt.*;
  */
 public class RenduJoueurs {
 
-    // =========================================================================
+    // 
     // Constantes de position (espace monde)
-    // =========================================================================
+    // 
 
     static final double PLAYER_RECT_W_WORLD = 200.0;
     static final double PLAYER_RECT_H_WORLD =  55.0;
@@ -30,9 +30,9 @@ public class RenduJoueurs {
     static final double PLAYER_RECT_CY_BOT =
             VueMonde.BOARD_ORIGIN.y + VueMonde.BOARD_SIZE + PLAYER_RECT_H_WORLD / 2.0 + 110.0;
 
-    // =========================================================================
+    // 
     // État interne
-    // =========================================================================
+    // 
 
     /** Noms affichés dans les rectangles joueurs (index 0 = Enquêteur, 1 = Jack). */
     private final String[] playerNames  = { "", "" };
@@ -46,9 +46,9 @@ public class RenduJoueurs {
         new Color(180,  40,  40, 200)    // Jack (rouge)
     };
 
-    // =========================================================================
+    // 
     // Setters
-    // =========================================================================
+    // 
 
     public void setPlayerName(int player, String name) {
         if (player >= 0 && player < 2)
@@ -75,9 +75,9 @@ public class RenduJoueurs {
         }
     }
 
-    // =========================================================================
+    // 
     // Rendu
-    // =========================================================================
+    // 
 
     /**
      * Dessine les deux rectangles joueurs dans l'espace caméra.
@@ -92,7 +92,7 @@ public class RenduJoueurs {
         double[] worldCY = { PLAYER_RECT_CY_TOP, PLAYER_RECT_CY_BOT };
 
         for (int p = 0; p < 2; p++) {
-            // ---- Transformation monde → écran --------------------------------
+            //  Transformation monde écran 
             double worldX = PLAYER_RECT_CX - PLAYER_RECT_W_WORLD / 2.0;
             double worldY = worldCY[p]      - PLAYER_RECT_H_WORLD / 2.0;
 
@@ -107,17 +107,17 @@ public class RenduJoueurs {
             int rh  = (int) Math.round(sh);
             int arc = (int) Math.round(14 * Camera.zoom.x);
 
-            // ---- Fond semi-transparent avec coins arrondis -------------------
+            //  Fond semi-transparent avec coins arrondis ---
             g.setColor(playerColors[p]);
             g.fillRoundRect(rx, ry, rw, rh, arc, arc);
 
-            // ---- Bordure contrastée -----------------------------------------
+            //  Bordure contrastée -
             g.setColor(new Color(255, 255, 255, 200));
             g.setStroke(new BasicStroke((float) Math.max(1.0, 2.0 * Camera.zoom.x)));
             g.drawRoundRect(rx, ry, rw, rh, arc, arc);
             g.setStroke(new BasicStroke(1f));
 
-            // ---- Textes (nom + type) centrés ---------------------------------
+            //  Textes (nom + type) centrés -
             float baseFontSize  = (float) (13.0 * Camera.zoom.x);
             float smallFontSize = (float) Math.max(8.0, 10.0 * Camera.zoom.x);
 

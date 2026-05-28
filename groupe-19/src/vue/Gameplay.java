@@ -7,10 +7,10 @@ import javax.swing.*;
 import java.awt.Color;
 
 /**
- * Gameplay — Médiateur (Mediator).
+ * Gameplay  Médiateur (Mediator).
  *
  * Responsabilités :
- *   - Orchestrer le cycle de jeu : initialisation → tours → fin de partie.
+ *   - Orchestrer le cycle de jeu : initialisation  tours  fin de partie.
  *   - Servir d'unique point de communication entre VueJeu et le modèle (Partie).
  *   - NE PAS dupliquer l'état du modèle : toujours lire depuis partie.*.
  */
@@ -24,9 +24,9 @@ public class Gameplay {
     private ExecuteAction executeAction;
 
 
-    // -------------------------------------------------------------------------
-    // États temporaires d'interaction — encapsulés dans des classes dédiées
-    // -------------------------------------------------------------------------
+    // 
+    // États temporaires d'interaction  encapsulés dans des classes dédiées
+    // 
 
     /** État d'une opération d'échange en attente de deux clics. */
     private EchangeState echangeState = null;
@@ -37,9 +37,9 @@ public class Gameplay {
     /** Vrai si le mode rotation est actif (utilisé par IHMControler pour le curseur). */
     public boolean rotationMode = false;
 
-    // -------------------------------------------------------------------------
+    // 
     // Constructeur
-    // -------------------------------------------------------------------------
+    // 
 
     public Gameplay(VueJeu vue, Partie partie) {
         this.vue = vue;
@@ -154,9 +154,9 @@ public class Gameplay {
         });
     }
 
-    // -------------------------------------------------------------------------
-    // Verrou global — point d'entrée unique pour geler/dégeler le jeu
-    // -------------------------------------------------------------------------
+    // 
+    // Verrou global  point d'entrée unique pour geler/dégeler le jeu
+    // 
 
     /**
      * Gèle ou dégèle simultanément le modèle (Partie) et la vue (VueMonde).
@@ -225,10 +225,10 @@ public class Gameplay {
 
         // if partie solo and
         boolean jackHumain = (partie.niveauJack == -1);
-        // humain vs humain → Jack humain → affichage
-        // humain vs IA avec joueur = Jack → Jack humain → affichage
-        // IA vs humain avec Jack IA → pas affiché
-        // IA vs IA → pas affiché
+        // humain vs humain  Jack humain  affichage
+        // humain vs IA avec joueur = Jack  Jack humain  affichage
+        // IA vs humain avec Jack IA  pas affiché
+        // IA vs IA  pas affiché
         if (jackHumain) {
             System.out.println("Affichage de l'identité de Jack");
             partie.fireAlibiEvent();
@@ -248,7 +248,7 @@ public class Gameplay {
     /**
      * Rappelle à Jack son identité secrète en cours de partie.
      * Récupère le personnage depuis le modèle et délègue l'affichage à VueMonde
-     * via l'overlay générique — aucune logique métier dans la vue.
+     * via l'overlay générique  aucune logique métier dans la vue.
      */
     public void afficherRappelIdentiteJack() {
         if (partie.isFreeze() || partie.isPartieTerminee()) return;
@@ -283,7 +283,7 @@ public class Gameplay {
     }
 
     private void startTurn() {
-        System.out.println("Gameplay — début du tour " + partie.numeroTour);
+        System.out.println("Gameplay  début du tour " + partie.numeroTour);
         // Le type de joueur (humain/IA) est déterminé par le modèle
         boolean isIa = (partie.joueurCourant == Joueur.JACK && partie.niveauJack != -1)
                     || (partie.joueurCourant == Joueur.ENQUETEUR && partie.niveauEnqueteur != -1);
@@ -305,9 +305,9 @@ public class Gameplay {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Mise à jour de la vue — point unique
-    // -------------------------------------------------------------------------
+    // 
+    // Mise à jour de la vue  point unique
+    // 
 
     /** Rafraîchit tous les composants visuels depuis l'état courant du modèle. */
     public void refreshView() {
@@ -412,9 +412,9 @@ public class Gameplay {
         executeAction.executeQuitter();
     }
 
-    // -------------------------------------------------------------------------
+    // 
     // Cycle de jeu
-    // -------------------------------------------------------------------------
+    // 
 
     public void resetGame() {
         if (partie.isFreeze()) return;
@@ -441,13 +441,13 @@ public class Gameplay {
     public IHMControler getControler() { return controler; }
 
     private void onGameOver() {
-        System.out.println("Gameplay — fin de partie");
+        System.out.println("Gameplay  fin de partie");
         vue.showGameOverScreen(partie.getGagnant().getNom());
     }
 
-    // -------------------------------------------------------------------------
-    // Actions des boules (jetons) — appelées par IHMControler
-    // -------------------------------------------------------------------------
+    // 
+    // Actions des boules (jetons)  appelées par IHMControler
+    // 
 
     public void onActionBallClicked(IHMControler.ActionIntent intent) {
         // On refuse les clics sur les jetons actions sous certaines conditions
@@ -455,7 +455,7 @@ public class Gameplay {
         String actionName = intent.actionName();
         int ballIndex = intent.ballIndex();
 
-        System.out.println("Gameplay — action sur boule " + ballIndex + " : " + actionName);
+        System.out.println("Gameplay  action sur boule " + ballIndex + " : " + actionName);
 
         // L'utilisateur a cliqué : on efface le survol
         vue.getMonde().setHoveredToken(-1);
@@ -555,9 +555,9 @@ public class Gameplay {
         return null;
     }
 
-    // -------------------------------------------------------------------------
-    // Échange et Rotation — gestion propre via des objets d'état dédiés
-    // -------------------------------------------------------------------------
+    // 
+    // Échange et Rotation  gestion propre via des objets d'état dédiés
+    // 
 
     public void startEchange() {
         rotationState = null;
@@ -601,22 +601,22 @@ public class Gameplay {
         echangeState = null;
     }
 
-    // -------------------------------------------------------------------------
+    // 
     // Callbacks depuis IHMControler (clics sur plateau)
-    // -------------------------------------------------------------------------
+    // 
 
     public void onActionConfirmed(IHMControler.ClickIntent intent) {
-        System.out.println("Gameplay — action confirmée : (" + intent.cellRow() + "," + intent.cellCol() + ")");
+        System.out.println("Gameplay  action confirmée : (" + intent.cellRow() + "," + intent.cellCol() + ")");
         Camera.RecalculateZoom();
     }
 
     public void onUndoRequested(IHMControler.ClickIntent intent) {
-        System.out.println("Gameplay — undo (" + intent.cellRow() + "," + intent.cellCol() + ")");
+        System.out.println("Gameplay  undo (" + intent.cellRow() + "," + intent.cellCol() + ")");
         Camera.RecalculateZoom();
     }
 
     public void onRedoRequested(IHMControler.ClickIntent intent) {
-        System.out.println("Gameplay — redo (" + intent.cellRow() + "," + intent.cellCol() + ")");
+        System.out.println("Gameplay  redo (" + intent.cellRow() + "," + intent.cellCol() + ")");
         Camera.RecalculateZoom();
     }
 
@@ -635,14 +635,14 @@ public class Gameplay {
         if (echangeState != null) {
             if (!echangeState.hasFirstTile()) {
                 echangeState.setFirstTile(row, col);
-                System.out.println("Échange — première tuile : (" + row + "," + col + ")");
+                System.out.println("Échange  première tuile : (" + row + "," + col + ")");
             } else if (echangeState.isSameTile(row, col)) {
-                System.out.println("Échange — annulation de la 1ere tuile : (" + row + "," + col + ")");
+                System.out.println("Échange  annulation de la 1ere tuile : (" + row + "," + col + ")");
                 vue.getMonde().setTuileSelected(-1,-1);
                 echangeState.setFirstTile(-1,-1);
                 refreshView();
             } else {
-                System.out.println("Échange — deuxième tuile : (" + row + "," + col + ")");
+                System.out.println("Échange  deuxième tuile : (" + row + "," + col + ")");
                 executeAction.executeEchangeQuartier(this,echangeState.row, echangeState.col, row, col);
                 echangeState = null;
                 vue.getMonde().setTuileSelected(-1,-1);
@@ -658,20 +658,20 @@ public class Gameplay {
                 rotationState.setTarget(row, col);
                 rotationMode = true;
                 vue.rotateTile(row, col, 90);
-                System.out.println("Rotation — tuile sélectionnée : (" + row + "," + col + ")");
+                System.out.println("Rotation  tuile sélectionnée : (" + row + "," + col + ")");
             } else if (rotationState.isSameTile(row, col)) {
                 rotationState.addQuart();
                 vue.rotateTile(row, col, 90);
-                System.out.println("Rotation — quart supplémentaire (" + rotationState.quarts + " total)");
+                System.out.println("Rotation  quart supplémentaire (" + rotationState.quarts + " total)");
             } else {
                 exitRotationMode();
             }
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Classes d'état temporaire — encapsulées, cycle de vie limité à l'interaction
-    // -------------------------------------------------------------------------
+    // 
+    // Classes d'état temporaire  encapsulées, cycle de vie limité à l'interaction
+    // 
 
     /** Encapsule l'état d'une opération d'échange en cours (attente de 2 clics). */
     private  class EchangeState {
@@ -731,7 +731,7 @@ public class Gameplay {
     public void updatePlayerRectangles() {
         VueMonde monde = vue.getMonde();
 
-        // ----- Enquêteur (index 0, toujours en bleu) -----
+        // Enquêteur (index 0, toujours en bleu) 
         String enqueteurNom = partie.pseudoEnqueteur;
         if (partie.niveauEnqueteur == -1) {
             enqueteurNom += " (Enquêteur)"; // On ajoute l'information que si c'est un humain
@@ -741,7 +741,7 @@ public class Gameplay {
         monde.setPlayerType(0, enqueteurType);
         monde.updateRectColor(0, new Color(40, 80, 180, 200));  // Bleu personnalisé
 
-        // ----- Mr. Jack (index 1, toujours en rouge) -----
+        // Mr. Jack (index 1, toujours en rouge) 
         String jackNom = partie.pseudoJack;
         if (partie.niveauJack == -1) {
             jackNom += " (Jack)"; // On ajoute l'information que si c'est un humain

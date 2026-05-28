@@ -4,16 +4,16 @@ import java.util.List;
 import src.modele.Detective;
 
 /**
- * GestionDetectives — Gère les pions détectives sur l'anneau extérieur du plateau.
+ * GestionDetectives Gère les pions détectives sur l'anneau extérieur du plateau.
  *
  * Instanciée et possédée par VueMonde ; les appelants extérieurs passent
  * toujours par VueMonde.
  */
 public class GestionDetectives {
 
-    // =========================================================================
+    // 
     // Constantes
-    // =========================================================================
+    // 
 
     private static final double    OUTER_BALL_DIAM = 80.0;
     private static final Vector2[] OUTER_POSITIONS = buildOuterPositions();
@@ -40,17 +40,17 @@ public class GestionDetectives {
         return pos;
     }
 
-    // =========================================================================
+    // 
     // État interne
-    // =========================================================================
+    // 
 
     private final int[]         detectivePosition   = { -1, -1, -1 };
     final         Composant2D[] detectiveComponents = new Composant2D[3];
     final         Composant2D[] outerBalls          = new Composant2D[12];
 
-    // =========================================================================
+    // 
     // API publique (délégation depuis VueMonde)
-    // =========================================================================
+    // 
 
     /** Met à jour l'affichage des 3 détectives à partir des positions du modèle. */
     public void updateDetectivesView(List<Detective> detectives) {
@@ -92,9 +92,9 @@ public class GestionDetectives {
         return detectivePosition[detIdx];
     }
 
-    // =========================================================================
+    // 
     // Privé
-    // =========================================================================
+    // 
 
     private void refreshOuterBallScale(int posIdx) {
         int stackCount = 0;

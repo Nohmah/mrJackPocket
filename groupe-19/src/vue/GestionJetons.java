@@ -5,25 +5,25 @@ import src.modele.Action;
 import src.modele.JetonAction;
 
 /**
- * GestionJetons — Gère les boules d'action et les indicateurs de tour.
+ * GestionJetons  Gère les boules d'action et les indicateurs de tour.
  *
  * Instanciée et possédée par VueMonde ; les appelants extérieurs passent
  * toujours par VueMonde.
  */
 public class GestionJetons {
 
-    // =========================================================================
-    // Constantes — noms de sprites
-    // =========================================================================
+    // 
+    // Constantes  noms de sprites
+    // 
 
     static final String[] BALL_FACE_PILE = { "action_alibi", "action_toby", "action_rotation", "action_rotation" };
     static final String[] BALL_FACE_FACE = { "action_holmes", "action_watson", "action_echange", "action_joker" };
     static final String[] TURN_FACE_PILE = { "T1","T2","T3","T4","T5","T6","T7","T8" };
     static final String   TURN_FACE_FACE = "T0";
 
-    // =========================================================================
+    // 
     // État interne
-    // =========================================================================
+    // 
 
     private final boolean[]     ballFaceIsPile         = { true, true, true, true };
     final         String[]      actionBallCurrentSprite = new String[4];
@@ -34,18 +34,18 @@ public class GestionJetons {
     final Composant2D[] actionBalls    = new Composant2D[4];
     final Composant2D[] turnIndicators = new Composant2D[8];
 
-    // =========================================================================
+    // 
     // Constructeur
-    // =========================================================================
+    // 
 
     public GestionJetons() {
         initActionBalls();
         initTurnIndicators();
     }
 
-    // =========================================================================
+    // 
     // Initialisation
-    // =========================================================================
+    // 
 
     private void initActionBalls() {
         double diam    = 100;
@@ -71,9 +71,9 @@ public class GestionJetons {
         }
     }
 
-    // =========================================================================
+    // 
     // Mises à jour
-    // =========================================================================
+    // 
 
     /** Met à jour les 4 jetons d'action selon leur face visible. */
     public void updateJetons(List<JetonAction> jetons) {

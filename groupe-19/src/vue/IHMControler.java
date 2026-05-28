@@ -6,7 +6,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 /**
- * IHMControler — Interpréteur d'intentions utilisateur.
+ * IHMControler  Interpréteur d'intentions utilisateur.
  *
  * Responsabilités :
  *   - Intercepter les clics souris / touches clavier et les traduire en
@@ -17,25 +17,25 @@ import java.util.Deque;
  */
 public class IHMControler implements MouseListener, MouseMotionListener, KeyListener {
 
-    // =========================================================================
+    // 
     // Records d'intentions
-    // =========================================================================
+    // 
 
     public record ClickIntent(int cellRow, int cellCol, Vector2 worldPos, boolean isRightClick) {}
     public record ActionIntent(int ballIndex, String actionName) {}
 
-    // =========================================================================
-    // Interface fonctionnelle — sonde de survol
-    // =========================================================================
+    // 
+    // Interface fonctionnelle  sonde de survol
+    // 
 
     @FunctionalInterface
     public interface HoverProbe {
         int ballAt(int sx, int sy);
     }
 
-    // =========================================================================
+    // 
     // État interne
-    // =========================================================================
+    // 
 
     private final Deque<ClickIntent> undoStack = new ArrayDeque<>();
     private final Deque<ClickIntent> redoStack = new ArrayDeque<>();
@@ -44,17 +44,17 @@ public class IHMControler implements MouseListener, MouseMotionListener, KeyList
     private String activePlayerType = "HUMAN";
     private HoverProbe hoverProbe = null;
 
-    // =========================================================================
+    // 
     // Constructeur
-    // =========================================================================
+    // 
 
     public IHMControler(Gameplay gameplay) {
         this.gameplay = gameplay;
     }
 
-    // =========================================================================
-    // API publique — configuration
-    // =========================================================================
+    // 
+    // API publique  configuration
+    // 
 
     public void setActivePlayerType(String type) {
         this.activePlayerType = type;
@@ -68,13 +68,13 @@ public class IHMControler implements MouseListener, MouseMotionListener, KeyList
 
     public void onActionBallHit(int ballIndex, String actionName) {
         ActionIntent intent = new ActionIntent(ballIndex, actionName);
-        System.out.println("IHMControler — ActionIntent créé : [" + ballIndex + "] " + actionName);
+        System.out.println("IHMControler  ActionIntent créé : [" + ballIndex + "] " + actionName);
         gameplay.onActionBallClicked(intent);
     }
 
-    // =========================================================================
+    // 
     // Gestion Undo / Redo / Confirmation
-    // =========================================================================
+    // 
 
     public void confirmPendingIntent() {
         if (pendingIntent == null) return;
@@ -105,9 +105,9 @@ public class IHMControler implements MouseListener, MouseMotionListener, KeyList
         confirmPendingIntent();
     }
 
-    // =========================================================================
+    // 
     // MouseListener
-    // =========================================================================
+    // 
 
     @Override
     public void mouseClicked(MouseEvent e) {
@@ -138,10 +138,10 @@ public class IHMControler implements MouseListener, MouseMotionListener, KeyList
         boolean isRight = (e.getButton() == MouseEvent.BUTTON3);
         pendingIntent = new ClickIntent(row, col, world, isRight);
 
-        // Notification plateau — Gameplay orchestre la réponse
+        // Notification plateau  Gameplay orchestre la réponse
         gameplay.onCellHovered(row, col);
 
-        System.out.println("IHMControler — ClickIntent : (" + row + "," + col + ")"
+        System.out.println("IHMControler  ClickIntent : (" + row + "," + col + ")"
                 + (isRight ? " [droit]" : "") + " monde=" + world.ToString());
     }
 
@@ -160,9 +160,9 @@ public class IHMControler implements MouseListener, MouseMotionListener, KeyList
         gameplay.onTokenHovered(-1);
     }
 
-    // =========================================================================
+    // 
     // MouseMotionListener
-    // =========================================================================
+    // 
 
     @Override
     public void mouseMoved(MouseEvent e) {
@@ -175,9 +175,9 @@ public class IHMControler implements MouseListener, MouseMotionListener, KeyList
     @Override
     public void mouseDragged(MouseEvent e) {}
 
-    // =========================================================================
+    // 
     // KeyListener
-    // =========================================================================
+    // 
 
     @Override
     public void keyPressed(KeyEvent e) {
@@ -199,9 +199,9 @@ public class IHMControler implements MouseListener, MouseMotionListener, KeyList
     @Override
     public void keyReleased(KeyEvent e) {}
 
-    // =========================================================================
+    // 
     // Helper
-    // =========================================================================
+    // 
 
     private Vector2 screenToWorld(Vector2 screen) {
         return screen.Div(Camera.zoom).Add(Camera.positionHG);
