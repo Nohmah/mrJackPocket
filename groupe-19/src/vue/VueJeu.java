@@ -60,9 +60,8 @@ public class VueJeu extends JPanel {
 
     /**
      * Taille (largeur = hauteur) des boutons carrés de la bande latérale.
-     * 55×55 px — assez grand pour une icône lisible.
      */
-    private static final int BTN_SIZE   = 60s;
+    private static final int BTN_SIZE   = 60;
 
     /**
      * Nombre d'images par seconde du ticker.
